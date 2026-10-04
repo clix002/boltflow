@@ -1,4 +1,5 @@
 import { LogOutIcon, Monitor, Moon, Sun } from "lucide-react";
+import { useSearchParams } from "react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,11 +31,26 @@ const themeOptions = [
 export const Header = ({ handleLogout }: HeaderProps) => {
 	const { user } = useAuthStore();
 	const { setTheme } = useTheme();
+
+	const [searchParams, setSearchParams] = useSearchParams();
+
+	const handleSearch = (value: string) => {
+		setSearchParams((prev) => {
+			prev.set("q", value);
+			return prev;
+		});
+	};
+
 	return (
 		<header className="flex h-16 shrink-0 items-center gap-2 border-b">
 			<SidebarTrigger className="-ml-1" />
 			<div className="flex justify-between items-center w-full">
-				<Input className="max-w-sm" placeholder="Search..." />
+				<Input
+					value={searchParams.get("q") ?? ""}
+					className="max-w-sm"
+					placeholder="Search..."
+					onChange={(e) => handleSearch(e.target.value)}
+				/>
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<Button variant="ghost" size="icon" className="rounded-full">

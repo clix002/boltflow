@@ -1,8 +1,6 @@
 export type {
 	PaginateInfo,
 	PaginateOptions,
-	paginateInfo,
-	paginateOptions,
 } from "./pagination.schema";
 export {
 	PaginateInfoSchema,

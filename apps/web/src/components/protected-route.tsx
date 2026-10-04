@@ -1,4 +1,4 @@
-import { Navigate } from "react-router";
+import { Navigate, useLocation } from "react-router";
 import { useAuthStore } from "@/store/useAuthStore";
 
 type ProtectedRouteProps = {
@@ -7,9 +7,16 @@ type ProtectedRouteProps = {
 
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 	const { user } = useAuthStore();
+	const location = useLocation();
 
 	if (!user) {
-		return <Navigate to="/login" replace />;
+		return (
+			<Navigate
+				to="/login"
+				state={{ from: `${location.pathname}${location.search}` }}
+				replace
+			/>
+		);
 	}
 
 	return <>{children}</>;

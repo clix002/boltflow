@@ -21,7 +21,7 @@ export const BoardCard = ({ board, onEdit, onDelete }: BoardCardProps) => {
 	return (
 		<Card>
 			<CardHeader className="flex flex-row items-center justify-between">
-				<CardTitle>{board.name}</CardTitle>
+				<CardTitle className="truncate">{board.name}</CardTitle>
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<Button variant="ghost" size="icon">
