@@ -2,7 +2,7 @@ import type { BoardSchema } from "@scrum-board/shared/schemas";
 import { useQueryClient } from "@tanstack/react-query";
 import { range } from "es-toolkit";
 import { useDeferredValue, useState } from "react";
-import { useSearchParams } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import type { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,19 +12,20 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 } from "@/components/ui/pagination";
+import { UseDeleteBoardMutation } from "@/feature/board/api/use-detete-board";
+import { useGetBoardsQuery } from "@/feature/board/api/use-get-boards";
+import { BoardCard } from "@/feature/board/components/atomic/board-card";
+import { BoardsEmpty } from "@/feature/board/components/atomic/boards-empty";
+import { CreateBoardCard } from "@/feature/board/components/atomic/create-biard-card";
+import { CreateBoardDialog } from "@/feature/board/components/form/create-board-dialog";
+import { UpdateBoardDialog } from "@/feature/board/components/form/update-board-dialog";
 import { useConfirm } from "@/hooks/confirm-provider";
 import { isEmpty } from "@/lib/utils";
-import { UseDeleteBoardMutation } from "../api/use-detete-board";
-import { useGetBoardsQuery } from "../api/use-get-boards";
-import { BoardCard } from "./atomic/board-card";
-import { BoardsEmpty } from "./atomic/boards-empty";
-import { CreateBoardCard } from "./atomic/create-biard-card";
-import { CreateBoardDialog } from "./form/create-board-dialog";
-import { UpdateBoardDialog } from "./form/update-board-dialog";
 
 type Board = z.infer<typeof BoardSchema>;
 
 export const BoardList = () => {
+	const navigate = useNavigate();
 	const queryClient = useQueryClient();
 	const [searchParams, setSearchParams] = useSearchParams();
 	const search = searchParams.get("q") ?? "";
@@ -75,6 +76,10 @@ export const BoardList = () => {
 		});
 	};
 
+	const handleOpenBoard = (id: string) => () => {
+		navigate(`/board/${id}`);
+	};
+
 	if (isPending) {
 		return (
 			<div className="grid gap-x-8 gap-y-6 md:grid-cols-3">
@@ -102,6 +107,7 @@ export const BoardList = () => {
 				{isEmpty(data?.docs) && <BoardsEmpty onCreate={handleCreateBoard} />}
 				{data?.docs.map((board) => (
 					<BoardCard
+						onOpen={handleOpenBoard(board.id)}
 						board={board}
 						key={board.id}
 						onEdit={handleEditBoard(board)}
