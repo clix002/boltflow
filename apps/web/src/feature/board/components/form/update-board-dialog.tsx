@@ -46,7 +46,8 @@ export const UpdateBoardDialog = ({
 			{ data, id: board.id },
 			{
 				onSuccess: () => {
-					queryClient.invalidateQueries({ queryKey: ["boards"] }), form.reset();
+					queryClient.invalidateQueries({ queryKey: ["boards"] });
+					form.reset();
 					onOpenChange(false);
 				},
 			},

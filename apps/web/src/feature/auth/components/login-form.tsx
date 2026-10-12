@@ -3,7 +3,7 @@ import { LoginSchema } from "@scrum-board/shared/schemas";
 import { useQueryClient } from "@tanstack/react-query";
 import { GalleryVerticalEnd } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import { toast } from "sonner";
 import type { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,6 @@ export function LoginForm({
 	className,
 	...props
 }: React.ComponentProps<"div">) {
-	const navigate = useNavigate();
 	const { setUser } = useAuthStore();
 	const queryClient = useQueryClient();
 	const {
@@ -48,7 +47,6 @@ export function LoginForm({
 			onSuccess: (result) => {
 				setUser(result.user);
 				queryClient.invalidateQueries({ queryKey: ME_QUERY_KEY });
-				navigate("/");
 			},
 			onError: (error) => {
 				toast.error(error.message || "An error occurred while logging in");

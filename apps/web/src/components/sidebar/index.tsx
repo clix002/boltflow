@@ -1,58 +1,54 @@
 import type * as React from "react";
-import { Link } from "react-router";
+import { useMatches, useNavigate } from "react-router";
+import { toast } from "sonner";
 import {
 	Sidebar,
 	SidebarContent,
-	SidebarGroupContent,
+	SidebarFooter,
 	SidebarHeader,
-	SidebarMenu,
-	SidebarMenuButton,
-	SidebarMenuItem,
 	SidebarRail,
 } from "@/components/ui/sidebar";
-
-const data = {
-	navMain: [
-		{
-			url: "#",
-			items: [
-				{
-					title: "My Tasks",
-					url: "#",
-				},
-				{
-					title: "Boards",
-					url: "#",
-				},
-			],
-		},
-	],
-};
+import { useLogoutMutation } from "@/feature/auth/api/use-logout";
+import type { RouteHandle } from "@/routes";
+import { useAuthStore } from "@/store/useAuthStore";
+import { UserAvatar } from "../user";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+	const navigate = useNavigate();
+	const { clearUser } = useAuthStore();
+
+	const { mutate: logoutMutation } = useLogoutMutation();
+
+	const matches = useMatches();
+
+	const currentMatch = [...matches].reverse().find((match) => {
+		const handle = match.handle as RouteHandle;
+
+		return Boolean(handle?.sidebar);
+	});
+
+	const SideComponent = (currentMatch?.handle as RouteHandle)?.sidebar;
+	const HeaderComponent = (currentMatch?.handle as RouteHandle)?.sidebarHeader;
+
+	const handleLogout = () => {
+		logoutMutation(undefined, {
+			onSuccess: () => {
+				clearUser();
+				navigate("/login");
+			},
+			onError: (error) => {
+				toast.error(error.message || "An error occurred while logging out");
+			},
+		});
+	};
+
 	return (
 		<Sidebar {...props}>
-			<SidebarHeader>
-				<h2 className="text-lg font-semibold">Scrum-Board</h2>
-			</SidebarHeader>
-			<SidebarContent>
-				{/* We create a SidebarGroup for each parent. */}
-				{data.navMain.map((item) => (
-					<SidebarGroupContent
-						key={`${item.url}-${item.items[0]?.title ?? "group"}`}
-					>
-						<SidebarMenu>
-							{item.items.map((item) => (
-								<SidebarMenuItem key={item.title}>
-									<SidebarMenuButton asChild>
-										<Link to={item.url}>{item.title}</Link>
-									</SidebarMenuButton>
-								</SidebarMenuItem>
-							))}
-						</SidebarMenu>
-					</SidebarGroupContent>
-				))}
-			</SidebarContent>
+			<SidebarHeader>{HeaderComponent && <HeaderComponent />}</SidebarHeader>
+			<SidebarContent>{SideComponent && <SideComponent />}</SidebarContent>
+			<SidebarFooter>
+				<UserAvatar handleLogout={handleLogout} />
+			</SidebarFooter>
 			<SidebarRail />
 		</Sidebar>
 	);

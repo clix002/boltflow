@@ -1,4 +1,4 @@
-import { Board } from "@/feature/board/components";
+import { Board } from "@/feature/board/components/board";
 
 export const BoardPage = () => {
 	return <Board />;

@@ -1,12 +1,20 @@
-import { Navigate } from "react-router";
+import { Navigate, useLocation } from "react-router";
 import { LoginForm } from "@/feature/auth/components/login-form";
+import type { Maybe } from "@/lib/utils";
 import { useAuthStore } from "@/store/useAuthStore";
+
+type LoginLocationState = Maybe<{
+	from?: string;
+}>;
 
 export const LoginPage = () => {
 	const { user } = useAuthStore();
+	const location = useLocation();
+	const state = location.state as LoginLocationState;
 
 	if (user) {
-		return <Navigate to="/" replace />;
+		const from = state?.from ?? "/";
+		return <Navigate to={from} replace />;
 	}
 
 	return (

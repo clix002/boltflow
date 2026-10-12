@@ -15,20 +15,30 @@ type BoardCardProps = {
 	board: z.infer<typeof BoardSchema>;
 	onEdit: () => void;
 	onDelete: () => void;
+	onOpen: () => void;
 };
 
-export const BoardCard = ({ board, onEdit, onDelete }: BoardCardProps) => {
+export const BoardCard = ({
+	board,
+	onEdit,
+	onDelete,
+	onOpen,
+}: BoardCardProps) => {
 	return (
-		<Card>
+		<Card onClick={onOpen}>
 			<CardHeader className="flex flex-row items-center justify-between">
-				<CardTitle>{board.name}</CardTitle>
+				<CardTitle className="truncate">{board.name}</CardTitle>
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
-						<Button variant="ghost" size="icon">
+						<Button
+							variant="ghost"
+							size="icon"
+							onClick={(e) => e.stopPropagation()}
+						>
 							<MoreHorizontal />
 						</Button>
 					</DropdownMenuTrigger>
-					<DropdownMenuContent align="end">
+					<DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
 						<DropdownMenuItem onClick={onEdit}>Edit</DropdownMenuItem>
 						<DropdownMenuItem onClick={onDelete}>Delete</DropdownMenuItem>
 					</DropdownMenuContent>

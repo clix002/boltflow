@@ -25,7 +25,7 @@ export async function paginate<TDoc, TWhere, TOrderBy>(
 	query?: PaginateQuery<TWhere, TOrderBy>,
 	opts?: PaginateOptions,
 ): Promise<PaginatedResult<TDoc>> {
-	const { page = 1, limit = 10 } = opts ?? {};
+	const { page = 1, limit = 17 } = opts ?? {};
 	const skip = (page - 1) * limit;
 
 	const [docs, totalDocs] = await Promise.all([

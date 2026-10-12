@@ -14,8 +14,13 @@ export const listHandler: RouteHandler<typeof listBoardsRoute, AppEnv> = async (
 ) => {
 	const userId = c.get("jwtPayload").id;
 	const page = Number(c.req.query("page")) || 1;
-	const limit = Number(c.req.query("limit")) || 10;
-	const { docs, info } = await boardService.listByUser(userId, { page, limit });
+	const limit = Number(c.req.query("limit")) || 17;
+	const search = c.req.query("search");
+	const { docs, info } = await boardService.listByUser(userId, {
+		page,
+		limit,
+		search,
+	});
 	return c.json({ docs, info }, 200);
 };
 

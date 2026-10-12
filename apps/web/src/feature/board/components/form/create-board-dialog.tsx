@@ -38,7 +38,8 @@ export const CreateBoardDialog = ({
 	const onSubmit = (data: formData) => {
 		createBoard(data, {
 			onSuccess: () => {
-				queryClient.invalidateQueries({ queryKey: ["boards"] }), form.reset();
+				queryClient.invalidateQueries({ queryKey: ["boards"] });
+				form.reset();
 				onOpenChange(false);
 			},
 		});

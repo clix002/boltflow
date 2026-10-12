@@ -18,6 +18,7 @@ export function paginatedResponseOf<T extends z.ZodTypeAny>(itemSchema: T) {
 }
 
 export const PaginateOptionsSchema = z.object({
+	search: z.string().optional(),
 	page: z.number().optional(),
 	limit: z.number().optional(),
 });
