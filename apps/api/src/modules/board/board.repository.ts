@@ -3,9 +3,23 @@ import { prisma } from "@/db/connections";
 import type { Prisma } from "@/db/prisma/generated/client";
 export const boardRepository = {
 	findPaginatedByUserId(userId: string, opts: PaginateOptions) {
+		const { search, ...optionsPage } = opts;
 		return prisma.board
-			.paginate({ where: { ownerId: userId } })
-			.withPages(opts);
+			.paginate({
+				where: search
+					? {
+							ownerId: userId,
+							name: {
+								contains: search,
+								mode: "insensitive",
+							},
+						}
+					: { ownerId: userId },
+				orderBy: {
+					createdAt: "desc",
+				},
+			})
+			.withPages(optionsPage);
 	},
 	findById(id: string) {
 		return prisma.board.findUnique({
