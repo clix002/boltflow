@@ -4,14 +4,15 @@ import type {
 	PaginateOptions,
 } from "@scrum-board/shared/schemas";
 import { HTTPException } from "hono/http-exception";
+import type { TaskFilterParams } from "../task/task.filters";
 import { boardRepository } from "./board.repository";
 
 export const boardService = {
-	listByUser(userId: string, opts: PaginateOptions) {
-		return boardRepository.findPaginatedByUserId(userId, opts);
+	listByUser(userId: string, options: PaginateOptions) {
+		return boardRepository.findPaginatedByUserId({ userId, options });
 	},
-	async getById(id: string, userId: string) {
-		const board = await boardRepository.findById(id);
+	async getById(id: string, userId: string, filters: TaskFilterParams = {}) {
+		const board = await boardRepository.findById({ id, filters });
 		if (!board) throw new HTTPException(404, { message: "Board not found" });
 		if (board.ownerId !== userId)
 			throw new HTTPException(403, { message: "Not authorized" });
@@ -34,7 +35,7 @@ export const boardService = {
 		userId: string,
 		data: z.infer<typeof CreateBoardSchema>,
 	) {
-		const board = await boardRepository.findById(id);
+		const board = await boardRepository.findById({ id });
 		if (!board) throw new HTTPException(404, { message: "Board not found" });
 		if (board.ownerId !== userId)
 			throw new HTTPException(403, { message: "Not authorized" });
@@ -43,7 +44,7 @@ export const boardService = {
 	},
 
 	async remove(id: string, userId: string) {
-		const board = await boardRepository.findById(id);
+		const board = await boardRepository.findById({ id });
 		if (!board) throw new HTTPException(404, { message: "Board not found" });
 		if (board.ownerId !== userId)
 			throw new HTTPException(403, { message: "Not authorized" });

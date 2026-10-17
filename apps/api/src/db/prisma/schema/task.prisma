@@ -4,8 +4,7 @@ model Task {
   description String?
   order       Int
 
-  assigneeId String?
-  assignee   User?   @relation("UserTasks", fields: [assigneeId], references: [id], onDelete: SetNull)
+  assignees  User[]  @relation("TaskAssignees")
 
   columnId String
   column   Column @relation("ColumnTasks", fields: [columnId], references: [id], onDelete: Cascade)

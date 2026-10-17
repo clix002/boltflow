@@ -6,6 +6,7 @@
 		"check-types": "tsc --noEmit",
 		"lint": "biome check src/",
 		"prisma:generate": "bun run --env-file=.env prisma generate",
+		"prisma:migrate": "bun run --env-file=.env prisma migrate dev",
 		"prisma:studio": "bun run --env-file=.env prisma studio"
 	},
 	"dependencies": {

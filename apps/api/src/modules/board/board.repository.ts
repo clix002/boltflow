@@ -1,9 +1,23 @@
 import type { PaginateOptions } from "@scrum-board/shared/schemas";
 import { prisma } from "@/db/connections";
 import type { Prisma } from "@/db/prisma/generated/client";
+import {
+	buildTaskWhere,
+	type TaskFilterParams,
+} from "@/modules/task/task.filters";
+
+type findPaginatedByUserIdOptions = {
+	userId: string;
+	options: PaginateOptions;
+};
+
+type findByIdOptions = {
+	id?: string;
+	filters?: TaskFilterParams;
+};
 export const boardRepository = {
-	findPaginatedByUserId(userId: string, opts: PaginateOptions) {
-		const { search, ...optionsPage } = opts;
+	findPaginatedByUserId({ userId, options }: findPaginatedByUserIdOptions) {
+		const { search, ...optionsPage } = options;
 		return prisma.board
 			.paginate({
 				where: search
@@ -21,9 +35,29 @@ export const boardRepository = {
 			})
 			.withPages(optionsPage);
 	},
-	findById(id: string) {
+	findById({ id, filters = {} }: findByIdOptions) {
 		return prisma.board.findUnique({
 			where: { id },
+			include: {
+				columns: {
+					orderBy: { order: "asc" },
+					include: {
+						tasks: {
+							where: buildTaskWhere(filters),
+							orderBy: { order: "asc" },
+							include: {
+								assignees: {
+									select: {
+										id: true,
+										name: true,
+										avatarUrl: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		});
 	},
 	create(data: Prisma.BoardCreateInput) {

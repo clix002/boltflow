@@ -30,8 +30,9 @@ export const getByIdHandler: RouteHandler<
 > = async (c) => {
 	const userId = c.get("jwtPayload").id;
 	const id = c.req.param("id");
+	const query = c.req.valid("query");
 
-	const board = await boardService.getById(id, userId);
+	const board = await boardService.getById(id, userId, query);
 	return c.json(board, 200);
 };
 

@@ -1,4 +1,5 @@
 export {
+	BoardDetailResponseSchema,
 	BoardSchema,
 	CreateBoardSchema,
 	UpdateBoardSchema,

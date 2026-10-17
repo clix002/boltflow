@@ -5,6 +5,7 @@ import { ProtectedRoute } from "@/components/protected-route";
 import { BoardHeader } from "@/feature/board/components/board/board-header";
 import { BoardSidebar } from "@/feature/board/components/board/board-sidebar";
 import { BoardSidebarHeader } from "@/feature/board/components/board/board-sidebar-header";
+import { BoardDetailHeader } from "@/feature/board/components/board-detail/board-detail-header";
 import { BoardDetailSidebar } from "@/feature/board/components/board-detail/board-detail-sidebar";
 import { BoardDetailSidebarHeader } from "@/feature/board/components/board-detail/board-detail-sidebar-header";
 import {
@@ -57,6 +58,7 @@ export const routes = createBrowserRouter([
 				handle: {
 					sidebar: BoardDetailSidebar,
 					sidebarHeader: BoardDetailSidebarHeader,
+					headerContent: BoardDetailHeader,
 				},
 			},
 		],

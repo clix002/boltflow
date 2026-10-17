@@ -1,5 +1,6 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import {
+	BoardDetailResponseSchema,
 	BoardSchema,
 	CreateBoardSchema,
 	paginatedResponseOf,
@@ -13,6 +14,10 @@ const ParamsSchema = z.object({
 			in: "path",
 		},
 	}),
+});
+
+const BoardDetailQuerySchema = z.object({
+	search: z.string().optional(),
 });
 
 export const listBoardsRoute = createRoute({
@@ -37,13 +42,14 @@ export const getBoardByIdRoute = createRoute({
 	path: "/{id}",
 	request: {
 		params: ParamsSchema,
+		query: BoardDetailQuerySchema,
 	},
 	responses: {
 		200: {
 			description: "Board details for the authenticated user",
 			content: {
 				"application/json": {
-					schema: BoardSchema,
+					schema: BoardDetailResponseSchema,
 				},
 			},
 		},

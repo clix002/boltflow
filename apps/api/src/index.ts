@@ -4,6 +4,9 @@ import { cors } from "hono/cors";
 import authRouter from "./modules/auth";
 import type { AppEnv } from "./modules/auth/types";
 import boardRouter from "./modules/board";
+import columnRouter from "./modules/column";
+import taskRouter from "./modules/task";
+import userRouter from "./modules/user";
 
 const app = new OpenAPIHono<AppEnv>();
 
@@ -19,6 +22,9 @@ app.use(
 
 app.route("/auth", authRouter);
 app.route("/boards", boardRouter);
+app.route("/tasks", taskRouter);
+app.route("/users", userRouter);
+app.route("/columns", columnRouter);
 
 app.doc("/openapi.json", {
 	openapi: "3.0.0",
