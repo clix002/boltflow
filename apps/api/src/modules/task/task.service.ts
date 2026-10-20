@@ -2,6 +2,7 @@ import type { z } from "@hono/zod-openapi";
 import type { CreateTaskSchema } from "@scrum-board/shared/schemas";
 import { HTTPException } from "hono/http-exception";
 import { prisma } from "@/db/connections";
+import { Priority } from "@/db/prisma/generated/client";
 import { taskRepository } from "./task.repository";
 
 export const taskService = {
@@ -34,6 +35,7 @@ export const taskService = {
 			title: data.title,
 			description: data.description,
 			order,
+			priority: data.priority ?? Priority.MEDIUM,
 			columnId: data.columnId,
 			assignees: {
 				connect: assignees,

@@ -12,6 +12,7 @@
 		"lint": "biome check src/"
 	},
 	"dependencies": {
+		"es-toolkit": "^1.52.0",
 		"zod": "^4.4.3"
 	}
 }

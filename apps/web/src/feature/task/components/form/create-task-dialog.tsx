@@ -1,10 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CreateTaskSchema } from "@scrum-board/shared/schemas";
+import { CreateTaskSchema, PrioritySchema } from "@scrum-board/shared/schemas";
 import { useQueryClient } from "@tanstack/react-query";
 import { isEmpty } from "es-toolkit/compat";
 import { ChevronsUpDown, Loader2 } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
-import type { z } from "zod";
+import { z } from "zod";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,14 +24,24 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useGetBoardQuery } from "@/feature/board/api/use-get-board";
 import { useCreateTaskMutation } from "@/feature/task/api/use-create-task";
 import { useGetUsersQuery } from "@/feature/user/api/use-get-users";
+
+import type { Maybe } from "@/lib/utils";
 
 type CreateTaskDialogProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	columnId: string | null;
+	columnId?: Maybe<string>;
 	boardId: string;
 };
 
@@ -39,9 +49,13 @@ const FormSchema = CreateTaskSchema.pick({
 	title: true,
 	description: true,
 	assigneeIds: true,
+}).extend({
+	columnId: z.string().min(1, "Please select a column"),
+	priority: PrioritySchema.default(PrioritySchema.enum.MEDIUM),
 });
 
-type FormData = z.infer<typeof FormSchema>;
+type FormInput = z.input<typeof FormSchema>;
+type FormOutput = z.output<typeof FormSchema>;
 
 export const CreateTaskDialog = ({
 	open,
@@ -52,28 +66,39 @@ export const CreateTaskDialog = ({
 	const queryClient = useQueryClient();
 	const { mutate: createTask, isPending } = useCreateTaskMutation();
 	const { data: users, isPending: isLoadingUsers } = useGetUsersQuery();
+	const { data: board } = useGetBoardQuery(boardId);
+	const columns = board?.columns ?? [];
 
-	const form = useForm<FormData>({
+	const form = useForm<FormInput, unknown, FormOutput>({
 		resolver: zodResolver(FormSchema),
 		defaultValues: {
 			title: "",
 			description: "",
 			assigneeIds: [],
+			columnId: columnId ?? "",
+			priority: PrioritySchema.enum.MEDIUM,
 		},
 	});
 
-	const onSubmit = (data: FormData) => {
-		if (!columnId) return;
+	const onSubmit = (data: FormOutput) => {
+		const targetColumnId = columnId || data.columnId;
+		if (!targetColumnId) return;
 
 		createTask(
 			{
 				...data,
-				columnId,
+				columnId: targetColumnId,
 			},
 			{
 				onSuccess: () => {
 					queryClient.invalidateQueries({ queryKey: ["board", boardId] });
-					form.reset();
+					form.reset({
+						title: "",
+						description: "",
+						assigneeIds: [],
+						columnId: columnId ?? "",
+						priority: PrioritySchema.enum.MEDIUM,
+					});
 					onOpenChange(false);
 				},
 			},
@@ -85,15 +110,47 @@ export const CreateTaskDialog = ({
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>Create Task</DialogTitle>
-					<DialogDescription>
-						Add a new task to your board column.
-					</DialogDescription>
+					<DialogDescription>Add a new task to your board.</DialogDescription>
 				</DialogHeader>
 
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
 					className="mt-4 flex flex-col gap-4"
 				>
+					{!columnId && !isEmpty(columns) && (
+						<Controller
+							name="columnId"
+							control={form.control}
+							render={({ field, fieldState }) => (
+								<Field>
+									<FieldLabel htmlFor={field.name}>Column</FieldLabel>
+									<Select value={field.value} onValueChange={field.onChange}>
+										<SelectTrigger
+											id={field.name}
+											className="w-full cursor-pointer"
+										>
+											<SelectValue placeholder="Select a column" />
+										</SelectTrigger>
+										<SelectContent>
+											{columns.map((col) => (
+												<SelectItem
+													key={col.id}
+													value={col.id}
+													className="cursor-pointer"
+												>
+													{col.name}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+									{fieldState.error && (
+										<FieldError errors={[fieldState.error]} />
+									)}
+								</Field>
+							)}
+						/>
+					)}
+
 					<Controller
 						name="title"
 						control={form.control}
@@ -129,6 +186,37 @@ export const CreateTaskDialog = ({
 							</Field>
 						)}
 					/>
+
+					<Controller
+						name="priority"
+						control={form.control}
+						render={({ field, fieldState }) => (
+							<Field>
+								<FieldLabel htmlFor={field.name}>Priority</FieldLabel>
+								<Select value={field.value} onValueChange={field.onChange}>
+									<SelectTrigger
+										id={field.name}
+										className="w-full cursor-pointer"
+									>
+										<SelectValue placeholder="Select priority" />
+									</SelectTrigger>
+									<SelectContent>
+										{PrioritySchema.options.map((priority) => (
+											<SelectItem
+												key={priority}
+												value={priority}
+												className="cursor-pointer"
+											>
+												{priority.charAt(0) + priority.slice(1).toLowerCase()}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+								{fieldState.error && <FieldError errors={[fieldState.error]} />}
+							</Field>
+						)}
+					/>
+
 					<Controller
 						name="assigneeIds"
 						control={form.control}
@@ -219,6 +307,7 @@ export const CreateTaskDialog = ({
 							);
 						}}
 					/>
+
 					<Button type="submit" disabled={isPending} className="cursor-pointer">
 						Create Task
 					</Button>

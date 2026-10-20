@@ -1,11 +1,15 @@
 import { z } from "zod";
 import { ColumnSchema } from "../column";
 
+export const PrioritySchema = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);
+export type Priority = z.infer<typeof PrioritySchema>;
+
 export const TaskSchema = z.object({
 	id: z.string(),
 	title: z.string(),
 	description: z.string().nullable().optional(),
 	order: z.number(),
+	priority: PrioritySchema,
 	columnId: z.string(),
 	createdAt: z.string(),
 	updatedAt: z.string(),
@@ -21,6 +25,7 @@ export const CreateTaskSchema = z.object({
 	columnId: z.string(),
 	assigneeIds: z.array(z.string()).optional(),
 	order: z.number().optional(),
+	priority: PrioritySchema.optional(),
 });
 
 export const UpdateTaskSchema = z.object({
@@ -29,6 +34,7 @@ export const UpdateTaskSchema = z.object({
 	columnId: z.string().optional(),
 	assigneeIds: z.array(z.string()).optional(),
 	order: z.number().optional(),
+	priority: PrioritySchema.optional(),
 });
 
 export const AssigneeSchema = z.object({

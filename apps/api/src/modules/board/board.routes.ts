@@ -2,6 +2,7 @@ import { createRoute, z } from "@hono/zod-openapi";
 import {
 	BoardDetailResponseSchema,
 	BoardSchema,
+	CommaSeparatedArray,
 	CreateBoardSchema,
 	paginatedResponseOf,
 	UpdateBoardSchema,
@@ -18,6 +19,7 @@ const ParamsSchema = z.object({
 
 const BoardDetailQuerySchema = z.object({
 	search: z.string().optional(),
+	assigneeIds: CommaSeparatedArray,
 });
 
 export const listBoardsRoute = createRoute({

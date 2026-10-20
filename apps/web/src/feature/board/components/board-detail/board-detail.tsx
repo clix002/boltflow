@@ -1,5 +1,6 @@
 import type { ColumnWithTasksSchema } from "@scrum-board/shared/schemas";
 import { useQueryClient } from "@tanstack/react-query";
+import { isEmpty } from "es-toolkit/compat";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useParams, useSearchParams } from "react-router";
@@ -13,7 +14,10 @@ import { CreateColumnDialog } from "@/feature/column/components/form/create-colu
 import { UpdateColumnDialog } from "@/feature/column/components/form/update-column-dialog";
 import { CreateTaskDialog } from "@/feature/task/components/form/create-task-dialog";
 import { useConfirm } from "@/hooks/confirm-provider";
+import { storage } from "@/lib/storage";
+import { BoardTableView } from "./board-table";
 import { KanbanColumn } from "./kanban-column";
+import { BOARD_VIEW_MODE, type BoardPreferences } from "./types";
 
 export const BoardDetail = () => {
 	const queryClient = useQueryClient();
@@ -64,38 +68,65 @@ export const BoardDetail = () => {
 		);
 	}
 
+	const selectedColumnIds =
+		searchParams.get("columns")?.split(",").filter(Boolean) ?? [];
+
+	const visibleColumns = isEmpty(selectedColumnIds)
+		? board.columns
+		: board.columns.filter((c) => selectedColumnIds.includes(c.id));
+
+	const storageKey = boardId ? `board_preferences_${boardId}` : null;
+	const saved = storageKey
+		? (storage.get<BoardPreferences | null>(storageKey, null) ??
+			storage.get<BoardPreferences | null>(`board_filters_${boardId}`, null))
+		: null;
+
+	const viewMode =
+		searchParams.get("view") ?? saved?.view ?? BOARD_VIEW_MODE.GRID;
+
 	return (
 		<div className="flex flex-1 flex-col overflow-hidden py-4">
-			<div className="flex flex-1 items-start gap-4 overflow-x-auto min-h-0 w-full pb-3 pt-2 custom-scrollbar">
-				{board.columns.map((column) => (
-					<KanbanColumn
-						key={column.id}
-						column={column}
-						onAddTask={(colId) => setActiveColumnId(colId)}
-						onTaskClick={() => () => {}}
-						onEditColumn={(col) => setEditingColumn(col)}
-						onDeleteColumn={handleDeleteColumn}
-					/>
-				))}
+			{viewMode === BOARD_VIEW_MODE.LIST ? (
+				<BoardTableView
+					columns={visibleColumns}
+					onAddTask={(colId) => setActiveColumnId(colId)}
+					onTaskClick={() => {}}
+					onEditColumn={(col) => setEditingColumn(col)}
+					onDeleteColumn={handleDeleteColumn}
+				/>
+			) : (
+				<div className="flex flex-1 items-start gap-4 overflow-x-auto min-h-0 w-full pb-3 pt-2 custom-scrollbar">
+					{visibleColumns.map((column) => (
+						<KanbanColumn
+							key={column.id}
+							column={column}
+							onAddTask={(colId) => setActiveColumnId(colId)}
+							onTaskClick={() => {}}
+							onEditColumn={(col) => setEditingColumn(col)}
+							onDeleteColumn={handleDeleteColumn}
+						/>
+					))}
 
-				<Button
-					variant="outline"
-					className="h-12 w-80 rounded-2xl border-dashed text-muted-foreground cursor-pointer"
-					onClick={() => setIsAddColumnOpen(true)}
-				>
-					<Plus />
-					Add column
-				</Button>
-			</div>
+					<Button
+						variant="outline"
+						className="h-12 w-80 rounded-2xl border-dashed text-muted-foreground cursor-pointer"
+						onClick={() => setIsAddColumnOpen(true)}
+					>
+						<Plus />
+						Add column
+					</Button>
+				</div>
+			)}
 
-			<CreateTaskDialog
-				open={Boolean(activeColumnId)}
-				onOpenChange={(open) => {
-					if (!open) setActiveColumnId(null);
-				}}
-				columnId={activeColumnId}
-				boardId={boardId ?? ""}
-			/>
+			{Boolean(activeColumnId) && (
+				<CreateTaskDialog
+					key={activeColumnId}
+					open={Boolean(activeColumnId)}
+					onOpenChange={(open) => !open && setActiveColumnId(null)}
+					columnId={activeColumnId}
+					boardId={boardId ?? ""}
+				/>
+			)}
 			<CreateColumnDialog
 				open={isAddColumnOpen}
 				onOpenChange={setIsAddColumnOpen}
