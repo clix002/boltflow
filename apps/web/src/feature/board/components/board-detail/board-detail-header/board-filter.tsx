@@ -16,67 +16,31 @@ import { Input } from "@/components/ui/input";
 import { useGetBoardQuery } from "@/feature/board/api/use-get-board";
 import { useBoardPreferences } from "@/feature/board/components/board-detail/use-board-preferences";
 import { useGetUsersQuery } from "@/feature/user/api/use-get-users";
-import { useUpdateSearchParams } from "@/hooks/use-update-search-params";
 import { cn } from "@/lib/utils";
 
 export const BoardFilter = () => {
 	const { boardId } = useParams<{ boardId: string }>();
-	const updateSearchParams = useUpdateSearchParams();
 	const { data: board } = useGetBoardQuery(boardId);
 	const { data: users } = useGetUsersQuery();
 
 	const [userSearch, setUserSearch] = useState("");
 
-	const { selectedColumnIds, selectedUserIds, isModified, savePreferences } =
-		useBoardPreferences();
+	const {
+		selectedColumnIds,
+		selectedUserIds,
+		isModified,
+		toggleColumn,
+		toggleUser,
+		clearColumns,
+		clearUsers,
+		clearAll,
+		savePreferences,
+	} = useBoardPreferences();
 
 	const columns = board?.columns ?? [];
 
 	const totalActiveFilters = selectedColumnIds.length + selectedUserIds.length;
 	const hasActiveFilters = totalActiveFilters > 0;
-
-	const toggleColumn = (columnId: string) => {
-		const next = selectedColumnIds.includes(columnId)
-			? selectedColumnIds.filter((id) => id !== columnId)
-			: [...selectedColumnIds, columnId];
-
-		updateSearchParams({
-			columns: isEmpty(next) ? null : next.join(","),
-		});
-	};
-
-	const toggleUser = (userId: string) => {
-		const next = selectedUserIds.includes(userId)
-			? selectedUserIds.filter((id) => id !== userId)
-			: [...selectedUserIds, userId];
-
-		updateSearchParams({
-			assigneeIds: isEmpty(next) ? null : next.join(","),
-		});
-	};
-
-	const clearColumns = () => {
-		updateSearchParams({
-			columns: null,
-		});
-	};
-
-	const clearUsers = () => {
-		updateSearchParams({
-			assigneeIds: null,
-		});
-	};
-
-	const clearAll = () => {
-		updateSearchParams({
-			columns: null,
-			assigneeIds: null,
-		});
-	};
-
-	const saveFilters = () => {
-		savePreferences();
-	};
 
 	const filteredUsers =
 		users?.filter((u) =>
@@ -123,7 +87,7 @@ export const BoardFilter = () => {
 						{isModified && (
 							<button
 								type="button"
-								onClick={saveFilters}
+								onClick={savePreferences}
 								className="inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 transition-colors cursor-pointer"
 								title="Save current filters as default"
 							>

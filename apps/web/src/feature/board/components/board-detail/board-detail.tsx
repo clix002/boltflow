@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { isEmpty } from "es-toolkit/compat";
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { useParams, useSearchParams } from "react-router";
+import { useParams } from "react-router";
 import type { z } from "zod";
 import { ErrorState } from "@/components/state/error-state";
 import { LoadingState } from "@/components/state/loading-state";
@@ -14,26 +14,31 @@ import { CreateColumnDialog } from "@/feature/column/components/form/create-colu
 import { UpdateColumnDialog } from "@/feature/column/components/form/update-column-dialog";
 import { CreateTaskDialog } from "@/feature/task/components/form/create-task-dialog";
 import { useConfirm } from "@/hooks/confirm-provider";
-import { storage } from "@/lib/storage";
 import { BoardTableView } from "./board-table";
 import { KanbanColumn } from "./kanban-column";
-import { BOARD_VIEW_MODE, type BoardPreferences } from "./types";
+import { BOARD_VIEW_MODE } from "./types";
+import { useBoardPreferences } from "./use-board-preferences";
 
 export const BoardDetail = () => {
 	const queryClient = useQueryClient();
 	const { boardId } = useParams<{ boardId: string }>();
-	const [searchParams] = useSearchParams();
 	const [isAddColumnOpen, setIsAddColumnOpen] = useState(false);
 	const confirm = useConfirm();
 	const { mutate: deleteColumn } = useDeleteColumnMutation();
+
+	const { session, selectedColumnIds, currentView } = useBoardPreferences();
+
 	const {
 		data: board,
 		isPending,
 		isError,
 		refetch,
-	} = useGetBoardQuery(boardId, searchParams);
-	const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
+	} = useGetBoardQuery(boardId, {
+		search: session.search,
+		assigneeIds: session.assigneeIds.join(","),
+	});
 
+	const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
 	const [editingColumn, setEditingColumn] = useState<z.infer<
 		typeof ColumnWithTasksSchema
 	> | null>(null);
@@ -68,25 +73,16 @@ export const BoardDetail = () => {
 		);
 	}
 
-	const selectedColumnIds =
-		searchParams.get("columns")?.split(",").filter(Boolean) ?? [];
-
-	const visibleColumns = isEmpty(selectedColumnIds)
+	const matchingColumns = board.columns.filter((c) =>
+		selectedColumnIds.includes(c.id),
+	);
+	const visibleColumns = isEmpty(matchingColumns)
 		? board.columns
-		: board.columns.filter((c) => selectedColumnIds.includes(c.id));
-
-	const storageKey = boardId ? `board_preferences_${boardId}` : null;
-	const saved = storageKey
-		? (storage.get<BoardPreferences | null>(storageKey, null) ??
-			storage.get<BoardPreferences | null>(`board_filters_${boardId}`, null))
-		: null;
-
-	const viewMode =
-		searchParams.get("view") ?? saved?.view ?? BOARD_VIEW_MODE.GRID;
+		: matchingColumns;
 
 	return (
 		<div className="flex flex-1 flex-col overflow-hidden py-4">
-			{viewMode === BOARD_VIEW_MODE.LIST ? (
+			{currentView === BOARD_VIEW_MODE.LIST ? (
 				<BoardTableView
 					columns={visibleColumns}
 					onAddTask={(colId) => setActiveColumnId(colId)}

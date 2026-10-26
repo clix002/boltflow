@@ -10,6 +10,7 @@ export const userRepository = {
 				avatarUrl: true,
 			},
 			orderBy: { name: "asc" },
+			take: 100,
 		});
 	},
 };

@@ -2,14 +2,10 @@ import { LayoutGrid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BOARD_VIEW_MODE } from "@/feature/board/components/board-detail/types";
 import { useBoardPreferences } from "@/feature/board/components/board-detail/use-board-preferences";
-import { useUpdateSearchParams } from "@/hooks/use-update-search-params";
 import { cn } from "@/lib/utils";
 
 export const ViewModeToggle = () => {
-	const updateSearchParams = useUpdateSearchParams();
-	const { saved, currentView } = useBoardPreferences();
-	const savedView = saved?.view ?? BOARD_VIEW_MODE.GRID;
-	const isViewModified = currentView !== savedView;
+	const { currentView, isViewModified, setView } = useBoardPreferences();
 
 	return (
 		<div
@@ -30,7 +26,7 @@ export const ViewModeToggle = () => {
 						isViewModified &&
 						"text-amber-600 dark:text-amber-400",
 				)}
-				onClick={() => updateSearchParams({ view: BOARD_VIEW_MODE.GRID })}
+				onClick={() => setView(BOARD_VIEW_MODE.GRID)}
 				aria-label="Grid view"
 			>
 				<LayoutGrid className="size-3.5" />
@@ -50,7 +46,7 @@ export const ViewModeToggle = () => {
 						isViewModified &&
 						"text-amber-600 dark:text-amber-400",
 				)}
-				onClick={() => updateSearchParams({ view: BOARD_VIEW_MODE.LIST })}
+				onClick={() => setView(BOARD_VIEW_MODE.LIST)}
 				aria-label="List view"
 			>
 				<List className="size-3.5" />

@@ -35,8 +35,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useGetBoardQuery } from "@/feature/board/api/use-get-board";
 import { useCreateTaskMutation } from "@/feature/task/api/use-create-task";
 import { useGetUsersQuery } from "@/feature/user/api/use-get-users";
-
 import type { Maybe } from "@/lib/utils";
+import { PriorityBadge } from "../priority-badge";
 
 type CreateTaskDialogProps = {
 	open: boolean;
@@ -207,7 +207,7 @@ export const CreateTaskDialog = ({
 												value={priority}
 												className="cursor-pointer"
 											>
-												{priority.charAt(0) + priority.slice(1).toLowerCase()}
+												<PriorityBadge priority={priority} />
 											</SelectItem>
 										))}
 									</SelectContent>

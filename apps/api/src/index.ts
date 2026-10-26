@@ -1,6 +1,7 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { Scalar } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
+import { HTTPException } from "hono/http-exception";
 import authRouter from "./modules/auth";
 import type { AppEnv } from "./modules/auth/types";
 import boardRouter from "./modules/board";
@@ -19,6 +20,20 @@ app.use(
 		credentials: true,
 	}),
 );
+
+app.get("/health", (c) =>
+	c.json({ status: "ok", timestamp: new Date().toISOString() }),
+);
+
+app.onError((err, c) => {
+	if (err instanceof HTTPException) {
+		return c.json({ message: err.message }, err.status);
+	}
+
+	// biome-ignore lint/suspicious/noConsole: global unhandled error logging
+	console.error("Unhandled error:", err);
+	return c.json({ message: "Internal Server Error" }, 500);
+});
 
 app.route("/auth", authRouter);
 app.route("/boards", boardRouter);

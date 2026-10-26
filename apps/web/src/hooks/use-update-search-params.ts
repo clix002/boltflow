@@ -8,11 +8,11 @@ export const useUpdateSearchParams = () => {
 			(prev) => {
 				const next = new URLSearchParams(prev);
 				for (const [key, value] of Object.entries(updates)) {
-					if (value != null && value !== "") {
-						next.set(key, String(value));
-					} else {
+					if (value == null || value === "") {
 						next.delete(key);
+						continue;
 					}
+					next.set(key, String(value));
 				}
 				return next;
 			},

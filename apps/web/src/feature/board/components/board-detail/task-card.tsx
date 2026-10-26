@@ -4,6 +4,7 @@ import { Calendar } from "lucide-react";
 import type { z } from "zod";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
+import { PriorityBadge } from "@/feature/task/components/priority-badge";
 
 type Task = z.infer<typeof TaskWithAssigneesSchema>;
 
@@ -25,7 +26,7 @@ export const TaskCard = ({ task, onClick }: TaskCardProps) => {
 			className="shrink-0 gap-2.5 p-3.5 shadow-sm transition-all hover:bg-accent/40 hover:shadow-md cursor-pointer"
 		>
 			<div className="flex items-center gap-2">
-				<div className="size-2 rounded-full bg-primary/80 shrink-0" />
+				<PriorityBadge priority={task.priority} variant="dot" />
 				<span className="text-sm font-medium leading-tight text-foreground truncate">
 					{task.title}
 				</span>

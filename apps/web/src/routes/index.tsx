@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 import { createBrowserRouter } from "react-router";
 import { AppLayout } from "@/components/layout/app-layout";
 import { ProtectedRoute } from "@/components/protected-route";
+import { RootErrorBoundary } from "@/components/root-error-boundary";
 import { BoardHeader } from "@/feature/board/components/board/board-header";
 import { BoardSidebar } from "@/feature/board/components/board/board-sidebar";
 import { BoardSidebarHeader } from "@/feature/board/components/board/board-sidebar-header";
@@ -30,13 +31,16 @@ export const routes = createBrowserRouter([
 	{
 		path: "/login",
 		Component: () => <LoginPage />,
+		errorElement: <RootErrorBoundary />,
 	},
 	{
 		path: "/register",
 		Component: () => <RegisterPage />,
+		errorElement: <RootErrorBoundary />,
 	},
 	{
 		path: "/",
+		errorElement: <RootErrorBoundary />,
 		Component: () => (
 			<ProtectedRoute>
 				<AppLayout />

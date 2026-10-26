@@ -18,6 +18,7 @@ import { useGetBoardsQuery } from "@/feature/board/api/use-get-boards";
 import { BoardCard } from "@/feature/board/components/atomic/board-card";
 import { BoardsEmpty } from "@/feature/board/components/atomic/boards-empty";
 import { CreateBoardCard } from "@/feature/board/components/atomic/create-biard-card";
+import { useBoardDefaultStore } from "@/feature/board/components/board-detail/use-board-default-store";
 import { CreateBoardDialog } from "@/feature/board/components/form/create-board-dialog";
 import { UpdateBoardDialog } from "@/feature/board/components/form/update-board-dialog";
 import { useConfirm } from "@/hooks/confirm-provider";
@@ -77,6 +78,7 @@ export const BoardList = () => {
 	};
 
 	const handleOpenBoard = (id: string) => () => {
+		useBoardDefaultStore.getState().setInteractedBoard(null);
 		navigate(`/board/${id}`);
 	};
 

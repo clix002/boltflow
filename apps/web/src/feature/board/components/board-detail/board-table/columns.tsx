@@ -4,6 +4,7 @@ import { Calendar, MoreHorizontal } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PriorityBadge } from "@/feature/task/components/priority-badge";
 import type { BoardTableFeatures } from "./table-features";
 import type { TableTaskRow } from "./types";
 
@@ -16,7 +17,7 @@ export const tableColumns = helper.columns([
 			const task = row.original;
 			return (
 				<div className="flex items-center gap-2.5 py-1">
-					<div className="size-2 rounded-full bg-primary/80 shrink-0" />
+					<PriorityBadge priority={task.priority} variant="dot" />
 					<div className="flex flex-col min-w-0">
 						<span className="text-sm font-medium text-foreground truncate">
 							{task.title}
@@ -38,6 +39,13 @@ export const tableColumns = helper.columns([
 				{row.original.columnName}
 			</Badge>
 		),
+	}),
+	helper.accessor("priority", {
+		header: "Priority",
+		cell: ({ row }) => {
+			if (row.original.isEmptyPlaceholder) return null;
+			return <PriorityBadge priority={row.original.priority} />;
+		},
 	}),
 	helper.accessor("assignees", {
 		header: "Assignees",
