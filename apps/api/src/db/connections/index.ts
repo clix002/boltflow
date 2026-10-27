@@ -1,6 +1,7 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import type { PaginateOptions } from "@scrum-board/shared/schemas";
 import { Pool } from "pg";
+import { env } from "@/config/env";
 import {
 	type PaginatedResult,
 	type PaginateQuery,
@@ -13,7 +14,7 @@ import {
 } from "../prisma/generated/client";
 import { MODELS } from "./paginations";
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL! });
+const pool = new Pool({ connectionString: env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const basePrisma = new PrismaClient({ adapter });
 

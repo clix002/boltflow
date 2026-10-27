@@ -1,6 +1,7 @@
 import type { BoardSchema } from "@scrum-board/shared/schemas";
 import { useQueryClient } from "@tanstack/react-query";
 import { range } from "es-toolkit";
+import { isEmpty } from "es-toolkit/compat";
 import { useDeferredValue, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import type { z } from "zod";
@@ -20,7 +21,6 @@ import { CreateBoardCard } from "@/feature/board/components/atomic/create-biard-
 import { CreateBoardDialog } from "@/feature/board/components/form/create-board-dialog";
 import { UpdateBoardDialog } from "@/feature/board/components/form/update-board-dialog";
 import { useConfirm } from "@/hooks/confirm-provider";
-import { isEmpty } from "@/lib/utils";
 
 type Board = z.infer<typeof BoardSchema>;
 

@@ -7,9 +7,11 @@ export const AppLayout = () => {
 	return (
 		<SidebarProvider>
 			<AppSidebar />
-			<SidebarInset className="px-4">
+			<SidebarInset className="px-4 h-svh overflow-hidden flex flex-col">
 				<Header />
-				<Outlet />
+				<main className="flex flex-1 flex-col min-h-0 min-w-0 overflow-hidden">
+					<Outlet />
+				</main>
 			</SidebarInset>
 		</SidebarProvider>
 	);

@@ -5,10 +5,18 @@
 		"build": "bun build src/index.ts --outdir dist --target bun",
 		"check-types": "tsc --noEmit",
 		"lint": "biome check src/",
+		"test": "bun test --env-file=.env src/",
 		"prisma:generate": "bun run --env-file=.env prisma generate",
-		"prisma:studio": "bun run --env-file=.env prisma studio"
+		"prisma:migrate": "bun run --env-file=.env prisma migrate dev",
+		"prisma:seed": "bun run --env-file=.env src/db/prisma/seed.ts",
+		"prisma:studio": "bun run --env-file=.env prisma studio",
+		"postinstall": "bun run --env-file=.env prisma generate"
+	},
+	"prisma": {
+		"seed": "bun run --env-file=.env src/db/prisma/seed.ts"
 	},
 	"dependencies": {
+		"@hono/bun": "^1.0.1",
 		"@hono/zod-openapi": "^1.4.0",
 		"@prisma/adapter-pg": "^7.8.0",
 		"@prisma/client": "^7.8.0",

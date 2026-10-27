@@ -1,7 +1,7 @@
 import type { UserResponseSchema } from "@scrum-board/shared/schemas";
+import type { Maybe } from "@scrum-board/shared/types";
 import type { z } from "zod";
 import { create } from "zustand";
-import type { Maybe } from "@/lib/utils";
 
 type User = z.infer<typeof UserResponseSchema>;
 

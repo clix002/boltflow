@@ -1,14 +1,16 @@
+import { startTransition } from "react";
 import { useSearchParams } from "react-router";
 import { Input } from "@/components/ui/input";
+import { useUpdateSearchParams } from "@/hooks/use-update-search-params";
 
 export const BoardHeader = () => {
-	const [searchParams, setSearchParams] = useSearchParams();
+	const [searchParams] = useSearchParams();
+	const updateSearchParams = useUpdateSearchParams();
 	const search = searchParams.get("q") ?? "";
 
 	const handleSearch = (value: string) => {
-		setSearchParams((prev) => {
-			prev.set("q", value);
-			return prev;
+		startTransition(() => {
+			updateSearchParams({ q: value, page: null });
 		});
 	};
 

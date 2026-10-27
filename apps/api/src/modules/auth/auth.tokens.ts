@@ -1,10 +1,11 @@
 import { randomUUIDv7 } from "bun";
 import { isString } from "es-toolkit/predicate";
-import { jwtVerify, SignJWT } from "jose";
+import { HTTPException } from "hono/http-exception";
+import { errors, jwtVerify, SignJWT } from "jose";
+import { env } from "@/config/env";
 
-const ACCESS_SECRET = () => new TextEncoder().encode(process.env.JWT_SECRET!);
-const REFRESH_SECRET = () =>
-	new TextEncoder().encode(process.env.REFRESH_SECRET!);
+const ACCESS_SECRET = () => new TextEncoder().encode(env.JWT_SECRET);
+const REFRESH_SECRET = () => new TextEncoder().encode(env.REFRESH_SECRET);
 
 const ACCESS_DURATION = "15m";
 const REFRESH_DURATION = "7d";
@@ -26,17 +27,33 @@ export const signRefreshToken = async (userId: string) => {
 };
 
 export const verifyAccessToken = async (token: string): Promise<string> => {
-	const { payload } = await jwtVerify(token, ACCESS_SECRET());
-	if (!isString(payload.id)) {
-		throw new Error("Invalid token payload");
+	try {
+		const { payload } = await jwtVerify(token, ACCESS_SECRET());
+		if (!isString(payload.id)) {
+			throw new HTTPException(401, { message: "Invalid token payload" });
+		}
+		return payload.id;
+	} catch (err) {
+		if (err instanceof HTTPException) throw err;
+		if (err instanceof errors.JOSEError) {
+			throw new HTTPException(401, { message: "Invalid or expired token" });
+		}
+		throw err;
 	}
-	return payload.id;
 };
 
 export const verifyRefreshToken = async (token: string): Promise<string> => {
-	const { payload } = await jwtVerify(token, REFRESH_SECRET());
-	if (!isString(payload.id)) {
-		throw new Error("Invalid token payload");
+	try {
+		const { payload } = await jwtVerify(token, REFRESH_SECRET());
+		if (!isString(payload.id)) {
+			throw new HTTPException(401, { message: "Invalid token payload" });
+		}
+		return payload.id;
+	} catch (err) {
+		if (err instanceof HTTPException) throw err;
+		if (err instanceof errors.JOSEError) {
+			throw new HTTPException(401, { message: "Invalid or expired token" });
+		}
+		throw err;
 	}
-	return payload.id;
 };

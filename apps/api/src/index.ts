@@ -1,24 +1,46 @@
-import { OpenAPIHono } from "@hono/zod-openapi";
 import { Scalar } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
+import { HTTPException } from "hono/http-exception";
+import { env } from "./config/env";
+import { createRouter } from "./lib/openapi";
 import authRouter from "./modules/auth";
 import type { AppEnv } from "./modules/auth/types";
 import boardRouter from "./modules/board";
+import columnRouter from "./modules/column";
+import taskRouter from "./modules/task";
+import userRouter from "./modules/user";
 
-const app = new OpenAPIHono<AppEnv>();
+const app = createRouter<AppEnv>();
 
 app.use(
 	"*",
 	cors({
-		origin: process.env.FRONTEND_URL || "http://localhost:5173",
+		origin: env.FRONTEND_URL,
 		allowHeaders: ["Content-Type", "Authorization"],
 		allowMethods: ["POST", "GET", "OPTIONS", "PUT", "DELETE"],
 		credentials: true,
 	}),
 );
 
+app.get("/health", (c) =>
+	c.json({ status: "ok", timestamp: new Date().toISOString() }),
+);
+
+app.onError((err, c) => {
+	if (err instanceof HTTPException) {
+		return c.json({ message: err.message }, err.status);
+	}
+
+	// biome-ignore lint/suspicious/noConsole: global unhandled error logging
+	console.error("Unhandled error:", err);
+	return c.json({ message: "Internal Server Error" }, 500);
+});
+
 app.route("/auth", authRouter);
 app.route("/boards", boardRouter);
+app.route("/tasks", taskRouter);
+app.route("/users", userRouter);
+app.route("/columns", columnRouter);
 
 app.doc("/openapi.json", {
 	openapi: "3.0.0",

@@ -121,10 +121,37 @@
 	* {
 		@apply border-border outline-ring/50;
 	}
+
 	body {
 		@apply bg-background text-foreground;
 	}
+
 	html {
 		@apply font-sans;
+	}
+}
+
+@utility custom-scrollbar {
+	scrollbar-width: thin;
+	scrollbar-color: var(--border) transparent;
+
+	&::-webkit-scrollbar {
+		width: 6px;
+		/* Grosor del scroll vertical (eje Y) */
+		height: 6px;
+		/* Grosor del scroll horizontal (eje X) */
+	}
+
+	&::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	&::-webkit-scrollbar-thumb {
+		background-color: var(--border);
+		border-radius: 9999px;
+	}
+
+	&::-webkit-scrollbar-thumb:hover {
+		background-color: var(--muted-foreground);
 	}
 }

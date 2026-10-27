@@ -9,4 +9,6 @@ model Column {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([boardId])
 }
