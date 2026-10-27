@@ -2,7 +2,7 @@ import type { ColumnWithTasksSchema } from "@scrum-board/shared/schemas";
 import { useQueryClient } from "@tanstack/react-query";
 import { isEmpty } from "es-toolkit/compat";
 import { Plus } from "lucide-react";
-import { useDeferredValue, useState } from "react";
+import { useState } from "react";
 import { useParams } from "react-router";
 import type { z } from "zod";
 import { ErrorState } from "@/components/state/error-state";
@@ -27,7 +27,6 @@ export const BoardDetail = () => {
 	const { mutate: deleteColumn } = useDeleteColumnMutation();
 
 	const { session, selectedColumnIds, currentView } = useBoardPreferences();
-	const deferredSearch = useDeferredValue(session.search);
 
 	const {
 		data: board,
@@ -35,7 +34,7 @@ export const BoardDetail = () => {
 		isError,
 		refetch,
 	} = useGetBoardQuery(boardId, {
-		search: deferredSearch,
+		search: session.search,
 		assigneeIds: session.assigneeIds.join(","),
 	});
 
@@ -85,6 +84,7 @@ export const BoardDetail = () => {
 		<div className="flex flex-1 flex-col overflow-hidden py-4">
 			{currentView === BOARD_VIEW_MODE.LIST ? (
 				<BoardTableView
+					key={boardId}
 					columns={visibleColumns}
 					onAddTask={(colId) => setActiveColumnId(colId)}
 					onTaskClick={() => {}}
@@ -104,14 +104,16 @@ export const BoardDetail = () => {
 						/>
 					))}
 
-					<Button
-						variant="outline"
-						className="h-12 w-80 rounded-2xl border-dashed text-muted-foreground cursor-pointer"
-						onClick={() => setIsAddColumnOpen(true)}
-					>
-						<Plus />
-						Add column
-					</Button>
+					{board.columns.length === 0 && (
+						<Button
+							variant="outline"
+							className="h-12 w-80 rounded-2xl border-dashed text-muted-foreground cursor-pointer"
+							onClick={() => setIsAddColumnOpen(true)}
+						>
+							<Plus />
+							Add column
+						</Button>
+					)}
 				</div>
 			)}
 

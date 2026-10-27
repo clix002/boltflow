@@ -29,7 +29,7 @@ export const signRefreshToken = async (userId: string) => {
 export const verifyAccessToken = async (token: string): Promise<string> => {
 	try {
 		const { payload } = await jwtVerify(token, ACCESS_SECRET());
-		if (!isString(payload.id)) {
+		if (!isString(payload.id) || payload.id.length === 0) {
 			throw new HTTPException(401, { message: "Invalid token payload" });
 		}
 		return payload.id;
@@ -45,7 +45,7 @@ export const verifyAccessToken = async (token: string): Promise<string> => {
 export const verifyRefreshToken = async (token: string): Promise<string> => {
 	try {
 		const { payload } = await jwtVerify(token, REFRESH_SECRET());
-		if (!isString(payload.id)) {
+		if (!isString(payload.id) || payload.id.length === 0) {
 			throw new HTTPException(401, { message: "Invalid token payload" });
 		}
 		return payload.id;

@@ -64,6 +64,7 @@ export const BoardTable = ({
 			expanded,
 		},
 		onExpandedChange: setExpanded,
+		autoResetExpanded: false,
 		groupedColumnMode: false,
 	});
 

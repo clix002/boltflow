@@ -40,4 +40,22 @@ describe("auth.tokens", () => {
 			expect((err as HTTPException).status).toBe(401);
 		}
 	});
+
+	it("access secret can't verify a refresh token", async () => {
+		const token = await signRefreshToken("user-123");
+		await expect(verifyAccessToken(token)).rejects.toMatchObject({
+			status: 401,
+		});
+	});
+
+	it("rejects tokens with an empty user id", async () => {
+		const accessToken = await signAccessToken("");
+		const refreshToken = await signRefreshToken("");
+		await expect(verifyAccessToken(accessToken)).rejects.toMatchObject({
+			status: 401,
+		});
+		await expect(verifyRefreshToken(refreshToken)).rejects.toMatchObject({
+			status: 401,
+		});
+	});
 });

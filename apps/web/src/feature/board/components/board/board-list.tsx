@@ -2,7 +2,7 @@ import type { BoardSchema } from "@scrum-board/shared/schemas";
 import { useQueryClient } from "@tanstack/react-query";
 import { range } from "es-toolkit";
 import { isEmpty } from "es-toolkit/compat";
-import { useDeferredValue, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import type { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -24,20 +24,24 @@ import { useConfirm } from "@/hooks/confirm-provider";
 
 type Board = z.infer<typeof BoardSchema>;
 
+const BOARDS_PER_PAGE = 8;
+
 export const BoardList = () => {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
 	const [searchParams, setSearchParams] = useSearchParams();
 	const search = searchParams.get("q") ?? "";
-	const page = Number(searchParams.get("page")) || 1;
-	const deferredSearch = useDeferredValue(search);
+	const rawPage = Number(searchParams.get("page"));
+	const page =
+		Number.isFinite(rawPage) && rawPage >= 1 ? Math.floor(rawPage) : 1;
 
 	const confirm = useConfirm();
 	const [open, setOpen] = useState(false);
 	const [editingBoard, setEditingBoard] = useState<Board | null>(null);
 	const { data, isPending, isError, refetch } = useGetBoardsQuery({
 		page,
-		search: deferredSearch,
+		limit: BOARDS_PER_PAGE,
+		search,
 	});
 	const { mutate: deleteBoard } = UseDeleteBoardMutation();
 
@@ -71,8 +75,9 @@ export const BoardList = () => {
 
 	const goToPage = (newPage: number) => {
 		setSearchParams((prev) => {
-			prev.set("page", String(newPage));
-			return prev;
+			const next = new URLSearchParams(prev);
+			next.set("page", String(newPage));
+			return next;
 		});
 	};
 
@@ -82,8 +87,8 @@ export const BoardList = () => {
 
 	if (isPending) {
 		return (
-			<div className="grid gap-x-8 gap-y-6 md:grid-cols-3">
-				{range(6).map((i) => (
+			<div className="grid gap-x-8 gap-y-6 sm:grid-cols-2 xl:grid-cols-3">
+				{range(BOARDS_PER_PAGE + 1).map((i) => (
 					<BoardCard.Skeleton key={i} />
 				))}
 			</div>
@@ -102,7 +107,7 @@ export const BoardList = () => {
 	return (
 		<div className="flex flex-1 flex-col">
 			<CreateBoardDialog open={open} onOpenChange={setOpen} />
-			<div className="grid flex-1 content-start gap-x-8 gap-y-6 md:grid-cols-3">
+			<div className="grid flex-1 content-start gap-x-8 gap-y-6 sm:grid-cols-2 xl:grid-cols-3">
 				<CreateBoardCard onclick={handleCreateBoard} />
 				{isEmpty(data?.docs) && <BoardsEmpty onCreate={handleCreateBoard} />}
 				{data?.docs.map((board) => (

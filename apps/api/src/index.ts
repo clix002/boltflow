@@ -59,4 +59,8 @@ app.get(
 	}),
 );
 
-export default app;
+export default {
+	fetch(req: Request, server: Bun.Server<undefined>) {
+		return app.fetch(req, server);
+	},
+};

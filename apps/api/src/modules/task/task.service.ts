@@ -2,7 +2,7 @@ import type { z } from "@hono/zod-openapi";
 import type { CreateTaskSchema } from "@scrum-board/shared/schemas";
 import { HTTPException } from "hono/http-exception";
 import { prisma } from "@/db/connections";
-import { Priority } from "@/db/prisma/generated/client";
+import { Priority, Prisma } from "@/db/prisma/generated/client";
 import { taskRepository } from "./task.repository";
 
 export const taskService = {
@@ -27,12 +27,13 @@ export const taskService = {
 			throw new HTTPException(403, { message: "Not authorized" });
 		}
 
-		if (data.assigneeIds?.length) {
+		const assigneeIds = [...new Set(data.assigneeIds ?? [])];
+		if (assigneeIds.length) {
 			const existingUsers = await prisma.user.findMany({
-				where: { id: { in: data.assigneeIds } },
+				where: { id: { in: assigneeIds } },
 				select: { id: true },
 			});
-			if (existingUsers.length !== data.assigneeIds.length) {
+			if (existingUsers.length !== assigneeIds.length) {
 				throw new HTTPException(400, {
 					message: "One or more assignees do not exist",
 				});
@@ -41,17 +42,29 @@ export const taskService = {
 
 		const currentCount = await taskRepository.countByColumnId(data.columnId);
 		const order = data.order ?? currentCount;
-		const assignees = data.assigneeIds?.map((id) => ({ id })) ?? [];
+		const assignees = assigneeIds.map((id) => ({ id }));
 
-		return taskRepository.create({
-			title: data.title,
-			description: data.description,
-			order,
-			priority: data.priority ?? Priority.MEDIUM,
-			columnId: data.columnId,
-			assignees: {
-				connect: assignees,
-			},
-		});
+		try {
+			return await taskRepository.create({
+				title: data.title,
+				description: data.description,
+				order,
+				priority: data.priority ?? Priority.MEDIUM,
+				columnId: data.columnId,
+				assignees: {
+					connect: assignees,
+				},
+			});
+		} catch (err) {
+			if (
+				err instanceof Prisma.PrismaClientKnownRequestError &&
+				(err.code === "P2003" || err.code === "P2025")
+			) {
+				throw new HTTPException(400, {
+					message: "Column or assignee no longer exists",
+				});
+			}
+			throw err;
+		}
 	},
 };

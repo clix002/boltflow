@@ -1,8 +1,8 @@
 import { getConnInfo } from "@hono/bun";
-import type { Maybe } from "@scrum-board/shared/types";
 import { isNil, last } from "es-toolkit";
 import type { Context, Next } from "hono";
 import { HTTPException } from "hono/http-exception";
+import { env } from "@/config/env";
 
 type Bucket = {
 	timestamps: number[];
@@ -13,30 +13,23 @@ const buckets = new Map<string, Bucket>();
 const WINDOW_MS = 10_000;
 const MAX_REQUESTS = 5;
 const MAX_BUCKET_CAPACITY = 5_000;
+let lastSweep = 0;
 
-const getSocketIp = (c: Context): Maybe<string> => {
-	try {
-		const address = getConnInfo(c)?.remote?.address;
-		return !isNil(address) ? address : null;
-	} catch {
-		return null;
+const getSocketIp = (c: Context): string => {
+	const address = getConnInfo(c).remote.address;
+	if (!address) {
+		throw new HTTPException(503, { message: "Client address unavailable" });
 	}
+	return address;
 };
 
 const getClientKey = (c: Context): string => {
-	const realIp = c.req.header("cf-connecting-ip") ?? c.req.header("x-real-ip");
-	if (!isNil(realIp) && realIp.trim().length > 0) {
-		return realIp.trim();
-	}
-	const forwarded = c.req.header("x-forwarded-for");
-	if (!isNil(forwarded) && forwarded.trim().length > 0) {
-		return forwarded.split(",")[0].trim();
-	}
 	const socketIp = getSocketIp(c);
-	if (!isNil(socketIp)) {
-		return socketIp;
-	}
-	return "unknown";
+	if (!env.TRUST_PROXY) return socketIp;
+
+	const forwarded = c.req.header("x-forwarded-for");
+	// The trusted proxy appends the rightmost address; earlier hops can be client supplied.
+	return forwarded?.split(",").at(-1)?.trim() || socketIp;
 };
 
 const cleanupExpiredTimestamps = (
@@ -56,12 +49,20 @@ const sweepExpiredBuckets = (now: number) => {
 export const rateLimit = async (c: Context, next: Next) => {
 	const key = getClientKey(c);
 	const now = Date.now();
+	const bucket = buckets.get(key);
 
-	if (buckets.size > MAX_BUCKET_CAPACITY) {
-		sweepExpiredBuckets(now);
+	if (!bucket && buckets.size >= MAX_BUCKET_CAPACITY) {
+		if (now - lastSweep >= WINDOW_MS) {
+			sweepExpiredBuckets(now);
+			lastSweep = now;
+		}
+		while (buckets.size >= MAX_BUCKET_CAPACITY) {
+			const oldestKey = buckets.keys().next().value;
+			if (oldestKey === undefined) break;
+			buckets.delete(oldestKey);
+		}
 	}
 
-	const bucket = buckets.get(key);
 	const timestamps = bucket
 		? cleanupExpiredTimestamps(bucket.timestamps, now)
 		: [];
@@ -75,9 +76,13 @@ export const rateLimit = async (c: Context, next: Next) => {
 	}
 
 	timestamps.push(now);
+	buckets.delete(key);
 	buckets.set(key, { timestamps });
 
 	await next();
 };
 
-export const resetRateLimits = () => buckets.clear();
+export const resetRateLimits = () => {
+	buckets.clear();
+	lastSweep = 0;
+};

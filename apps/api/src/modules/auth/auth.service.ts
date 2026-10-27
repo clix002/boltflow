@@ -1,5 +1,6 @@
 import type { z } from "@hono/zod-openapi";
 import type { LoginSchema, RegisterSchema } from "@scrum-board/shared/schemas";
+import { omit } from "es-toolkit";
 import { HTTPException } from "hono/http-exception";
 import { authRepository } from "./auth.repository";
 import {
@@ -54,7 +55,7 @@ export const loginUser = async (data: z.infer<typeof LoginSchema>) => {
 	const refreshToken = await signRefreshToken(user.id);
 
 	return {
-		user,
+		user: omit(user, ["password"]),
 		accessToken,
 		refreshToken,
 	};

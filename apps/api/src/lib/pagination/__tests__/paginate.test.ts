@@ -95,11 +95,11 @@ describe("paginate utility", () => {
 			count: async () => 0,
 		};
 
-		for (const page of [1e306, 1e307, Number.NaN, 0, -3]) {
+		for (const page of [Number.NaN, 0, -3]) {
 			const res = await paginate(mockModel, {}, { page });
 			expect(Number.isFinite(res.info.page)).toBe(true);
 			expect(res.info.page).toBeGreaterThanOrEqual(1);
-			expect(res.info.page).toBeLessThanOrEqual(100_000);
+			expect(res.info.page).toBeLessThanOrEqual(10_001);
 		}
 
 		for (const limit of [0, Number.NaN, 1000, -1]) {
@@ -111,5 +111,24 @@ describe("paginate utility", () => {
 
 		const emptyLimit = await paginate(mockModel, {}, { limit: undefined });
 		expect(emptyLimit.info.limit).toBe(17);
+	});
+
+	it("rejects deep offsets before querying the model", async () => {
+		let queried = false;
+		const mockModel: PaginatableModel<{ id: string }, unknown, unknown> = {
+			findMany: async () => {
+				queried = true;
+				return [];
+			},
+			count: async () => {
+				queried = true;
+				return 0;
+			},
+		};
+
+		await expect(
+			paginate(mockModel, {}, { page: 1e306, limit: 100 }),
+		).rejects.toMatchObject({ status: 400 });
+		expect(queried).toBe(false);
 	});
 });

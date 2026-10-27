@@ -24,5 +24,7 @@ export const useGetBoardQuery = (
 		queryKey: ["board", id, params],
 		queryFn: () => api.get<BoardDetail>(`/boards/${id}${queryString}`),
 		enabled: Boolean(id),
+		placeholderData: (previous, previousQuery) =>
+			previousQuery?.queryKey[1] === id ? previous : undefined,
 	});
 };

@@ -7,13 +7,18 @@ import { parseQueryParams } from "@/lib/query-params";
 type BoardsQueryParams = {
 	search?: string;
 	page?: number;
+	limit?: number;
 };
 
 const BoardResponseSchema = paginatedResponseOf(BoardSchema);
 type boardResponse = z.infer<typeof BoardResponseSchema>;
 
 export const useGetBoardsQuery = (filters: BoardsQueryParams = {}) => {
-	const { params, queryString } = parseQueryParams(filters, ["page", "search"]);
+	const { params, queryString } = parseQueryParams(filters, [
+		"page",
+		"limit",
+		"search",
+	]);
 
 	return useQuery({
 		queryKey: ["boards", params],

@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useUpdateSearchParams } from "@/hooks/use-update-search-params";
 import {
 	type BoardDefault,
+	BoardDefaultSchema,
 	type BoardSession,
 	BoardSessionSchema,
 	hasAnyLayoutParams,
@@ -49,11 +50,21 @@ export const useBoardPreferences = () => {
 	const hasDefault = saved !== null;
 	const isViewModified = session.view !== baseline.view;
 	const isDirty = Boolean(boardId) && !isEqual(sessionPrefs, baseline);
+	const clearLayoutOverride = () =>
+		updateSearchParams({
+			columns: null,
+			assigneeIds: null,
+			view: null,
+			layout: null,
+		});
 
 	const updateSession = (partial: Partial<BoardDefault>) => {
-		updateSearchParams(
-			sessionToParamUpdates({ ...sessionPrefs, ...partial }, true),
-		);
+		const next = BoardDefaultSchema.parse({ ...sessionPrefs, ...partial });
+		if (isEqual(next, baseline)) {
+			clearLayoutOverride();
+			return;
+		}
+		updateSearchParams(sessionToParamUpdates(next, true));
 	};
 
 	const toggleColumn = (columnId: string) =>
@@ -73,6 +84,7 @@ export const useBoardPreferences = () => {
 	const savePreferences = () => {
 		if (!boardId) return;
 		setDefault(boardId, sessionPrefs);
+		clearLayoutOverride();
 		toast.success("Saved as default view");
 	};
 
@@ -82,9 +94,7 @@ export const useBoardPreferences = () => {
 		toast.success("Default view forgotten");
 	};
 
-	const resetToDefault = () => {
-		updateSearchParams(sessionToParamUpdates(baseline, false));
-	};
+	const resetToDefault = clearLayoutOverride;
 
 	return {
 		session,

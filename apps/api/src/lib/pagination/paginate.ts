@@ -3,6 +3,7 @@ import type {
 	PaginateOptions,
 } from "@scrum-board/shared/schemas";
 import { clamp, isNil } from "es-toolkit";
+import { HTTPException } from "hono/http-exception";
 
 export type PaginateQuery<TWhere, TOrderBy> = {
 	where?: TWhere;
@@ -21,7 +22,8 @@ export type PaginatedResult<TDoc> = {
 	info: PaginateInfo;
 };
 
-export const MAX_PAGE = 100_000;
+export const MAX_OFFSET = 10_000;
+export const MAX_PAGE = MAX_OFFSET + 1;
 export const MAX_LIMIT = 100;
 export const DEFAULT_LIMIT = 17;
 
@@ -55,6 +57,11 @@ export async function paginate<TDoc, TWhere, TOrderBy>(
 	const page = parsePage(opts?.page);
 	const limit = parseLimit(opts?.limit);
 	const skip = (page - 1) * limit;
+	if (skip > MAX_OFFSET) {
+		throw new HTTPException(400, {
+			message: "Page offset is too large. Narrow the search.",
+		});
+	}
 
 	const [docs, totalDocs] = await Promise.all([
 		model.findMany({ ...query, skip, take: limit }),
