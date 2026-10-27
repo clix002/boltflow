@@ -12,10 +12,10 @@ export const ColumnSchema = z.object({
 export const CreateColumnSchema = z.object({
 	name: z.string().min(1).max(100),
 	boardId: z.string(),
-	order: z.number().optional(),
+	order: z.number().int().nonnegative().optional(),
 });
 
 export const UpdateColumnSchema = z.object({
 	name: z.string().min(1).max(100).optional(),
-	order: z.number().optional(),
+	order: z.number().int().nonnegative().optional(),
 });

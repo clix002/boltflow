@@ -1,7 +1,8 @@
 import type { Context } from "hono";
 import { deleteCookie, setCookie } from "hono/cookie";
+import { env } from "@/config/env";
 
-const isProd = () => process.env.NODE_ENV === "production";
+const isProd = () => env.NODE_ENV === "production";
 
 export const ACCESS_COOKIE = "scrum_access";
 export const REFRESH_COOKIE = "scrum_refresh";

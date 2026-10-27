@@ -7,17 +7,14 @@ const STORAGE_KEY = "sb:board-defaults:v1";
 
 type BoardDefaultStoreState = {
 	defaultsByBoard: Record<string, BoardDefault>;
-	interactedBoardId: string | null;
 	setDefault: (boardId: string, prefs: BoardDefault) => void;
 	removeDefault: (boardId: string) => void;
-	setInteractedBoard: (boardId: string | null) => void;
 };
 
 export const useBoardDefaultStore = create<BoardDefaultStoreState>()(
 	persist(
 		(set) => ({
 			defaultsByBoard: {},
-			interactedBoardId: null,
 
 			setDefault: (boardId, prefs) =>
 				set((state) => ({
@@ -32,8 +29,6 @@ export const useBoardDefaultStore = create<BoardDefaultStoreState>()(
 					defaultsByBoard: omit(state.defaultsByBoard, [boardId]),
 				}));
 			},
-
-			setInteractedBoard: (boardId) => set({ interactedBoardId: boardId }),
 		}),
 		{
 			name: STORAGE_KEY,

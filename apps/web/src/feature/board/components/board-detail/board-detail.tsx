@@ -2,7 +2,7 @@ import type { ColumnWithTasksSchema } from "@scrum-board/shared/schemas";
 import { useQueryClient } from "@tanstack/react-query";
 import { isEmpty } from "es-toolkit/compat";
 import { Plus } from "lucide-react";
-import { useState } from "react";
+import { useDeferredValue, useState } from "react";
 import { useParams } from "react-router";
 import type { z } from "zod";
 import { ErrorState } from "@/components/state/error-state";
@@ -27,6 +27,7 @@ export const BoardDetail = () => {
 	const { mutate: deleteColumn } = useDeleteColumnMutation();
 
 	const { session, selectedColumnIds, currentView } = useBoardPreferences();
+	const deferredSearch = useDeferredValue(session.search);
 
 	const {
 		data: board,
@@ -34,7 +35,7 @@ export const BoardDetail = () => {
 		isError,
 		refetch,
 	} = useGetBoardQuery(boardId, {
-		search: session.search,
+		search: deferredSearch,
 		assigneeIds: session.assigneeIds.join(","),
 	});
 

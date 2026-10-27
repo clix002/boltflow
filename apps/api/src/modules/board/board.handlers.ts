@@ -1,4 +1,5 @@
 import type { RouteHandler } from "@hono/zod-openapi";
+import { parseLimit, parsePage } from "@/lib/pagination/paginate";
 import type { AppEnv } from "@/modules/auth/types";
 import type {
 	createBoardRoute,
@@ -13,8 +14,8 @@ export const listHandler: RouteHandler<typeof listBoardsRoute, AppEnv> = async (
 	c,
 ) => {
 	const userId = c.get("jwtPayload").id;
-	const page = Math.max(1, Number(c.req.query("page")) || 1);
-	const limit = Math.min(Math.max(1, Number(c.req.query("limit")) || 17), 100);
+	const page = parsePage(c.req.query("page"));
+	const limit = parseLimit(c.req.query("limit"));
 	const search = c.req.query("search");
 	const { docs, info } = await boardService.listByUser(userId, {
 		page,

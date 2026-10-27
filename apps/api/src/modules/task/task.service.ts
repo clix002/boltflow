@@ -27,6 +27,18 @@ export const taskService = {
 			throw new HTTPException(403, { message: "Not authorized" });
 		}
 
+		if (data.assigneeIds?.length) {
+			const existingUsers = await prisma.user.findMany({
+				where: { id: { in: data.assigneeIds } },
+				select: { id: true },
+			});
+			if (existingUsers.length !== data.assigneeIds.length) {
+				throw new HTTPException(400, {
+					message: "One or more assignees do not exist",
+				});
+			}
+		}
+
 		const currentCount = await taskRepository.countByColumnId(data.columnId);
 		const order = data.order ?? currentCount;
 		const assignees = data.assigneeIds?.map((id) => ({ id })) ?? [];

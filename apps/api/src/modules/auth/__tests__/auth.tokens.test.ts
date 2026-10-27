@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { HTTPException } from "hono/http-exception";
 import {
 	signAccessToken,
 	signRefreshToken,
@@ -19,12 +20,24 @@ describe("auth.tokens", () => {
 		expect(userId).toBe("user-456");
 	});
 
-	it("rejects garbage tokens", async () => {
-		await expect(verifyAccessToken("not.a.token")).rejects.toThrow();
+	it("rejects garbage tokens with 401 HTTPException", async () => {
+		try {
+			await verifyAccessToken("not.a.token");
+			expect.unreachable("should have thrown");
+		} catch (err) {
+			expect(err).toBeInstanceOf(HTTPException);
+			expect((err as HTTPException).status).toBe(401);
+		}
 	});
 
-	it("refresh secret can't verify access token", async () => {
+	it("refresh secret can't verify access token (returns 401)", async () => {
 		const token = await signAccessToken("user-123");
-		await expect(verifyRefreshToken(token)).rejects.toThrow();
+		try {
+			await verifyRefreshToken(token);
+			expect.unreachable("should have thrown");
+		} catch (err) {
+			expect(err).toBeInstanceOf(HTTPException);
+			expect((err as HTTPException).status).toBe(401);
+		}
 	});
 });

@@ -1,6 +1,7 @@
 import { Scalar } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
+import { env } from "./config/env";
 import { createRouter } from "./lib/openapi";
 import authRouter from "./modules/auth";
 import type { AppEnv } from "./modules/auth/types";
@@ -14,7 +15,7 @@ const app = createRouter<AppEnv>();
 app.use(
 	"*",
 	cors({
-		origin: process.env.FRONTEND_URL || "http://localhost:5173",
+		origin: env.FRONTEND_URL,
 		allowHeaders: ["Content-Type", "Authorization"],
 		allowMethods: ["POST", "GET", "OPTIONS", "PUT", "DELETE"],
 		credentials: true,

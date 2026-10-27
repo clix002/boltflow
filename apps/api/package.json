@@ -10,12 +10,13 @@
 		"prisma:migrate": "bun run --env-file=.env prisma migrate dev",
 		"prisma:seed": "bun run --env-file=.env src/db/prisma/seed.ts",
 		"prisma:studio": "bun run --env-file=.env prisma studio",
-		"postinstall": "prisma generate"
+		"postinstall": "bun run --env-file=.env prisma generate"
 	},
 	"prisma": {
 		"seed": "bun run --env-file=.env src/db/prisma/seed.ts"
 	},
 	"dependencies": {
+		"@hono/bun": "^1.0.1",
 		"@hono/zod-openapi": "^1.4.0",
 		"@prisma/adapter-pg": "^7.8.0",
 		"@prisma/client": "^7.8.0",

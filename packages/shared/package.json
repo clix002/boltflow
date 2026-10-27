@@ -3,7 +3,8 @@
 	"version": "0.0.0",
 	"devDependencies": {},
 	"exports": {
-		"./schemas": "./src/schemas/index.ts"
+		"./schemas": "./src/schemas/index.ts",
+		"./types": "./src/types/index.ts"
 	},
 	"private": true,
 	"scripts": {

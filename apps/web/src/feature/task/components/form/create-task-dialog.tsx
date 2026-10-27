@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CreateTaskSchema, PrioritySchema } from "@scrum-board/shared/schemas";
+import type { Maybe } from "@scrum-board/shared/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { isEmpty } from "es-toolkit/compat";
 import { ChevronsUpDown, Loader2 } from "lucide-react";
@@ -35,7 +36,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useGetBoardQuery } from "@/feature/board/api/use-get-board";
 import { useCreateTaskMutation } from "@/feature/task/api/use-create-task";
 import { useGetUsersQuery } from "@/feature/user/api/use-get-users";
-import type { Maybe } from "@/lib/utils";
 import { PriorityBadge } from "../priority-badge";
 
 type CreateTaskDialogProps = {

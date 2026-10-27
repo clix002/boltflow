@@ -1,6 +1,6 @@
+import type { Maybe } from "@scrum-board/shared/types";
 import { Navigate, useLocation } from "react-router";
 import { LoginForm } from "@/feature/auth/components/login-form";
-import type { Maybe } from "@/lib/utils";
 import { useAuthStore } from "@/store/useAuthStore";
 
 type LoginLocationState = Maybe<{

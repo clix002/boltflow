@@ -24,7 +24,7 @@ export const CreateTaskSchema = z.object({
 	description: z.string().optional(),
 	columnId: z.string(),
 	assigneeIds: z.array(z.string()).optional(),
-	order: z.number().optional(),
+	order: z.number().int().nonnegative().optional(),
 	priority: PrioritySchema.optional(),
 });
 
@@ -33,7 +33,7 @@ export const UpdateTaskSchema = z.object({
 	description: z.string().nullable().optional(),
 	columnId: z.string().optional(),
 	assigneeIds: z.array(z.string()).optional(),
-	order: z.number().optional(),
+	order: z.number().int().nonnegative().optional(),
 	priority: PrioritySchema.optional(),
 });
 

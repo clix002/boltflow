@@ -1,6 +1,6 @@
 import { isEmpty } from "es-toolkit/compat";
 import { Bookmark, Filter, Search, X } from "lucide-react";
-import { useState } from "react";
+import { useDeferredValue, useState } from "react";
 import { useParams } from "react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -37,8 +37,10 @@ export const BoardFilter = () => {
 		savePreferences,
 	} = useBoardPreferences();
 
+	const deferredSearch = useDeferredValue(session.search);
+
 	const { data: board } = useGetBoardQuery(boardId, {
-		search: session.search,
+		search: deferredSearch,
 		assigneeIds: session.assigneeIds.join(","),
 	});
 

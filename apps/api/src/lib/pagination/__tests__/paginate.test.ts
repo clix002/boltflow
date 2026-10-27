@@ -66,4 +66,50 @@ describe("paginate utility", () => {
 		expect(result.info.hasNextPage).toBe(false);
 		expect(result.info.hasPrevPage).toBe(false);
 	});
+
+	it("safely clamps non-finite or extreme page and limit values", async () => {
+		let capturedArgs: { skip?: number; take?: number } = {};
+		const mockModel: PaginatableModel<{ id: string }, unknown, unknown> = {
+			findMany: async (args) => {
+				capturedArgs = args;
+				return [];
+			},
+			count: async () => 50,
+		};
+
+		const result = await paginate(
+			mockModel,
+			{},
+			{ page: Number.POSITIVE_INFINITY, limit: 1000 },
+		);
+
+		expect(result.info.page).toBe(1);
+		expect(result.info.limit).toBe(100);
+		expect(capturedArgs.skip).toBe(0);
+		expect(capturedArgs.take).toBe(100);
+	});
+
+	it("safely handles extreme finite numbers and edge-case inputs", async () => {
+		const mockModel: PaginatableModel<{ id: string }, unknown, unknown> = {
+			findMany: async () => [],
+			count: async () => 0,
+		};
+
+		for (const page of [1e306, 1e307, Number.NaN, 0, -3]) {
+			const res = await paginate(mockModel, {}, { page });
+			expect(Number.isFinite(res.info.page)).toBe(true);
+			expect(res.info.page).toBeGreaterThanOrEqual(1);
+			expect(res.info.page).toBeLessThanOrEqual(100_000);
+		}
+
+		for (const limit of [0, Number.NaN, 1000, -1]) {
+			const res = await paginate(mockModel, {}, { limit });
+			expect(Number.isFinite(res.info.limit)).toBe(true);
+			expect(res.info.limit).toBeGreaterThanOrEqual(1);
+			expect(res.info.limit).toBeLessThanOrEqual(100);
+		}
+
+		const emptyLimit = await paginate(mockModel, {}, { limit: undefined });
+		expect(emptyLimit.info.limit).toBe(17);
+	});
 });

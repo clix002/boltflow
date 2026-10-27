@@ -1,7 +1,9 @@
 import { CommaSeparatedArray } from "@scrum-board/shared/schemas";
+import type { Maybe } from "@scrum-board/shared/types";
 import { uniq } from "es-toolkit";
+import { isEmpty } from "es-toolkit/compat";
 import { z } from "zod";
-import { BOARD_VIEW_MODE } from "./types";
+import { BOARD_VIEW_MODE, type BoardViewMode } from "./types";
 
 const SortedIdsSchema = CommaSeparatedArray.transform((arr) =>
 	uniq(arr ?? []).sort(),
@@ -24,16 +26,53 @@ export const BoardSessionSchema = BoardDefaultSchema.extend({
 export type BoardDefault = z.infer<typeof BoardDefaultSchema>;
 export type BoardSession = z.infer<typeof BoardSessionSchema>;
 
-const SESSION_PARAM_KEYS = ["columns", "assigneeIds", "view"] as const;
+export const LAYOUT_OVERRIDE = "custom" as const;
+export type LayoutOverride = typeof LAYOUT_OVERRIDE;
 
-export const hasAnySessionParams = (searchParams: URLSearchParams): boolean =>
-	SESSION_PARAM_KEYS.some((key) => searchParams.has(key));
+export type LayoutKey = keyof BoardDefault;
+export type SessionParamKey = LayoutKey | "layout";
+
+export const LAYOUT_KEYS: readonly LayoutKey[] = [
+	"columns",
+	"assigneeIds",
+	"view",
+];
+
+export type LayoutParamUpdates = Record<LayoutKey, Maybe<string>>;
+export type SessionParamUpdates = LayoutParamUpdates & {
+	layout: Maybe<LayoutOverride>;
+};
+
+export const hasAnyLayoutParams = (searchParams: URLSearchParams): boolean =>
+	searchParams.has("layout") ||
+	LAYOUT_KEYS.some((key) => searchParams.has(key));
+
+const serializeListParam = (ids: readonly string[]): Maybe<string> => {
+	if (isEmpty(ids)) {
+		return null;
+	}
+	return ids.join(",");
+};
+
+const serializeViewParam = (view: BoardViewMode): Maybe<string> => {
+	if (view === BOARD_VIEW_MODE.GRID) {
+		return null;
+	}
+	return view;
+};
 
 export const defaultToParamUpdates = (
 	prefs: BoardDefault,
-): Record<string, string | null> => ({
-	columns: prefs.columns.length > 0 ? prefs.columns.join(",") : null,
-	assigneeIds:
-		prefs.assigneeIds.length > 0 ? prefs.assigneeIds.join(",") : null,
-	view: prefs.view !== BOARD_VIEW_MODE.GRID ? prefs.view : null,
+): LayoutParamUpdates => ({
+	columns: serializeListParam(prefs.columns),
+	assigneeIds: serializeListParam(prefs.assigneeIds),
+	view: serializeViewParam(prefs.view),
+});
+
+export const sessionToParamUpdates = (
+	prefs: BoardDefault,
+	isOverride = true,
+): SessionParamUpdates => ({
+	...defaultToParamUpdates(prefs),
+	layout: isOverride ? LAYOUT_OVERRIDE : null,
 });

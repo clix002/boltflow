@@ -6,8 +6,9 @@ import {
 	type BoardDefault,
 	type BoardSession,
 	BoardSessionSchema,
-	defaultToParamUpdates,
-	hasAnySessionParams,
+	hasAnyLayoutParams,
+	LAYOUT_KEYS,
+	sessionToParamUpdates,
 } from "./board-view.schema";
 import { BOARD_VIEW_MODE, type BoardViewMode } from "./types";
 import {
@@ -29,42 +30,30 @@ export const useBoardPreferences = () => {
 	const saved = useBoardDefaultStore((state) =>
 		selectBoardDefault(state, boardId),
 	);
-	const interactedBoardId = useBoardDefaultStore(
-		(state) => state.interactedBoardId,
-	);
 	const setDefault = useBoardDefaultStore((state) => state.setDefault);
 	const removeDefault = useBoardDefaultStore((state) => state.removeDefault);
-	const setInteractedBoard = useBoardDefaultStore(
-		(state) => state.setInteractedBoard,
-	);
 
 	const urlSession = BoardSessionSchema.parse(Object.fromEntries(searchParams));
 
 	const getSession = (): BoardSession => {
 		if (!saved) return urlSession;
-		if (interactedBoardId === boardId) return urlSession;
-		if (hasAnySessionParams(searchParams)) return urlSession;
+		if (hasAnyLayoutParams(searchParams)) return urlSession;
 		return { ...saved, search: urlSession.search };
 	};
 
 	const session = getSession();
 
 	const baseline: BoardDefault = saved ?? SYSTEM_DEFAULT;
-	const sessionPrefs: BoardDefault = pick(session, [
-		"columns",
-		"assigneeIds",
-		"view",
-	]);
+	const sessionPrefs: BoardDefault = pick(session, LAYOUT_KEYS);
 
 	const hasDefault = saved !== null;
 	const isViewModified = session.view !== baseline.view;
 	const isDirty = Boolean(boardId) && !isEqual(sessionPrefs, baseline);
 
 	const updateSession = (partial: Partial<BoardDefault>) => {
-		if (boardId) {
-			setInteractedBoard(boardId);
-		}
-		updateSearchParams(defaultToParamUpdates({ ...sessionPrefs, ...partial }));
+		updateSearchParams(
+			sessionToParamUpdates({ ...sessionPrefs, ...partial }, true),
+		);
 	};
 
 	const toggleColumn = (columnId: string) =>
@@ -89,14 +78,12 @@ export const useBoardPreferences = () => {
 
 	const forgetDefault = () => {
 		if (!boardId) return;
-		setInteractedBoard(boardId);
 		removeDefault(boardId);
 		toast.success("Default view forgotten");
 	};
 
 	const resetToDefault = () => {
-		setInteractedBoard(null);
-		updateSearchParams(defaultToParamUpdates(baseline));
+		updateSearchParams(sessionToParamUpdates(baseline, false));
 	};
 
 	return {
