@@ -1,21 +1,9 @@
 import { omit } from "es-toolkit";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { storage } from "@/lib/storage";
 import { type BoardDefault, BoardDefaultSchema } from "./board-view.schema";
 
 const STORAGE_KEY = "sb:board-defaults:v1";
-
-const readLegacyBoardDefault = (boardId: string): BoardDefault | null => {
-	const raw =
-		storage.get<unknown>(`board_preferences_${boardId}`, null) ??
-		storage.get<unknown>(`board_filters_${boardId}`, null);
-
-	if (!raw) return null;
-
-	const parsed = BoardDefaultSchema.safeParse(raw);
-	return parsed.success ? parsed.data : null;
-};
 
 type BoardDefaultStoreState = {
 	defaultsByBoard: Record<string, BoardDefault>;
@@ -40,8 +28,6 @@ export const useBoardDefaultStore = create<BoardDefaultStoreState>()(
 				})),
 
 			removeDefault: (boardId) => {
-				storage.remove(`board_preferences_${boardId}`);
-				storage.remove(`board_filters_${boardId}`);
 				set((state) => ({
 					defaultsByBoard: omit(state.defaultsByBoard, [boardId]),
 				}));
@@ -64,5 +50,5 @@ export const selectBoardDefault = (
 	boardId?: string,
 ): BoardDefault | null => {
 	if (!boardId) return null;
-	return state.defaultsByBoard[boardId] ?? readLegacyBoardDefault(boardId);
+	return state.defaultsByBoard[boardId] ?? null;
 };

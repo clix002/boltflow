@@ -1,5 +1,6 @@
 import { randomUUIDv7 } from "bun";
 import { isString } from "es-toolkit/predicate";
+import { HTTPException } from "hono/http-exception";
 import { jwtVerify, SignJWT } from "jose";
 
 const ACCESS_SECRET = () => new TextEncoder().encode(process.env.JWT_SECRET!);
@@ -26,17 +27,27 @@ export const signRefreshToken = async (userId: string) => {
 };
 
 export const verifyAccessToken = async (token: string): Promise<string> => {
-	const { payload } = await jwtVerify(token, ACCESS_SECRET());
-	if (!isString(payload.id)) {
-		throw new Error("Invalid token payload");
+	try {
+		const { payload } = await jwtVerify(token, ACCESS_SECRET());
+		if (!isString(payload.id)) {
+			throw new HTTPException(401, { message: "Invalid token payload" });
+		}
+		return payload.id;
+	} catch (err) {
+		if (err instanceof HTTPException) throw err;
+		throw new HTTPException(401, { message: "Invalid or expired token" });
 	}
-	return payload.id;
 };
 
 export const verifyRefreshToken = async (token: string): Promise<string> => {
-	const { payload } = await jwtVerify(token, REFRESH_SECRET());
-	if (!isString(payload.id)) {
-		throw new Error("Invalid token payload");
+	try {
+		const { payload } = await jwtVerify(token, REFRESH_SECRET());
+		if (!isString(payload.id)) {
+			throw new HTTPException(401, { message: "Invalid token payload" });
+		}
+		return payload.id;
+	} catch (err) {
+		if (err instanceof HTTPException) throw err;
+		throw new HTTPException(401, { message: "Invalid or expired token" });
 	}
-	return payload.id;
 };

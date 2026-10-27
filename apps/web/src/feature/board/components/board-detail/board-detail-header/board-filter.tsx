@@ -20,12 +20,12 @@ import { cn } from "@/lib/utils";
 
 export const BoardFilter = () => {
 	const { boardId } = useParams<{ boardId: string }>();
-	const { data: board } = useGetBoardQuery(boardId);
 	const { data: users } = useGetUsersQuery();
 
 	const [userSearch, setUserSearch] = useState("");
 
 	const {
+		session,
 		selectedColumnIds,
 		selectedUserIds,
 		isModified,
@@ -36,6 +36,11 @@ export const BoardFilter = () => {
 		clearAll,
 		savePreferences,
 	} = useBoardPreferences();
+
+	const { data: board } = useGetBoardQuery(boardId, {
+		search: session.search,
+		assigneeIds: session.assigneeIds.join(","),
+	});
 
 	const columns = board?.columns ?? [];
 

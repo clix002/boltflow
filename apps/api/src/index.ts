@@ -1,7 +1,7 @@
-import { OpenAPIHono } from "@hono/zod-openapi";
 import { Scalar } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
+import { createRouter } from "./lib/openapi";
 import authRouter from "./modules/auth";
 import type { AppEnv } from "./modules/auth/types";
 import boardRouter from "./modules/board";
@@ -9,7 +9,7 @@ import columnRouter from "./modules/column";
 import taskRouter from "./modules/task";
 import userRouter from "./modules/user";
 
-const app = new OpenAPIHono<AppEnv>();
+const app = createRouter<AppEnv>();
 
 app.use(
 	"*",

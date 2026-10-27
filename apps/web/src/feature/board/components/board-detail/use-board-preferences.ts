@@ -44,7 +44,7 @@ export const useBoardPreferences = () => {
 		if (!saved) return urlSession;
 		if (interactedBoardId === boardId) return urlSession;
 		if (hasAnySessionParams(searchParams)) return urlSession;
-		return { ...saved, search: "" };
+		return { ...saved, search: urlSession.search };
 	};
 
 	const session = getSession();

@@ -1,4 +1,4 @@
-import { OpenAPIHono } from "@hono/zod-openapi";
+import { createRouter } from "@/lib/openapi";
 import { authMiddleware } from "@/middlewares/auth.middleware";
 import type { AppEnv } from "@/modules/auth/types";
 import { createHandler, deleteHandler, updateHandler } from "./column.handlers";
@@ -8,7 +8,7 @@ import {
 	updateColumnRoute,
 } from "./column.routes";
 
-const columnRouter = new OpenAPIHono<AppEnv>();
+const columnRouter = createRouter<AppEnv>();
 columnRouter.use("*", authMiddleware);
 
 columnRouter.openapi(createColumnRoute, createHandler);

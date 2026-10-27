@@ -1,4 +1,4 @@
-import { OpenAPIHono } from "@hono/zod-openapi";
+import { createRouter } from "@/lib/openapi";
 import { authMiddleware } from "@/middlewares/auth.middleware";
 import type { AppEnv } from "@/modules/auth/types";
 import {
@@ -16,7 +16,7 @@ import {
 	updateBoardRoute,
 } from "./board.routes";
 
-const boardRouter = new OpenAPIHono<AppEnv>();
+const boardRouter = createRouter<AppEnv>();
 boardRouter.use("*", authMiddleware);
 
 boardRouter.openapi(listBoardsRoute, listHandler);

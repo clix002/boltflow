@@ -74,7 +74,7 @@ export const KanbanColumn = ({
 				</div>
 			</div>
 
-			<div className="flex flex-1 flex-col gap-2.5 overflow-y-auto min-h-0 pr-1 custom-scrollbar">
+			<div className="flex flex-1 flex-col gap-2.5 overflow-y-auto min-h-0 p-0.5 pr-1 custom-scrollbar">
 				{column.tasks.map((task) => (
 					<TaskCard
 						key={task.id}

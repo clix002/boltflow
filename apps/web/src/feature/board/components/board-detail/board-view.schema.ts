@@ -24,12 +24,7 @@ export const BoardSessionSchema = BoardDefaultSchema.extend({
 export type BoardDefault = z.infer<typeof BoardDefaultSchema>;
 export type BoardSession = z.infer<typeof BoardSessionSchema>;
 
-const SESSION_PARAM_KEYS = [
-	"columns",
-	"assigneeIds",
-	"view",
-	"search",
-] as const;
+const SESSION_PARAM_KEYS = ["columns", "assigneeIds", "view"] as const;
 
 export const hasAnySessionParams = (searchParams: URLSearchParams): boolean =>
 	SESSION_PARAM_KEYS.some((key) => searchParams.has(key));
