@@ -1,38 +1,44 @@
 import {
 	DragDropProvider,
 	type DragEndEvent,
+	type DragOverEvent,
 	DragOverlay,
-	type DragStartEvent,
 } from "@dnd-kit/react";
 import type {
+	BoardDetailResponseSchema,
 	ColumnWithTasksSchema,
-	TaskWithAssigneesSchema,
 } from "@scrum-board/shared/schemas";
+import type { Maybe } from "@scrum-board/shared/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { isEmpty } from "es-toolkit/compat";
 import { Plus } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useParams } from "react-router";
 import type { z } from "zod";
 import { ErrorState } from "@/components/state/error-state";
 import { LoadingState } from "@/components/state/loading-state";
 import { Button } from "@/components/ui/button";
-import { useGetBoardQuery } from "@/feature/board/api/use-get-board";
+import { CARD_VARIANT } from "@/components/ui/card";
+import {
+	getBoardQueryKey,
+	useGetBoardQuery,
+} from "@/feature/board/api/use-get-board";
 import { useDeleteColumnMutation } from "@/feature/column/api/use-delete-column";
 import { CreateColumnDialog } from "@/feature/column/components/form/create-column-dialog";
 import { UpdateColumnDialog } from "@/feature/column/components/form/update-column-dialog";
 import { useMoveTaskMutation } from "@/feature/task/api/use-move-task";
 import { CreateTaskDialog } from "@/feature/task/components/form/create-task-dialog";
 import { useConfirm } from "@/hooks/confirm-provider";
+import { playTaskMoveSound } from "@/lib/sound.utils";
 import { BoardTableView } from "./board-table";
-import { findTaskInBoard, resolveDropPosition } from "./dnd.utils";
+import { findTaskInBoard, moveTaskInBoard } from "./dnd.utils";
 import { KanbanColumn } from "./kanban-column";
 import { TaskCard } from "./task-card";
 import { BOARD_VIEW_MODE } from "./types";
 import { useBoardPreferences } from "./use-board-preferences";
 
+type BoardDetailData = z.infer<typeof BoardDetailResponseSchema>;
 type ColumnWithTasks = z.infer<typeof ColumnWithTasksSchema>;
-type TaskWithAssignees = z.infer<typeof TaskWithAssigneesSchema>;
 
 export const BoardDetail = () => {
 	const queryClient = useQueryClient();
@@ -44,21 +50,22 @@ export const BoardDetail = () => {
 
 	const { session, selectedColumnIds, currentView } = useBoardPreferences();
 
+	const boardFilters = {
+		search: session.search,
+		assigneeIds: session.assigneeIds.join(","),
+	};
+	const boardQueryKey = getBoardQueryKey(boardId, boardFilters);
 	const {
 		data: board,
 		isPending,
 		isError,
 		refetch,
-	} = useGetBoardQuery(boardId, {
-		search: session.search,
-		assigneeIds: session.assigneeIds.join(","),
-	});
+	} = useGetBoardQuery(boardId, boardFilters);
 
-	const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
-	const [editingColumn, setEditingColumn] = useState<ColumnWithTasks | null>(
-		null,
-	);
-	const [activeTask, setActiveTask] = useState<TaskWithAssignees | null>(null);
+	const boardBeforeDrag = useRef<Maybe<BoardDetailData>>(null);
+	const [activeColumnId, setActiveColumnId] = useState<Maybe<string>>(null);
+	const [editingColumn, setEditingColumn] =
+		useState<Maybe<ColumnWithTasks>>(null);
 
 	const handleDeleteColumn = async (columnId: string) => {
 		const ok = await confirm({
@@ -97,38 +104,47 @@ export const BoardDetail = () => {
 		? board.columns
 		: matchingColumns;
 
-	const handleDragEnd = ({ operation }: DragEndEvent) => {
-		const { source, target } = operation;
-		setActiveTask(null);
+	const handleDragStart = () => {
+		boardBeforeDrag.current = board;
+	};
 
-		if (!source || !target || !board) return;
+	const handleDragOver = (event: DragOverEvent) => {
+		queryClient.setQueryData<BoardDetailData>(
+			boardQueryKey,
+			(current) => current && moveTaskInBoard(current, event),
+		);
+	};
 
-		const taskId = String(source.id);
-		const drop = resolveDropPosition(board, String(target.id));
-		if (!drop) return;
+	const handleDragEnd = (event: DragEndEvent) => {
+		const previousBoard = boardBeforeDrag.current;
+		boardBeforeDrag.current = null;
+		const { source } = event.operation;
+		if (!previousBoard || !source) return;
 
-		const currentTask = findTaskInBoard(board, taskId);
-		if (!currentTask) return;
-
-		if (
-			currentTask.columnId === drop.columnId &&
-			currentTask.order === drop.order
-		) {
+		if (event.canceled) {
+			queryClient.setQueryData(boardQueryKey, previousBoard);
 			return;
 		}
 
+		const currentBoard =
+			queryClient.getQueryData<BoardDetailData>(boardQueryKey);
+		if (!currentBoard) return;
+
+		const taskId = String(source.id);
+		const before = findTaskInBoard(previousBoard, taskId);
+		const after = findTaskInBoard(currentBoard, taskId);
+		if (!before || !after) return;
+		if (before.columnId === after.columnId && before.order === after.order) {
+			return;
+		}
+
+		playTaskMoveSound();
+
 		moveTask(
+			{ id: taskId, data: { columnId: after.columnId, order: after.order } },
 			{
-				id: currentTask.id,
-				data: {
-					columnId: drop.columnId,
-					order: drop.order,
-				},
-			},
-			{
-				onSuccess: () => {
-					queryClient.invalidateQueries({ queryKey: ["board", boardId] });
-				},
+				onSettled: () =>
+					queryClient.invalidateQueries({ queryKey: ["board", boardId] }),
 			},
 		);
 	};
@@ -146,12 +162,8 @@ export const BoardDetail = () => {
 				/>
 			) : (
 				<DragDropProvider
-					onDragStart={({ operation }: DragStartEvent) => {
-						if (!operation.source || !board) return;
-						const id = String(operation.source.id);
-						const task = findTaskInBoard(board, id);
-						setActiveTask(task);
-					}}
+					onDragStart={handleDragStart}
+					onDragOver={handleDragOver}
 					onDragEnd={handleDragEnd}
 				>
 					<div className="flex flex-1 items-start gap-4 overflow-x-auto min-h-0 w-full pb-3 pt-2 custom-scrollbar">
@@ -179,7 +191,12 @@ export const BoardDetail = () => {
 					</div>
 
 					<DragOverlay>
-						{activeTask && <TaskCard task={activeTask} variant="overlay" />}
+						{(source) => {
+							const task = findTaskInBoard(board, String(source.id));
+							return (
+								task && <TaskCard task={task} variant={CARD_VARIANT.OVERLAY} />
+							);
+						}}
 					</DragOverlay>
 				</DragDropProvider>
 			)}

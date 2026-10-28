@@ -19,6 +19,9 @@ export const useMoveTaskMutation = () => {
 	return useMutation({
 		mutationFn: ({ id, data }: MoveTaskVariables) =>
 			api.patch<TaskWithAssignees>(`/tasks/${id}/move`, data),
+		onSuccess: () => {
+			toast.success("Task moved successfully");
+		},
 		onError: () => {
 			toast.error("Failed to move task");
 		},

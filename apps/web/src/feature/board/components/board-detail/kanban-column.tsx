@@ -1,3 +1,4 @@
+import { CollisionPriority } from "@dnd-kit/abstract";
 import { useDroppable } from "@dnd-kit/react";
 import type { ColumnWithTasksSchema } from "@scrum-board/shared/schemas";
 import { MoreHorizontal, Plus } from "lucide-react";
@@ -11,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { SortableTaskCard } from "./sortable-task-card";
+import { DND_TYPE } from "./types";
 
 type ColumnWithTasks = z.infer<typeof ColumnWithTasksSchema>;
 
@@ -29,7 +31,12 @@ export const KanbanColumn = ({
 	onEditColumn,
 	onDeleteColumn,
 }: KanbanColumnProps) => {
-	const { ref, isDropTarget } = useDroppable({ id: column.id });
+	const { ref, isDropTarget } = useDroppable({
+		id: column.id,
+		type: DND_TYPE.COLUMN,
+		accept: DND_TYPE.TASK,
+		collisionPriority: CollisionPriority.Low,
+	});
 
 	return (
 		<div

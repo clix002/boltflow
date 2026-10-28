@@ -11,17 +11,22 @@ export type BoardFilters = {
 	assigneeIds?: string;
 };
 
+const BOARD_FILTER_KEYS = ["search", "assigneeIds"] as const;
+
+export const getBoardQueryKey = (
+	id?: string,
+	filters?: URLSearchParams | BoardFilters,
+) =>
+	["board", id, parseQueryParams(filters, BOARD_FILTER_KEYS).params] as const;
+
 export const useGetBoardQuery = (
 	id?: string,
 	filters?: URLSearchParams | BoardFilters,
 ) => {
-	const { params, queryString } = parseQueryParams(filters, [
-		"search",
-		"assigneeIds",
-	]);
+	const { queryString } = parseQueryParams(filters, BOARD_FILTER_KEYS);
 
 	return useQuery({
-		queryKey: ["board", id, params],
+		queryKey: getBoardQueryKey(id, filters),
 		queryFn: () => api.get<BoardDetail>(`/boards/${id}${queryString}`),
 		enabled: Boolean(id),
 		placeholderData: (previous, previousQuery) =>

@@ -2,18 +2,29 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import type * as React from "react";
 
+export const CARD_VARIANT = {
+	DEFAULT: "default",
+	INTERACTIVE: "interactive",
+	DRAGGABLE: "draggable",
+	DRAGGING: "dragging",
+	OVERLAY: "overlay",
+} as const;
+
+export type CardVariant = (typeof CARD_VARIANT)[keyof typeof CARD_VARIANT];
+
 const cardVariants = cva(
 	"group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
 	{
 		variants: {
 			variant: {
-				default: "",
-				interactive:
+				[CARD_VARIANT.DEFAULT]: "",
+				[CARD_VARIANT.INTERACTIVE]:
 					"cursor-pointer transition-all hover:bg-accent/40 hover:shadow-md",
-				draggable:
+				[CARD_VARIANT.DRAGGABLE]:
 					"cursor-grab active:cursor-grabbing transition-all hover:bg-accent/40 hover:shadow-md",
-				dragging: "opacity-40 border-dashed border-primary/50 cursor-grabbing",
-				overlay:
+				[CARD_VARIANT.DRAGGING]:
+					"opacity-40 border-dashed border-primary/50 cursor-grabbing",
+				[CARD_VARIANT.OVERLAY]:
 					"cursor-grabbing shadow-2xl ring-2 ring-primary/40 rotate-1 scale-102",
 			},
 			size: {
@@ -22,7 +33,7 @@ const cardVariants = cva(
 			},
 		},
 		defaultVariants: {
-			variant: "default",
+			variant: CARD_VARIANT.DEFAULT,
 			size: "default",
 		},
 	},

@@ -1,7 +1,9 @@
 import { useSortable } from "@dnd-kit/react/sortable";
 import type { TaskWithAssigneesSchema } from "@scrum-board/shared/schemas";
 import type { z } from "zod";
+import { CARD_VARIANT } from "@/components/ui/card";
 import { TaskCard } from "./task-card";
+import { DND_TYPE } from "./types";
 
 type Task = z.infer<typeof TaskWithAssigneesSchema>;
 
@@ -20,13 +22,15 @@ export const SortableTaskCard = ({
 		id: task.id,
 		index,
 		group: task.columnId,
+		type: DND_TYPE.TASK,
+		accept: DND_TYPE.TASK,
 	});
 
 	return (
 		<TaskCard
 			ref={ref}
 			task={task}
-			variant={isDragging ? "dragging" : "draggable"}
+			variant={isDragging ? CARD_VARIANT.DRAGGING : CARD_VARIANT.DRAGGABLE}
 			onClick={onClick}
 		/>
 	);
