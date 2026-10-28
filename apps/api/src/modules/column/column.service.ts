@@ -7,6 +7,12 @@ import { HTTPException } from "hono/http-exception";
 import { prisma } from "@/db/connections";
 import { columnRepository } from "./column.repository";
 
+export type UpdateColumnInput = {
+	id: string;
+	userId: string;
+	data: z.infer<typeof UpdateColumnSchema>;
+};
+
 export const columnService = {
 	async create(userId: string, data: z.infer<typeof CreateColumnSchema>) {
 		const board = await prisma.board.findUnique({
@@ -32,11 +38,8 @@ export const columnService = {
 		});
 	},
 
-	async update(
-		id: string,
-		userId: string,
-		data: z.infer<typeof UpdateColumnSchema>,
-	) {
+	async update(input: UpdateColumnInput) {
+		const { id, userId, data } = input;
 		const column = await columnRepository.findById(id);
 
 		if (!column) {

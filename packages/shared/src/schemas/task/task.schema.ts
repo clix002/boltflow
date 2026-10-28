@@ -37,6 +37,11 @@ export const UpdateTaskSchema = z.object({
 	priority: PrioritySchema.optional(),
 });
 
+export const MoveTaskSchema = z.object({
+	columnId: z.string(),
+	order: z.number().int().nonnegative().optional(),
+});
+
 export const AssigneeSchema = z.object({
 	id: z.string(),
 	name: z.string(),

@@ -1,3 +1,4 @@
+import { useDroppable } from "@dnd-kit/react";
 import type { ColumnWithTasksSchema } from "@scrum-board/shared/schemas";
 import { MoreHorizontal, Plus } from "lucide-react";
 import type { z } from "zod";
@@ -8,7 +9,8 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { TaskCard } from "./task-card";
+import { cn } from "@/lib/utils";
+import { SortableTaskCard } from "./sortable-task-card";
 
 type ColumnWithTasks = z.infer<typeof ColumnWithTasksSchema>;
 
@@ -27,8 +29,17 @@ export const KanbanColumn = ({
 	onEditColumn,
 	onDeleteColumn,
 }: KanbanColumnProps) => {
+	const { ref, isDropTarget } = useDroppable({ id: column.id });
+
 	return (
-		<div className="flex h-full w-80 shrink-0 flex-col rounded-2xl border border-border/40 bg-secondary/20 p-3">
+		<div
+			ref={ref}
+			className={cn(
+				"flex h-full w-80 shrink-0 flex-col rounded-2xl border border-border/40 bg-secondary/20 p-3 transition-colors",
+				isDropTarget &&
+					"bg-secondary/40 border-primary/50 ring-2 ring-primary/20",
+			)}
+		>
 			<div className="group/header flex shrink-0 items-center justify-between pb-3">
 				<div className="flex items-center gap-2">
 					<span className="text-sm font-semibold tracking-tight text-foreground">
@@ -75,10 +86,11 @@ export const KanbanColumn = ({
 			</div>
 
 			<div className="flex flex-1 flex-col gap-2.5 overflow-y-auto min-h-0 p-0.5 pr-1 custom-scrollbar">
-				{column.tasks.map((task) => (
-					<TaskCard
+				{column.tasks.map((task, index) => (
+					<SortableTaskCard
 						key={task.id}
 						task={task}
+						index={index}
 						onClick={() => onTaskClick?.(task.id)}
 					/>
 				))}

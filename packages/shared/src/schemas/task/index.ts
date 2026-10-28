@@ -3,6 +3,7 @@ export {
 	AssigneeSchema,
 	ColumnWithTasksSchema,
 	CreateTaskSchema,
+	MoveTaskSchema,
 	type Priority,
 	PrioritySchema,
 	TaskSchema,

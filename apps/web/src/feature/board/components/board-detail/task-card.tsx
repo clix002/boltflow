@@ -1,9 +1,11 @@
 import type { TaskWithAssigneesSchema } from "@scrum-board/shared/schemas";
+import type { VariantProps } from "class-variance-authority";
 import { isEmpty } from "es-toolkit/compat";
 import { Calendar } from "lucide-react";
+import type React from "react";
 import type { z } from "zod";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card } from "@/components/ui/card";
+import { Card, type cardVariants } from "@/components/ui/card";
 import { PriorityBadge } from "@/feature/task/components/priority-badge";
 
 type Task = z.infer<typeof TaskWithAssigneesSchema>;
@@ -11,9 +13,11 @@ type Task = z.infer<typeof TaskWithAssigneesSchema>;
 type TaskCardProps = {
 	task: Task;
 	onClick?: () => void;
+	variant?: VariantProps<typeof cardVariants>["variant"];
+	ref?: React.Ref<HTMLDivElement>;
 };
 
-export const TaskCard = ({ task, onClick }: TaskCardProps) => {
+export const TaskCard = ({ task, onClick, variant, ref }: TaskCardProps) => {
 	const formattedDate = new Date(task.createdAt).toLocaleDateString("en-US", {
 		month: "short",
 		day: "numeric",
@@ -21,9 +25,11 @@ export const TaskCard = ({ task, onClick }: TaskCardProps) => {
 
 	return (
 		<Card
+			ref={ref}
 			size="sm"
+			variant={variant}
 			onClick={onClick}
-			className="shrink-0 gap-2.5 p-3.5 shadow-sm transition-all hover:bg-accent/40 hover:shadow-md cursor-pointer"
+			className="shrink-0 gap-2.5 p-3.5 shadow-sm"
 		>
 			<div className="flex items-center gap-2">
 				<PriorityBadge priority={task.priority} variant="dot" />

@@ -7,11 +7,24 @@ import { HTTPException } from "hono/http-exception";
 import type { TaskFilterParams } from "../task/task.filters";
 import { boardRepository } from "./board.repository";
 
+export type GetBoardInput = {
+	id: string;
+	userId: string;
+	filters?: TaskFilterParams;
+};
+
+export type UpdateBoardInput = {
+	id: string;
+	userId: string;
+	data: z.infer<typeof CreateBoardSchema>;
+};
+
 export const boardService = {
 	listByUser(userId: string, options: PaginateOptions) {
 		return boardRepository.findPaginatedByUserId({ userId, options });
 	},
-	async getById(id: string, userId: string, filters: TaskFilterParams = {}) {
+	async getById(input: GetBoardInput) {
+		const { id, userId, filters = {} } = input;
 		const board = await boardRepository.findById({ id, filters });
 		if (!board) throw new HTTPException(404, { message: "Board not found" });
 		if (board.ownerId !== userId)
@@ -30,11 +43,8 @@ export const boardService = {
 		});
 	},
 
-	async update(
-		id: string,
-		userId: string,
-		data: z.infer<typeof CreateBoardSchema>,
-	) {
+	async update(input: UpdateBoardInput) {
+		const { id, userId, data } = input;
 		const board = await boardRepository.findById({ id });
 		if (!board) throw new HTTPException(404, { message: "Board not found" });
 		if (board.ownerId !== userId)

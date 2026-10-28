@@ -33,7 +33,7 @@ export const getByIdHandler: RouteHandler<
 	const id = c.req.param("id");
 	const query = c.req.valid("query");
 
-	const board = await boardService.getById(id, userId, query);
+	const board = await boardService.getById({ id, userId, filters: query });
 	return c.json(board, 200);
 };
 
@@ -56,7 +56,7 @@ export const updateHandler: RouteHandler<
 	const id = c.req.param("id");
 	const data = c.req.valid("json");
 
-	const board = await boardService.update(id, userId, data);
+	const board = await boardService.update({ id, userId, data });
 	return c.json(board, 200);
 };
 

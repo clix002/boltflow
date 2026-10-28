@@ -26,7 +26,7 @@ export const updateHandler: RouteHandler<
 	const { id } = c.req.valid("param");
 	const data = c.req.valid("json");
 
-	const column = await columnService.update(id, userId, data);
+	const column = await columnService.update({ id, userId, data });
 	return c.json(column, 200);
 };
 

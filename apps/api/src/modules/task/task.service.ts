@@ -1,9 +1,25 @@
 import type { z } from "@hono/zod-openapi";
-import type { CreateTaskSchema } from "@scrum-board/shared/schemas";
+import type {
+	CreateTaskSchema,
+	MoveTaskSchema,
+	UpdateTaskSchema,
+} from "@scrum-board/shared/schemas";
 import { HTTPException } from "hono/http-exception";
 import { prisma } from "@/db/connections";
 import { Priority, Prisma } from "@/db/prisma/generated/client";
 import { taskRepository } from "./task.repository";
+
+export type UpdateTaskInput = {
+	userId: string;
+	id: string;
+	data: z.infer<typeof UpdateTaskSchema>;
+};
+
+export type MoveTaskInput = {
+	userId: string;
+	id: string;
+	data: z.infer<typeof MoveTaskSchema>;
+};
 
 export const taskService = {
 	async create(userId: string, data: z.infer<typeof CreateTaskSchema>) {
@@ -66,5 +82,75 @@ export const taskService = {
 			}
 			throw err;
 		}
+	},
+
+	async update(input: UpdateTaskInput) {
+		const { userId, id, data } = input;
+		const task = await taskRepository.findByIdWithBoard(id);
+		if (!task) {
+			throw new HTTPException(404, { message: "Task not found" });
+		}
+
+		if (task.column.board.ownerId !== userId) {
+			throw new HTTPException(403, { message: "Not authorized" });
+		}
+
+		const { assigneeIds, ...taskData } = data;
+
+		return taskRepository.update(id, {
+			...taskData,
+			...(assigneeIds && {
+				assignees: {
+					set: [...new Set(assigneeIds)].map((assigneeId) => ({
+						id: assigneeId,
+					})),
+				},
+			}),
+		});
+	},
+
+	async move(input: MoveTaskInput) {
+		const { userId, id, data } = input;
+		const task = await taskRepository.findByIdWithBoard(id);
+		if (!task) {
+			throw new HTTPException(404, { message: "Task not found" });
+		}
+
+		if (task.column.board.ownerId !== userId) {
+			throw new HTTPException(403, { message: "Not authorized" });
+		}
+
+		const isSameColumn = data.columnId === task.columnId;
+
+		if (!isSameColumn) {
+			const targetColumn = await prisma.column.findUnique({
+				where: { id: data.columnId },
+				select: {
+					id: true,
+					boardId: true,
+				},
+			});
+
+			if (!targetColumn) {
+				throw new HTTPException(404, { message: "Target column not found" });
+			}
+
+			if (targetColumn.boardId !== task.column.board.id) {
+				throw new HTTPException(400, {
+					message: "Cannot move task to a column in a different board",
+				});
+			}
+		}
+
+		const targetOrder =
+			data.order ?? (await taskRepository.countByColumnId(data.columnId));
+
+		return taskRepository.moveTask({
+			id,
+			sourceColumnId: task.columnId,
+			sourceOrder: task.order,
+			targetColumnId: data.columnId,
+			targetOrder,
+		});
 	},
 };
