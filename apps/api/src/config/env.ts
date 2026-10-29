@@ -14,8 +14,6 @@ const EnvSchema = z
 			.enum(["true", "false"])
 			.default("false")
 			.transform((value) => value === "true"),
-		GITHUB_TOKEN: z.string().optional(),
-		GITHUB_REPO: z.string().optional(),
 	})
 	.refine((value) => value.JWT_SECRET !== value.REFRESH_SECRET, {
 		path: ["REFRESH_SECRET"],

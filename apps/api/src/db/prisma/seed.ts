@@ -43,8 +43,7 @@ async function main() {
 			name: "Clix",
 			password: defaultPassword,
 			avatarUrl: avatarsCatalog[0]?.value,
-			githubToken:
-				existingDemo?.githubToken ?? process.env.GITHUB_TOKEN ?? null,
+			githubToken: existingDemo?.githubToken ?? null,
 		},
 	});
 

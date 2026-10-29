@@ -8,7 +8,6 @@ import type { Maybe } from "@scrum-board/shared/types";
 import { Effect } from "effect";
 import { HTTPException } from "hono/http-exception";
 import { Octokit } from "octokit";
-import { env } from "@/config/env";
 import { prisma } from "@/db/connections";
 import {
 	GitHubApiError,
@@ -53,11 +52,10 @@ type CreateRemoteBranchParams = {
 const createOctokitClient = (
 	token?: Maybe<string | undefined>,
 ): Maybe<Octokit> => {
-	const effectiveToken = token || env.GITHUB_TOKEN;
-	if (!effectiveToken) {
+	if (!token) {
 		return null;
 	}
-	return new Octokit({ auth: effectiveToken });
+	return new Octokit({ auth: token });
 };
 
 const getRemoteBranchEffect = Effect.fn("github.getRemoteBranch")(
@@ -181,7 +179,7 @@ const listBranchesEffect = Effect.fn("github.listBranches")(function* (
 	const defaultBranch = input.defaultBranch ?? "main";
 	const coords = parseRepoCoordinates(effectiveRepo);
 	const octokit = createOctokitClient(input.githubToken);
-	const hasToken = Boolean(input.githubToken || env.GITHUB_TOKEN);
+	const hasToken = Boolean(input.githubToken);
 
 	if (!coords || !octokit) {
 		return {
