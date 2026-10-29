@@ -76,6 +76,7 @@ export const BoardDetailSidebar = () => {
 
 			<SidebarBranchesGroup
 				branches={branches}
+				units={units}
 				isLoading={isLoadingGitHub}
 				selectedBranchName={selectedBranchName}
 				onToggleBranch={toggleBranch}

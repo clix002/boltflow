@@ -148,12 +148,28 @@ export const boardService = {
 
 	async update(input: UpdateBoardInput) {
 		const { id, userId, data } = input;
-		await verifyBoardOwnership(id, userId);
+		const board = await verifyBoardOwnership(id, userId);
+
+		const normalizedNextRepo =
+			data.githubRepo !== undefined
+				? normalizeRepoSlug(data.githubRepo)
+				: undefined;
+
+		if (
+			board.githubRepo &&
+			normalizedNextRepo !== undefined &&
+			normalizedNextRepo !== board.githubRepo
+		) {
+			throw new HTTPException(400, {
+				message:
+					"GitHub repository cannot be changed once linked to a board. Create a new board for another repository.",
+			});
+		}
 
 		return boardRepository.update(id, {
 			...(data.name !== undefined ? { name: data.name } : {}),
-			...(data.githubRepo !== undefined
-				? { githubRepo: normalizeRepoSlug(data.githubRepo) }
+			...(normalizedNextRepo !== undefined
+				? { githubRepo: normalizedNextRepo }
 				: {}),
 			...(data.defaultBranch !== undefined
 				? { defaultBranch: data.defaultBranch }

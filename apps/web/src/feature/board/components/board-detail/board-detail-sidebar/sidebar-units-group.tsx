@@ -96,12 +96,10 @@ export const SidebarUnitsGroup = ({
 												{unit.branchName && (
 													<Badge
 														variant="outline"
-														className="ml-auto h-4 gap-0.5 px-1 font-mono text-[9px] text-emerald-600 dark:text-emerald-400 shrink-0"
+														className="ml-auto h-4 gap-0.5 px-1 font-mono text-[9px] text-emerald-600 dark:text-emerald-400 shrink-0 max-w-[48%]"
 													>
-														<GitBranch className="size-2.5" />
-														<span className="max-w-16 truncate">
-															{unit.branchName}
-														</span>
+														<GitBranch className="size-2.5 shrink-0" />
+														<span className="truncate">{unit.branchName}</span>
 													</Badge>
 												)}
 											</SidebarMenuButton>

@@ -97,6 +97,7 @@ export const UpdateBoardDialog = ({
 					<GitHubRepoFields
 						githubRepo={githubRepo}
 						defaultBranch={defaultBranch}
+						repoLocked={Boolean(board.githubRepo)}
 						onRepoChange={(nextRepo, nextDefaultBranch) => {
 							form.setValue("githubRepo", nextRepo);
 							form.setValue("defaultBranch", nextDefaultBranch);

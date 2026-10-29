@@ -22,6 +22,7 @@ export type RouteHandle = {
 	sidebar?: ComponentType;
 	sidebarHeader?: ComponentType;
 	headerContent?: ComponentType;
+	showSidebarFooter?: boolean;
 };
 
 export const routes = createBrowserRouter([
@@ -59,6 +60,7 @@ export const routes = createBrowserRouter([
 					sidebar: BoardSidebar,
 					sidebarHeader: BoardSidebarHeader,
 					headerContent: BoardHeader,
+					showSidebarFooter: true,
 				},
 			},
 			{

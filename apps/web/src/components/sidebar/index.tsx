@@ -29,6 +29,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
 	const SideComponent = (currentMatch?.handle as RouteHandle)?.sidebar;
 	const HeaderComponent = (currentMatch?.handle as RouteHandle)?.sidebarHeader;
+	const showSidebarFooter = Boolean(
+		(currentMatch?.handle as RouteHandle)?.showSidebarFooter,
+	);
 
 	const handleLogout = () => {
 		logoutMutation(undefined, {
@@ -46,9 +49,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 		<Sidebar {...props}>
 			<SidebarHeader>{HeaderComponent && <HeaderComponent />}</SidebarHeader>
 			<SidebarContent>{SideComponent && <SideComponent />}</SidebarContent>
-			<SidebarFooter>
-				<UserAvatar handleLogout={handleLogout} />
-			</SidebarFooter>
+			{showSidebarFooter && (
+				<SidebarFooter>
+					<UserAvatar handleLogout={handleLogout} />
+				</SidebarFooter>
+			)}
 			<SidebarRail />
 		</Sidebar>
 	);

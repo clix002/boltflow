@@ -18,6 +18,11 @@ const MAIN_BOARD_ID = "4ec3738b-039f-4b75-a93e-58ae5a1529a6";
 async function main() {
 	console.log("Starting database seeding...");
 
+	const existingDemo = await prisma.user.findUnique({
+		where: { email: "demo@example.com" },
+		select: { id: true, githubToken: true },
+	});
+
 	await prisma.comment.deleteMany();
 	await prisma.task.deleteMany();
 	await prisma.column.deleteMany();
@@ -32,10 +37,13 @@ async function main() {
 
 	const demoUser = await prisma.user.create({
 		data: {
+			...(existingDemo?.id ? { id: existingDemo.id } : {}),
 			email: "demo@example.com",
 			name: "Clix",
 			password: defaultPassword,
 			avatarUrl: avatarsCatalog[0]?.value,
+			githubToken:
+				existingDemo?.githubToken ?? process.env.GITHUB_TOKEN ?? null,
 		},
 	});
 
@@ -67,7 +75,7 @@ async function main() {
 			id: MAIN_BOARD_ID,
 			name: "BoltFlow Workspace",
 			githubRepo: "clix002/boltflow",
-			defaultBranch: "main",
+			defaultBranch: "staging",
 			ownerId: demoUser.id,
 		},
 	});
@@ -89,7 +97,7 @@ async function main() {
 				name: "GitHub Sync",
 				description: "Integración Octokit REST API, ramas y Pull Requests",
 				color: "#10b981",
-				branchName: "feature/board-detail-01",
+				branchName: "feature/board-detail-03",
 				boardId: mainProjectBoard.id,
 			},
 		}),
@@ -109,7 +117,7 @@ async function main() {
 				description:
 					"Herramienta CLI para que agentes IA operen desde terminal",
 				color: "#f59e0b",
-				branchName: "staging",
+				branchName: "clinton/board-02",
 				boardId: mainProjectBoard.id,
 			},
 		}),
@@ -276,7 +284,7 @@ async function main() {
 							order: 0,
 							priority: Priority.HIGH,
 							boltId: coreBolt2.id,
-							branchName: "staging",
+							branchName: "feature/model-01",
 							prStatus: PrStatus.OPEN,
 							assignees: {
 								connect: [{ id: demoUser.id }, { id: aiAgent.id }],
@@ -310,7 +318,7 @@ async function main() {
 							order: 0,
 							priority: Priority.HIGH,
 							boltId: coreBolt2.id,
-							branchName: "feature/board-detail-02",
+							branchName: "feature/unit-subboard-01",
 							prStatus: PrStatus.MERGED,
 							assignees: {
 								connect: [{ id: demoUser.id }, { id: aiAgent.id }],
@@ -558,7 +566,7 @@ async function main() {
 							order: 1,
 							priority: Priority.HIGH,
 							boltId: uiBolt1.id,
-							branchName: "feature/board-detail-01",
+							branchName: "feature/board-detail-02",
 							prStatus: PrStatus.MERGED,
 							assignees: {
 								connect: [{ id: demoUser.id }, { id: aiAgent.id }],

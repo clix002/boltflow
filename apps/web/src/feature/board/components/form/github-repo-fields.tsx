@@ -34,6 +34,7 @@ import {
 type GitHubRepoFieldsProps = {
 	githubRepo: Maybe<string | undefined>;
 	defaultBranch: string;
+	repoLocked?: boolean;
 	onRepoChange: (repo: Maybe<string>, defaultBranch: string) => void;
 	onBranchChange: (branch: string) => void;
 };
@@ -41,6 +42,7 @@ type GitHubRepoFieldsProps = {
 export const GitHubRepoFields = ({
 	githubRepo,
 	defaultBranch,
+	repoLocked = false,
 	onRepoChange,
 	onBranchChange,
 }: GitHubRepoFieldsProps) => {
@@ -169,45 +171,63 @@ export const GitHubRepoFields = ({
 					<div className="sm:col-span-2">
 						<Field>
 							<FieldLabel className="text-xs">Repository</FieldLabel>
-							<Select
-								value={toOptionalSelectValue(activeRepo)}
-								onValueChange={handleSelectRepo}
-							>
-								<SelectTrigger className="w-full font-mono text-xs cursor-pointer">
-									<SelectValue placeholder="Select a repository..." />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem
-										value={SELECT_UNSET_VALUE}
-										className="text-xs text-muted-foreground cursor-pointer"
+							{repoLocked && activeRepo ? (
+								<div
+									title="Repository cannot be changed once linked to a board"
+									className="flex h-9 w-full items-center gap-2 rounded-md border border-input bg-muted/50 px-3 font-mono text-xs text-muted-foreground select-none"
+								>
+									<Lock className="size-3.5 shrink-0 text-muted-foreground" />
+									<span className="truncate text-foreground/90">
+										{activeRepo}
+									</span>
+									<Badge
+										variant="outline"
+										className="ml-auto h-4 px-1.5 font-sans text-[10px] shrink-0"
 									>
-										No linked repository
-									</SelectItem>
-									{activeRepo &&
-										!repos.some((r) => r.fullName === activeRepo) && (
+										Locked
+									</Badge>
+								</div>
+							) : (
+								<Select
+									value={toOptionalSelectValue(activeRepo)}
+									onValueChange={handleSelectRepo}
+								>
+									<SelectTrigger className="w-full font-mono text-xs cursor-pointer">
+										<SelectValue placeholder="Select a repository..." />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem
+											value={SELECT_UNSET_VALUE}
+											className="text-xs text-muted-foreground cursor-pointer"
+										>
+											No linked repository
+										</SelectItem>
+										{activeRepo &&
+											!repos.some((r) => r.fullName === activeRepo) && (
+												<SelectItem
+													value={activeRepo}
+													className="font-mono text-xs cursor-pointer"
+												>
+													{activeRepo}
+												</SelectItem>
+											)}
+										{repos.map((repo) => (
 											<SelectItem
-												value={activeRepo}
+												key={repo.id}
+												value={repo.fullName}
 												className="font-mono text-xs cursor-pointer"
 											>
-												{activeRepo}
+												<span className="inline-flex items-center gap-1.5">
+													<span>{repo.fullName}</span>
+													{repo.private && (
+														<Lock className="size-2.5 text-muted-foreground" />
+													)}
+												</span>
 											</SelectItem>
-										)}
-									{repos.map((repo) => (
-										<SelectItem
-											key={repo.id}
-											value={repo.fullName}
-											className="font-mono text-xs cursor-pointer"
-										>
-											<span className="inline-flex items-center gap-1.5">
-												<span>{repo.fullName}</span>
-												{repo.private && (
-													<Lock className="size-2.5 text-muted-foreground" />
-												)}
-											</span>
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
+										))}
+									</SelectContent>
+								</Select>
+							)}
 						</Field>
 					</div>
 
