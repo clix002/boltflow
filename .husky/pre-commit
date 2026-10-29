@@ -1,4 +1,4 @@
 #!/bin/sh
 # Format & lint staged files, stage the fixes
-bun run biome check --write --staged
+bun run biome check --write --staged --no-errors-on-unmatched
 git update-index --again
