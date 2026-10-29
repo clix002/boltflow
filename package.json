@@ -1,5 +1,5 @@
 {
-	"name": "scrum-board",
+	"name": "boltflow",
 	"private": true,
 	"scripts": {
 		"build": "turbo run build",
