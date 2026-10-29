@@ -5,7 +5,7 @@ import { useMe } from "@/feature/auth/api/use-me";
 import { useAuthStore } from "@/store/useAuthStore";
 
 export const Root = ({ children }: { children: ReactNode }) => {
-	const { setUser, clearUser } = useAuthStore();
+	const { user, setUser, clearUser } = useAuthStore();
 	const { data, isLoading, isError } = useMe();
 
 	useEffect(() => {
@@ -18,7 +18,9 @@ export const Root = ({ children }: { children: ReactNode }) => {
 		}
 	}, [data, isError, setUser, clearUser]);
 
-	if (isLoading) {
+	const isSyncingAuthUser = Boolean(data?.user) && !user && !isError;
+
+	if (isLoading || isSyncingAuthUser) {
 		return (
 			<div className="flex min-h-screen items-center justify-center">
 				<Spinner />

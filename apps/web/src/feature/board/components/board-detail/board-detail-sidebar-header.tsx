@@ -11,7 +11,7 @@ export const BoardDetailSidebarHeader = () => {
 	return (
 		<div className="flex items-center gap-2 w-full">
 			<Button variant="ghost" size="icon" className="size-7 shrink-0" asChild>
-				<Link to="/">
+				<Link to="/boards">
 					<ArrowLeft className="size-4" />
 				</Link>
 			</Button>

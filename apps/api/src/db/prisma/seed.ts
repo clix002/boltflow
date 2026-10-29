@@ -1,5 +1,6 @@
 import { prisma } from "@/db/connections";
 import { BoltStatus, Priority, PrStatus } from "@/db/prisma/generated/client";
+import avatarsCatalog from "@/modules/catalog/avatars.json";
 import {
 	bold,
 	bullet,
@@ -35,7 +36,7 @@ async function main() {
 			email: "demo@example.com",
 			name: "Clix",
 			password: defaultPassword,
-			avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Demo",
+			avatarUrl: avatarsCatalog[0]?.value,
 		},
 	});
 
@@ -44,7 +45,7 @@ async function main() {
 			email: "agent@example.com",
 			name: "Code Agent",
 			password: defaultPassword,
-			avatarUrl: "https://api.dicebear.com/7.x/bottts/svg?seed=BoltFlow",
+			avatarUrl: avatarsCatalog[1]?.value,
 		},
 	});
 
@@ -53,7 +54,7 @@ async function main() {
 			email: "john@example.com",
 			name: "John Doe",
 			password: defaultPassword,
-			avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
+			avatarUrl: avatarsCatalog[2]?.value,
 		},
 	});
 

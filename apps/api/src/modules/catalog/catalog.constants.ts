@@ -6,6 +6,7 @@ import {
 	PrioritySchema,
 	PrStatusSchema,
 } from "@scrum-board/shared/schemas";
+import avatarsCatalog from "./avatars.json";
 
 export const CATALOG_REGISTRY = {
 	[CATALOG_SLUG.BOLT_STATUS]: [
@@ -36,4 +37,5 @@ export const CATALOG_REGISTRY = {
 		{ value: PrStatusSchema.enum.MERGED, label: "Merged" },
 		{ value: PrStatusSchema.enum.CLOSED, label: "Closed" },
 	],
+	[CATALOG_SLUG.USER_AVATAR]: avatarsCatalog,
 } as const satisfies Record<CatalogSlug, CatalogOption[]>;

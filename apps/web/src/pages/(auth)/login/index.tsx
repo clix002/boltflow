@@ -13,7 +13,7 @@ export const LoginPage = () => {
 	const state = location.state as LoginLocationState;
 
 	if (user) {
-		const from = state?.from ?? "/";
+		const from = state?.from ?? "/boards";
 		return <Navigate to={from} replace />;
 	}
 

@@ -21,4 +21,10 @@ describe("catalogService", () => {
 			color: "#8b5cf6",
 		});
 	});
+
+	it("returns local self-hosted SVG avatars in user-avatar catalog", () => {
+		const options = catalogService.getBySlug(CATALOG_SLUG.USER_AVATAR);
+		expect(options.length).toBe(8);
+		expect(options[0]?.value.startsWith("data:image/svg+xml;utf8,")).toBe(true);
+	});
 });

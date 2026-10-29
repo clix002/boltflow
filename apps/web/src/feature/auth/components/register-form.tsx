@@ -50,7 +50,7 @@ export function RegisterForm({
 			onSuccess: (result) => {
 				setUser(result.user);
 				queryClient.invalidateQueries({ queryKey: ME_QUERY_KEY });
-				navigate("/");
+				navigate("/boards");
 			},
 			onError: (error) => {
 				toast.error(error.message || "An error occurred while registering");

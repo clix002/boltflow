@@ -6,7 +6,7 @@ export const RegisterPage = () => {
 	const { user } = useAuthStore();
 
 	if (user) {
-		return <Navigate to="/" replace />;
+		return <Navigate to="/boards" replace />;
 	}
 
 	return (

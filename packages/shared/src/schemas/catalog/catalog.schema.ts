@@ -5,6 +5,7 @@ export const CATALOG_SLUG = {
 	UNIT_COLOR: "unit-color",
 	TASK_PRIORITY: "task-priority",
 	PR_STATUS: "pr-status",
+	USER_AVATAR: "user-avatar",
 } as const;
 
 export const CatalogSlugSchema = z.enum([
@@ -12,6 +13,7 @@ export const CatalogSlugSchema = z.enum([
 	CATALOG_SLUG.UNIT_COLOR,
 	CATALOG_SLUG.TASK_PRIORITY,
 	CATALOG_SLUG.PR_STATUS,
+	CATALOG_SLUG.USER_AVATAR,
 ]);
 export type CatalogSlug = z.infer<typeof CatalogSlugSchema>;
 

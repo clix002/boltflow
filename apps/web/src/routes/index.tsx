@@ -13,6 +13,7 @@ import {
 	BoardDetailPage,
 	BoardPage,
 	LoginPage,
+	MarketingPage,
 	NotFoundPage,
 	RegisterPage,
 } from "@/pages";
@@ -29,6 +30,11 @@ export const routes = createBrowserRouter([
 		Component: () => <NotFoundPage />,
 	},
 	{
+		path: "/",
+		Component: () => <MarketingPage />,
+		errorElement: <RootErrorBoundary />,
+	},
+	{
 		path: "/login",
 		Component: () => <LoginPage />,
 		errorElement: <RootErrorBoundary />,
@@ -39,7 +45,6 @@ export const routes = createBrowserRouter([
 		errorElement: <RootErrorBoundary />,
 	},
 	{
-		path: "/",
 		errorElement: <RootErrorBoundary />,
 		Component: () => (
 			<ProtectedRoute>
@@ -48,7 +53,7 @@ export const routes = createBrowserRouter([
 		),
 		children: [
 			{
-				index: true,
+				path: "/boards",
 				Component: () => <BoardPage />,
 				handle: {
 					sidebar: BoardSidebar,
@@ -57,7 +62,7 @@ export const routes = createBrowserRouter([
 				},
 			},
 			{
-				path: "board/:boardId",
+				path: "/board/:boardId",
 				Component: () => <BoardDetailPage />,
 				handle: {
 					sidebar: BoardDetailSidebar,
