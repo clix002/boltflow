@@ -68,3 +68,19 @@ export const moveTaskRoute = createRoute({
 		},
 	},
 });
+
+export const deleteTaskRoute = createRoute({
+	method: "delete",
+	tags: ["Task"],
+	path: "/:id",
+	request: {
+		params: z.object({
+			id: z.string(),
+		}),
+	},
+	responses: {
+		204: {
+			description: "Task deleted successfully",
+		},
+	},
+});

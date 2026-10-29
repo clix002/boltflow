@@ -10,6 +10,7 @@ import {
 	PRIORITY_BADGE_VARIANT,
 	PriorityBadge,
 } from "@/feature/task/components/priority-badge";
+import { TaskActionsMenu } from "@/feature/task/components/task-actions-menu";
 import { getTaskDescriptionPreview } from "@/feature/task/components/task-detail-sheet";
 
 type Task = z.infer<typeof TaskWithAssigneesSchema>;
@@ -17,11 +18,20 @@ type Task = z.infer<typeof TaskWithAssigneesSchema>;
 type TaskCardProps = {
 	task: Task;
 	onClick?: () => void;
+	onEdit?: () => void;
+	onDelete?: () => void;
 	variant?: VariantProps<typeof cardVariants>["variant"];
 	ref?: React.Ref<HTMLDivElement>;
 };
 
-export const TaskCard = ({ task, onClick, variant, ref }: TaskCardProps) => {
+export const TaskCard = ({
+	task,
+	onClick,
+	onEdit,
+	onDelete,
+	variant,
+	ref,
+}: TaskCardProps) => {
 	const formattedDate = new Date(task.createdAt).toLocaleDateString("en-US", {
 		month: "short",
 		day: "numeric",
@@ -36,14 +46,20 @@ export const TaskCard = ({ task, onClick, variant, ref }: TaskCardProps) => {
 			onClick={onClick}
 			className="shrink-0 gap-2.5 p-3.5 shadow-sm"
 		>
-			<div className="flex items-center gap-2">
-				<PriorityBadge
-					priority={task.priority}
-					variant={PRIORITY_BADGE_VARIANT.DOT}
-				/>
-				<span className="text-sm font-medium leading-tight text-foreground truncate">
-					{task.title}
-				</span>
+			<div className="flex items-center justify-between gap-2">
+				<div className="flex items-center gap-2 min-w-0">
+					<PriorityBadge
+						priority={task.priority}
+						variant={PRIORITY_BADGE_VARIANT.DOT}
+					/>
+					<span className="text-sm font-medium leading-tight text-foreground truncate">
+						{task.title}
+					</span>
+				</div>
+
+				{onEdit && onDelete && (
+					<TaskActionsMenu onEdit={onEdit} onDelete={onDelete} />
+				)}
 			</div>
 
 			{descriptionPreview && (

@@ -6,6 +6,7 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { z } from "zod";
 import { api } from "@/lib/api";
+import { playTaskCreateSound } from "@/lib/sound.utils";
 
 type CreateTaskInput = z.infer<typeof CreateTaskSchema>;
 type TaskWithAssignees = z.infer<typeof TaskWithAssigneesSchema>;
@@ -15,6 +16,7 @@ export const useCreateTaskMutation = () => {
 		mutationFn: (data: CreateTaskInput) =>
 			api.post<TaskWithAssignees>("/tasks", data),
 		onSuccess: () => {
+			playTaskCreateSound();
 			toast.success("Task created successfully");
 		},
 		onError: () => {

@@ -21,6 +21,11 @@ export type MoveTaskInput = {
 	data: z.infer<typeof MoveTaskSchema>;
 };
 
+export type RemoveTaskInput = {
+	userId: string;
+	id: string;
+};
+
 export const taskService = {
 	async create(userId: string, data: z.infer<typeof CreateTaskSchema>) {
 		const column = await prisma.column.findUnique({
@@ -151,6 +156,24 @@ export const taskService = {
 			sourceOrder: task.order,
 			targetColumnId: data.columnId,
 			targetOrder,
+		});
+	},
+
+	async remove(input: RemoveTaskInput) {
+		const { userId, id } = input;
+		const task = await taskRepository.findByIdWithBoard(id);
+		if (!task) {
+			throw new HTTPException(404, { message: "Task not found" });
+		}
+
+		if (task.column.board.ownerId !== userId) {
+			throw new HTTPException(403, { message: "Not authorized" });
+		}
+
+		await taskRepository.deleteTask({
+			id,
+			columnId: task.columnId,
+			order: task.order,
 		});
 	},
 };

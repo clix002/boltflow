@@ -11,12 +11,16 @@ type SortableTaskCardProps = {
 	task: Task;
 	index: number;
 	onClick?: () => void;
+	onEdit?: () => void;
+	onDelete?: () => void;
 };
 
 export const SortableTaskCard = ({
 	task,
 	index,
 	onClick,
+	onEdit,
+	onDelete,
 }: SortableTaskCardProps) => {
 	const { ref, isDragging } = useSortable({
 		id: task.id,
@@ -32,6 +36,8 @@ export const SortableTaskCard = ({
 			task={task}
 			variant={isDragging ? CARD_VARIANT.DRAGGING : CARD_VARIANT.DRAGGABLE}
 			onClick={onClick}
+			onEdit={onEdit}
+			onDelete={onDelete}
 		/>
 	);
 };

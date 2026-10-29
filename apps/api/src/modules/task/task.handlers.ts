@@ -2,6 +2,7 @@ import type { RouteHandler } from "@hono/zod-openapi";
 import type { AppEnv } from "@/modules/auth/types";
 import type {
 	createTaskRoute,
+	deleteTaskRoute,
 	moveTaskRoute,
 	updateTaskRoute,
 } from "./task.routes";
@@ -39,4 +40,15 @@ export const moveHandler: RouteHandler<typeof moveTaskRoute, AppEnv> = async (
 
 	const task = await taskService.move({ userId, id, data });
 	return c.json(task, 200);
+};
+
+export const deleteHandler: RouteHandler<
+	typeof deleteTaskRoute,
+	AppEnv
+> = async (c) => {
+	const userId = c.get("jwtPayload").id;
+	const { id } = c.req.valid("param");
+
+	await taskService.remove({ userId, id });
+	return c.body(null, 204);
 };

@@ -7,7 +7,7 @@ import {
 import { isEmpty, keyBy } from "es-toolkit/compat";
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
-import { tableColumns } from "./columns";
+import { createTableColumns } from "./columns";
 import { DroppableTableGroup } from "./droppable-table-group";
 import { SortableTableRow } from "./sortable-table-row";
 import { boardTableFeatures } from "./table-features";
@@ -17,12 +17,19 @@ import type { BoardTableProps, TableTaskRow } from "./types";
 export const BoardTable = ({
 	columns,
 	onTaskClick,
+	onEditTask,
+	onDeleteTask,
 	onAddTask,
 	onEditColumn,
 	onDeleteColumn,
 }: BoardTableProps) => {
 	const [expanded, setExpanded] = useState<ExpandedState>(true);
 	const [grouping] = useState<GroupingState>(["columnName"]);
+
+	const tableColumns = useMemo(
+		() => createTableColumns({ onEditTask, onDeleteTask }),
+		[onEditTask, onDeleteTask],
+	);
 
 	const data = useMemo<TableTaskRow[]>(() => {
 		return columns.flatMap((column): TableTaskRow[] => {

@@ -15,7 +15,8 @@ export type TableTaskRow = TaskWithAssignees & {
 };
 
 export type TableColumnsProps = {
-	onTaskClick?: (taskId: string) => void;
+	onEditTask?: (task: TaskWithAssignees) => void;
+	onDeleteTask?: (taskId: string) => void;
 };
 
 export type TableGroupHeaderProps = {
@@ -30,6 +31,8 @@ export type TableGroupHeaderProps = {
 export type BoardTableProps = {
 	columns: ColumnWithTasks[];
 	onTaskClick?: (taskId: string) => void;
+	onEditTask?: (task: TaskWithAssignees) => void;
+	onDeleteTask?: (taskId: string) => void;
 	onAddTask?: (columnId: string) => void;
 	onEditColumn?: (column: ColumnWithTasks) => void;
 	onDeleteColumn?: (columnId: string) => void;

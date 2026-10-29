@@ -2,6 +2,7 @@ import { DragDropProvider, DragOverlay } from "@dnd-kit/react";
 import type {
 	BoardDetailResponseSchema,
 	ColumnWithTasksSchema,
+	TaskWithAssigneesSchema,
 } from "@scrum-board/shared/schemas";
 import type { Maybe } from "@scrum-board/shared/types";
 import { useQueryClient } from "@tanstack/react-query";
@@ -21,8 +22,10 @@ import {
 import { useDeleteColumnMutation } from "@/feature/column/api/use-delete-column";
 import { CreateColumnDialog } from "@/feature/column/components/form/create-column-dialog";
 import { UpdateColumnDialog } from "@/feature/column/components/form/update-column-dialog";
+import { useDeleteTaskMutation } from "@/feature/task/api/use-delete-task";
 import { useMoveTaskMutation } from "@/feature/task/api/use-move-task";
 import { CreateTaskDialog } from "@/feature/task/components/form/create-task-dialog";
+import { UpdateTaskDialog } from "@/feature/task/components/form/update-task-dialog";
 import { TaskDetailSheet } from "@/feature/task/components/task-detail-sheet";
 import { useConfirm } from "@/hooks/confirm-provider";
 import { BoardTableView } from "./board-table";
@@ -34,6 +37,7 @@ import { useBoardPreferences } from "./use-board-preferences";
 
 type BoardDetailData = z.infer<typeof BoardDetailResponseSchema>;
 type ColumnWithTasks = z.infer<typeof ColumnWithTasksSchema>;
+type TaskWithAssignees = z.infer<typeof TaskWithAssigneesSchema>;
 
 export const BoardDetail = () => {
 	const queryClient = useQueryClient();
@@ -41,6 +45,7 @@ export const BoardDetail = () => {
 	const [isAddColumnOpen, setIsAddColumnOpen] = useState(false);
 	const confirm = useConfirm();
 	const { mutate: deleteColumn } = useDeleteColumnMutation();
+	const { mutate: deleteTask } = useDeleteTaskMutation();
 	const { mutate: moveTask } = useMoveTaskMutation();
 
 	const { session, selectedColumnIds, currentView } = useBoardPreferences();
@@ -60,6 +65,8 @@ export const BoardDetail = () => {
 	const boardBeforeDrag = useRef<Maybe<BoardDetailData>>(null);
 	const [activeColumnId, setActiveColumnId] = useState<Maybe<string>>(null);
 	const [selectedTaskId, setSelectedTaskId] = useState<Maybe<string>>(null);
+	const [editingTask, setEditingTask] =
+		useState<Maybe<TaskWithAssignees>>(null);
 	const [editingColumn, setEditingColumn] =
 		useState<Maybe<ColumnWithTasks>>(null);
 
@@ -74,6 +81,24 @@ export const BoardDetail = () => {
 
 		deleteColumn(columnId, {
 			onSuccess: () => {
+				queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+			},
+		});
+	};
+
+	const handleDeleteTask = async (taskId: string) => {
+		const ok = await confirm({
+			title: "Delete Task",
+			message: "Are you sure you want to permanently delete this task?",
+			confirmText: "Delete",
+		});
+		if (!ok) return;
+
+		deleteTask(taskId, {
+			onSuccess: () => {
+				if (selectedTaskId === taskId) {
+					setSelectedTaskId(null);
+				}
 				queryClient.invalidateQueries({ queryKey: ["board", boardId] });
 			},
 		});
@@ -132,6 +157,8 @@ export const BoardDetail = () => {
 						columns={visibleColumns}
 						onAddTask={(colId) => setActiveColumnId(colId)}
 						onTaskClick={(taskId) => setSelectedTaskId(taskId)}
+						onEditTask={(task) => setEditingTask(task)}
+						onDeleteTask={handleDeleteTask}
 						onEditColumn={(col) => setEditingColumn(col)}
 						onDeleteColumn={handleDeleteColumn}
 					/>
@@ -143,6 +170,8 @@ export const BoardDetail = () => {
 								column={column}
 								onAddTask={(colId) => setActiveColumnId(colId)}
 								onTaskClick={(taskId) => setSelectedTaskId(taskId)}
+								onEditTask={(task) => setEditingTask(task)}
+								onDeleteTask={handleDeleteTask}
 								onEditColumn={(col) => setEditingColumn(col)}
 								onDeleteColumn={handleDeleteColumn}
 							/>
@@ -173,10 +202,12 @@ export const BoardDetail = () => {
 
 			<TaskDetailSheet
 				task={selectedTask}
+				columns={board.columns}
 				boardId={boardId}
 				columnName={selectedTaskColumn?.name}
 				open={Boolean(selectedTask)}
 				onOpenChange={(open) => !open && setSelectedTaskId(null)}
+				onDeleteTask={handleDeleteTask}
 			/>
 
 			{Boolean(activeColumnId) && (
@@ -185,6 +216,15 @@ export const BoardDetail = () => {
 					open={Boolean(activeColumnId)}
 					onOpenChange={(open) => !open && setActiveColumnId(null)}
 					columnId={activeColumnId}
+					boardId={boardId ?? ""}
+				/>
+			)}
+			{editingTask && (
+				<UpdateTaskDialog
+					key={editingTask.id}
+					open={Boolean(editingTask)}
+					onOpenChange={(open) => !open && setEditingTask(null)}
+					task={editingTask}
 					boardId={boardId ?? ""}
 				/>
 			)}

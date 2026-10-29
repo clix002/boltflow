@@ -2,6 +2,12 @@ import { prisma } from "@/db/connections";
 import type { Prisma } from "@/db/prisma/generated/client";
 import { getMoveShiftOperations, type MoveTaskParams } from "./task.reorder";
 
+export type DeleteTaskParams = {
+	id: string;
+	columnId: string;
+	order: number;
+};
+
 export const taskRepository = {
 	findByIdWithBoard(id: string) {
 		return prisma.task.findUnique({
@@ -80,6 +86,23 @@ export const taskRepository = {
 							avatarUrl: true,
 						},
 					},
+				},
+			});
+		});
+	},
+	async deleteTask(params: DeleteTaskParams) {
+		return prisma.$transaction(async (tx) => {
+			await tx.task.delete({
+				where: { id: params.id },
+			});
+
+			await tx.task.updateMany({
+				where: {
+					columnId: params.columnId,
+					order: { gt: params.order },
+				},
+				data: {
+					order: { decrement: 1 },
 				},
 			});
 		});

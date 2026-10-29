@@ -1,6 +1,9 @@
 import { CollisionPriority } from "@dnd-kit/abstract";
 import { useDroppable } from "@dnd-kit/react";
-import type { ColumnWithTasksSchema } from "@scrum-board/shared/schemas";
+import type {
+	ColumnWithTasksSchema,
+	TaskWithAssigneesSchema,
+} from "@scrum-board/shared/schemas";
 import { cva } from "class-variance-authority";
 import { MoreHorizontal, Plus } from "lucide-react";
 import type { z } from "zod";
@@ -17,6 +20,7 @@ import { SortableTaskCard } from "./sortable-task-card";
 import { DND_TYPE } from "./types";
 
 type ColumnWithTasks = z.infer<typeof ColumnWithTasksSchema>;
+type TaskWithAssignees = z.infer<typeof TaskWithAssigneesSchema>;
 
 const kanbanColumnVariants = cva(
 	"flex h-full w-80 shrink-0 flex-col rounded-2xl border border-border/40 bg-secondary/20 p-3 transition-colors",
@@ -37,6 +41,8 @@ type KanbanColumnProps = {
 	column: ColumnWithTasks;
 	onAddTask?: (columnId: string) => void;
 	onTaskClick?: (taskId: string) => void;
+	onEditTask?: (task: TaskWithAssignees) => void;
+	onDeleteTask?: (taskId: string) => void;
 	onEditColumn?: (column: ColumnWithTasks) => void;
 	onDeleteColumn?: (columnId: string) => void;
 };
@@ -45,6 +51,8 @@ export const KanbanColumn = ({
 	column,
 	onAddTask,
 	onTaskClick,
+	onEditTask,
+	onDeleteTask,
 	onEditColumn,
 	onDeleteColumn,
 }: KanbanColumnProps) => {
@@ -112,6 +120,8 @@ export const KanbanColumn = ({
 						task={task}
 						index={index}
 						onClick={() => onTaskClick?.(task.id)}
+						onEdit={() => onEditTask?.(task)}
+						onDelete={() => onDeleteTask?.(task.id)}
 					/>
 				))}
 

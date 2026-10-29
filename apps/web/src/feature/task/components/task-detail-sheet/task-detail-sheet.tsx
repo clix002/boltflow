@@ -1,4 +1,5 @@
 import type {
+	ColumnWithTasksSchema,
 	TaskWithAssigneesSchema,
 	UpdateTaskSchema,
 } from "@scrum-board/shared/schemas";
@@ -30,22 +31,27 @@ import { TaskPropertiesSection } from "./task-properties-section";
 import { TaskSheetToolbar } from "./task-sheet-toolbar";
 
 type TaskWithAssignees = z.infer<typeof TaskWithAssigneesSchema>;
+type ColumnWithTasks = z.infer<typeof ColumnWithTasksSchema>;
 type UpdateTaskInput = z.infer<typeof UpdateTaskSchema>;
 
 type TaskDetailSheetProps = {
 	task: Maybe<TaskWithAssignees>;
+	columns?: ColumnWithTasks[];
 	boardId?: string;
 	columnName?: string;
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
+	onDeleteTask?: (taskId: string) => void;
 };
 
 export const TaskDetailSheet = ({
 	task,
+	columns,
 	boardId,
 	columnName,
 	open,
 	onOpenChange,
+	onDeleteTask,
 }: TaskDetailSheetProps) => {
 	const queryClient = useQueryClient();
 	const { open: isSidebarOpen } = useSidebar();
@@ -59,6 +65,16 @@ export const TaskDetailSheet = ({
 	const [size, setSize] = useState<SheetSize>(SHEET_SIZE.DEFAULT);
 
 	const isExpanded = size === SHEET_SIZE.EXPANDED;
+
+	const persistUpdate = (payload: UpdateTaskVariables) => {
+		updateTask(payload, {
+			onSuccess: () => {
+				if (boardId) {
+					queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+				}
+			},
+		});
+	};
 
 	const debouncedSave = useMemo(
 		() =>
@@ -94,6 +110,11 @@ export const TaskDetailSheet = ({
 		debouncedSave({ id: task.id, data });
 	};
 
+	const handleImmediateUpdate = (data: UpdateTaskInput) => {
+		if (!task) return;
+		persistUpdate({ id: task.id, data });
+	};
+
 	const handleTitleChange = (nextTitle: string) => {
 		const trimmed = nextTitle.trim();
 		if (!task || !trimmed || trimmed === task.title) return;
@@ -120,6 +141,9 @@ export const TaskDetailSheet = ({
 							isSaving={isSaving}
 							hasSavedRecently={hasSavedRecently}
 							onToggleSize={toggleSize}
+							onDeleteTask={
+								onDeleteTask ? () => onDeleteTask(task.id) : undefined
+							}
 						/>
 
 						<div className="flex-1 overflow-y-auto px-14 py-6 custom-scrollbar">
@@ -145,7 +169,12 @@ export const TaskDetailSheet = ({
 									</SheetDescription>
 								</SheetHeader>
 
-								<TaskPropertiesSection task={task} columnName={columnName} />
+								<TaskPropertiesSection
+									task={task}
+									columns={columns}
+									columnName={columnName}
+									onUpdateTask={handleImmediateUpdate}
+								/>
 
 								<Separator className="my-6" />
 

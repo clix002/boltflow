@@ -1,4 +1,4 @@
-import { Check, Maximize2, Minimize2 } from "lucide-react";
+import { Check, Maximize2, Minimize2, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -15,6 +15,7 @@ type TaskSheetToolbarProps = {
 	isSaving?: boolean;
 	hasSavedRecently?: boolean;
 	onToggleSize: () => void;
+	onDeleteTask?: () => void;
 };
 
 export const TaskSheetToolbar = ({
@@ -23,6 +24,7 @@ export const TaskSheetToolbar = ({
 	isSaving = false,
 	hasSavedRecently = false,
 	onToggleSize,
+	onDeleteTask,
 }: TaskSheetToolbarProps) => {
 	return (
 		<div className="flex items-center justify-between border-b border-border/50 px-4 py-2.5 pr-12">
@@ -58,7 +60,7 @@ export const TaskSheetToolbar = ({
 				)}
 			</div>
 
-			<div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+			<div className="flex items-center gap-2 text-xs text-muted-foreground">
 				{isSaving && (
 					<span className="inline-flex items-center gap-1 text-[11px]">
 						<Spinner className="size-3" />
@@ -70,6 +72,26 @@ export const TaskSheetToolbar = ({
 						<Check className="size-3" />
 						Saved
 					</span>
+				)}
+
+				{onDeleteTask && (
+					<TooltipProvider>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									type="button"
+									variant="ghost"
+									size="icon-sm"
+									onClick={onDeleteTask}
+									className="text-muted-foreground hover:text-destructive cursor-pointer"
+									aria-label="Delete task"
+								>
+									<Trash2 className="size-4" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent side="bottom">Delete task</TooltipContent>
+						</Tooltip>
+					</TooltipProvider>
 				)}
 			</div>
 		</div>

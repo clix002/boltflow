@@ -1,5 +1,5 @@
 export { BoardTable, BoardTableView } from "./board-table";
-export { tableColumns } from "./columns";
+export { createTableColumns } from "./columns";
 export { TableGroupHeader } from "./table-group-header";
 export type {
 	BoardTableProps,
