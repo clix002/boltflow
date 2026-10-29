@@ -41,3 +41,13 @@ export function buildGitHubBranchUrl(
 	if (!cleanedRepo || !cleanedBranch) return null;
 	return `${GITHUB_WEB_BASE_URL}/${cleanedRepo}/tree/${cleanedBranch}`;
 }
+
+export function buildGitHubOwnerAvatarUrl(
+	repoSlug?: Maybe<string>,
+): Maybe<string> {
+	const cleanedRepo = trimToNull(repoSlug);
+	if (!cleanedRepo) return null;
+	const owner = trimToNull(cleanedRepo.split("/")[0]);
+	if (!owner) return null;
+	return `${GITHUB_WEB_BASE_URL}/${owner}.png?size=128`;
+}

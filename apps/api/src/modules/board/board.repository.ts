@@ -1,4 +1,4 @@
-import type { PaginateOptions } from "@scrum-board/shared/schemas";
+import { BOLT_STATUS, type PaginateOptions } from "@scrum-board/shared/schemas";
 import { prisma } from "@/db/connections";
 import type { Prisma } from "@/db/prisma/generated/client";
 import {
@@ -25,9 +25,12 @@ type findByIdOptions = {
 };
 
 export const boardRepository = {
-	findPaginatedByUserId({ userId, options }: findPaginatedByUserIdOptions) {
+	async findPaginatedByUserId({
+		userId,
+		options,
+	}: findPaginatedByUserIdOptions) {
 		const { search, ...optionsPage } = options;
-		return prisma.board
+		const paginated = await prisma.board
 			.paginate({
 				where: search
 					? {
@@ -43,6 +46,46 @@ export const boardRepository = {
 				},
 			})
 			.withPages(optionsPage);
+
+		if (paginated.docs.length === 0) {
+			return paginated;
+		}
+
+		const boardIds = paginated.docs.map((board) => board.id);
+		const units = await prisma.unit.findMany({
+			where: { boardId: { in: boardIds } },
+			select: {
+				boardId: true,
+				_count: {
+					select: {
+						bolts: {
+							where: { status: BOLT_STATUS.ACTIVE },
+						},
+					},
+				},
+			},
+		});
+
+		const docsWithCounts = paginated.docs.map((board) => {
+			let unitCount = 0;
+			let activeBoltCount = 0;
+			for (const unit of units) {
+				if (unit.boardId === board.id) {
+					unitCount += 1;
+					activeBoltCount += unit._count.bolts;
+				}
+			}
+			return {
+				...board,
+				unitCount,
+				activeBoltCount,
+			};
+		});
+
+		return {
+			docs: docsWithCounts,
+			info: paginated.info,
+		};
 	},
 	findById({ id, filters = {} }: findByIdOptions) {
 		return prisma.board.findUnique({

@@ -20,10 +20,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 	const SideComponent = (currentMatch?.handle as RouteHandle)?.sidebar;
 	const HeaderComponent = (currentMatch?.handle as RouteHandle)?.sidebarHeader;
 
+	if (!SideComponent) {
+		return null;
+	}
+
 	return (
 		<Sidebar {...props}>
 			<SidebarHeader>{HeaderComponent && <HeaderComponent />}</SidebarHeader>
-			<SidebarContent>{SideComponent && <SideComponent />}</SidebarContent>
+			<SidebarContent>
+				<SideComponent />
+			</SidebarContent>
 			<SidebarRail />
 		</Sidebar>
 	);

@@ -114,8 +114,11 @@ export type BoardGitHubInfo = z.infer<typeof BoardGitHubInfoSchema>;
 export const BoardSchema = z.object({
 	id: z.string(),
 	name: z.string(),
+	iconUrl: z.string().nullable().optional(),
 	githubRepo: z.string().nullable().optional(),
 	defaultBranch: z.string().optional(),
+	unitCount: z.number().int().nonnegative().optional(),
+	activeBoltCount: z.number().int().nonnegative().optional(),
 	ownerId: z.string(),
 	createdAt: z.string(),
 	updatedAt: z.string(),
@@ -123,12 +126,14 @@ export const BoardSchema = z.object({
 
 export const CreateBoardSchema = z.object({
 	name: TrimmedString(100),
+	iconUrl: NullableTrimmedString(25000),
 	githubRepo: NullableTrimmedString(200),
 	defaultBranch: TrimmedString(80).optional(),
 });
 
 export const UpdateBoardSchema = z.object({
 	name: TrimmedString(100).optional(),
+	iconUrl: NullableTrimmedString(25000),
 	githubRepo: NullableTrimmedString(200),
 	defaultBranch: TrimmedString(80).optional(),
 });

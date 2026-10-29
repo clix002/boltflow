@@ -11,6 +11,7 @@ import {
 } from "@scrum-board/shared/schemas";
 import type { Maybe } from "@scrum-board/shared/types";
 import { HTTPException } from "hono/http-exception";
+import boardIconsCatalog from "../catalog/board-icons.json";
 import { githubService } from "../github/github.service";
 import { normalizeRepoSlug, sanitizeBranchName } from "../github/github.utils";
 import type { TaskFilterParams } from "../task/task.filters";
@@ -136,6 +137,7 @@ export const boardService = {
 	async create(userId: string, data: z.infer<typeof CreateBoardSchema>) {
 		return await boardRepository.create({
 			name: data.name,
+			iconUrl: data.iconUrl ?? boardIconsCatalog[0]?.value ?? null,
 			githubRepo: normalizeRepoSlug(data.githubRepo),
 			defaultBranch: data.defaultBranch ?? "main",
 			owner: {
@@ -168,6 +170,7 @@ export const boardService = {
 
 		return boardRepository.update(id, {
 			...(data.name !== undefined ? { name: data.name } : {}),
+			...(data.iconUrl !== undefined ? { iconUrl: data.iconUrl } : {}),
 			...(normalizedNextRepo !== undefined
 				? { githubRepo: normalizedNextRepo }
 				: {}),

@@ -1,6 +1,7 @@
 model Board {
   id            String  @id @default(uuid())
   name          String
+  iconUrl       String?
   githubRepo    String?
   defaultBranch String  @default("main")
 

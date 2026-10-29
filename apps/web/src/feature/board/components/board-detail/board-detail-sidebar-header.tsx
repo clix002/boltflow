@@ -15,6 +15,13 @@ export const BoardDetailSidebarHeader = () => {
 					<ArrowLeft className="size-4" />
 				</Link>
 			</Button>
+			{board?.iconUrl && (
+				<img
+					src={board.iconUrl}
+					alt=""
+					className="size-5 shrink-0 rounded-sm object-contain"
+				/>
+			)}
 			<h2 className="text-sm font-semibold truncate">
 				{isPending ? <Spinner className="size-4 shrink-0" /> : board?.name}
 			</h2>

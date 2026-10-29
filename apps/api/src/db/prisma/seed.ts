@@ -1,6 +1,7 @@
 import { prisma } from "@/db/connections";
 import { BoltStatus, Priority, PrStatus } from "@/db/prisma/generated/client";
 import avatarsCatalog from "@/modules/catalog/avatars.json";
+import boardIconsCatalog from "@/modules/catalog/board-icons.json";
 import {
 	bold,
 	code,
@@ -74,6 +75,7 @@ async function main() {
 		data: {
 			id: MAIN_BOARD_ID,
 			name: "BoltFlow Workspace",
+			iconUrl: boardIconsCatalog[0]?.value ?? null,
 			githubRepo: "clix002/boltflow",
 			defaultBranch: "staging",
 			ownerId: demoUser.id,

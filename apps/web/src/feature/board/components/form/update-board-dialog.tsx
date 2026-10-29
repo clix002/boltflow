@@ -17,6 +17,7 @@ import {
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useUpdateBoard } from "../../api/use-update-board";
+import { BoardIconPicker } from "./board-icon-picker";
 import { GitHubRepoFields } from "./github-repo-fields";
 
 type Board = z.infer<typeof BoardSchema>;
@@ -41,11 +42,13 @@ export const UpdateBoardDialog = ({
 		resolver: zodResolver(UpdateBoardSchema),
 		defaultValues: {
 			name: board.name,
+			iconUrl: board.iconUrl ?? null,
 			githubRepo: board.githubRepo ?? null,
 			defaultBranch: board.defaultBranch ?? "main",
 		},
 	});
 
+	const iconUrl = form.watch("iconUrl");
 	const githubRepo = form.watch("githubRepo");
 	const defaultBranch = form.watch("defaultBranch") ?? "main";
 
@@ -92,6 +95,12 @@ export const UpdateBoardDialog = ({
 								{fieldState.error && <FieldError errors={[fieldState.error]} />}
 							</Field>
 						)}
+					/>
+
+					<BoardIconPicker
+						value={iconUrl}
+						githubRepo={githubRepo}
+						onChange={(nextIcon) => form.setValue("iconUrl", nextIcon)}
 					/>
 
 					<GitHubRepoFields

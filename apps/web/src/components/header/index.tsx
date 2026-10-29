@@ -8,11 +8,18 @@ export const Header = () => {
 	const currentMatch = [...matches].reverse().find((m) => {
 		return Boolean((m.handle as RouteHandle)?.headerContent);
 	});
-	const HeaderContent = (currentMatch?.handle as RouteHandle)?.headerContent;
+	const handle = currentMatch?.handle as RouteHandle | undefined;
+	const HeaderContent = handle?.headerContent;
+	const hasSidebar = Boolean(handle?.sidebar);
+
 	return (
 		<header className="flex h-16 shrink-0 items-center gap-2 border-b">
-			<SidebarTrigger className="-ml-1" />
-			<Separator orientation="vertical" className="mr-2 h-4 self-center!" />
+			{hasSidebar && (
+				<>
+					<SidebarTrigger className="-ml-1" />
+					<Separator orientation="vertical" className="mr-2 h-4 self-center!" />
+				</>
+			)}
 			{HeaderContent && <HeaderContent />}
 		</header>
 	);

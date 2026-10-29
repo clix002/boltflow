@@ -23,11 +23,11 @@ type ColumnWithTasks = z.infer<typeof ColumnWithTasksSchema>;
 type TaskWithAssignees = z.infer<typeof TaskWithAssigneesSchema>;
 
 const kanbanColumnVariants = cva(
-	"flex h-full w-80 shrink-0 flex-col rounded-2xl border border-border/70 bg-muted/50 dark:bg-zinc-900/75 p-3 shadow-xs transition-colors",
+	"flex h-full w-80 shrink-0 flex-col rounded-2xl border border-border/75 bg-muted/45 dark:bg-zinc-900/65 backdrop-blur-xs p-3 shadow-xs transition-colors",
 	{
 		variants: {
 			isDropTarget: {
-				true: "bg-secondary/60 dark:bg-zinc-900 border-primary/50 ring-2 ring-primary/20",
+				true: "bg-secondary/60 dark:bg-zinc-900/90 border-primary/50 ring-2 ring-primary/20",
 				false: "",
 			},
 		},

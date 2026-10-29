@@ -27,4 +27,10 @@ describe("catalogService", () => {
 		expect(options.length).toBe(8);
 		expect(options[0]?.value.startsWith("data:image/svg+xml;utf8,")).toBe(true);
 	});
+
+	it("returns geometric SVG project icons in board-icon catalog", () => {
+		const options = catalogService.getBySlug(CATALOG_SLUG.BOARD_ICON);
+		expect(options.length).toBe(6);
+		expect(options[0]?.value.startsWith("data:image/svg+xml;utf8,")).toBe(true);
+	});
 });

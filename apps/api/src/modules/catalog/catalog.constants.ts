@@ -7,6 +7,7 @@ import {
 	PrStatusSchema,
 } from "@scrum-board/shared/schemas";
 import avatarsCatalog from "./avatars.json";
+import boardIconsCatalog from "./board-icons.json";
 
 export const CATALOG_REGISTRY = {
 	[CATALOG_SLUG.BOLT_STATUS]: [
@@ -38,4 +39,5 @@ export const CATALOG_REGISTRY = {
 		{ value: PrStatusSchema.enum.CLOSED, label: "Closed" },
 	],
 	[CATALOG_SLUG.USER_AVATAR]: avatarsCatalog,
+	[CATALOG_SLUG.BOARD_ICON]: boardIconsCatalog,
 } as const satisfies Record<CatalogSlug, CatalogOption[]>;

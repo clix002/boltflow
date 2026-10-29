@@ -18,7 +18,7 @@ export const UnitSubboardBanner = ({
 	const branchUrl = buildGitHubBranchUrl(githubRepo, unit.branchName);
 
 	return (
-		<div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/70 bg-card/60 px-4 py-2.5 shadow-xs">
+		<div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/75 bg-card/75 backdrop-blur-xs px-4 py-2.5 shadow-xs">
 			<div className="flex flex-wrap items-center gap-2.5 min-w-0">
 				<div className="flex items-center gap-2 min-w-0">
 					<h2 className="text-sm font-semibold tracking-tight text-foreground truncate">

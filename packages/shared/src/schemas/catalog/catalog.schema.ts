@@ -6,6 +6,7 @@ export const CATALOG_SLUG = {
 	TASK_PRIORITY: "task-priority",
 	PR_STATUS: "pr-status",
 	USER_AVATAR: "user-avatar",
+	BOARD_ICON: "board-icon",
 } as const;
 
 export const CatalogSlugSchema = z.enum([
@@ -14,6 +15,7 @@ export const CatalogSlugSchema = z.enum([
 	CATALOG_SLUG.TASK_PRIORITY,
 	CATALOG_SLUG.PR_STATUS,
 	CATALOG_SLUG.USER_AVATAR,
+	CATALOG_SLUG.BOARD_ICON,
 ]);
 export type CatalogSlug = z.infer<typeof CatalogSlugSchema>;
 
