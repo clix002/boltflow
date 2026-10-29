@@ -77,7 +77,8 @@ async function main() {
 		prisma.unit.create({
 			data: {
 				name: "Core & Schema",
-				description: "Modelos Prisma (Unit, Bolt) y esquemas Zod compartidos",
+				description:
+					"Modelos Prisma (Unit, Bolt), CI y esquemas Zod compartidos",
 				color: "#8b5cf6",
 				boardId: mainProjectBoard.id,
 			},
@@ -124,21 +125,21 @@ async function main() {
 			data: {
 				name: "Bolt #2: GitHub & Sidebar",
 				goal: "Conectar Octokit con clix002/boltflow, Units, Bolts y ramas en vivo",
-				status: BoltStatus.ACTIVE,
+				status: BoltStatus.COMPLETED,
 				boardId: mainProjectBoard.id,
 			},
 		}),
 		prisma.bolt.create({
 			data: {
-				name: "Bolt #3: CLI Agent & Webhooks",
-				goal: "CLI en terminal para agentes IA y sincronización automática por Webhooks",
-				status: BoltStatus.PLANNED,
+				name: "Bolt #3: Units CRUD, Webhooks & CLI",
+				goal: "Gestión de Units/Bolts desde UI, Webhooks de GitHub y CLI para agentes",
+				status: BoltStatus.ACTIVE,
 				boardId: mainProjectBoard.id,
 			},
 		}),
 	]);
 
-	// 4. Crear las Columnas con especificaciones ricas en formato BlockNote (sin emojis)
+	// 4. Crear las Columnas reflejando el estado real actual del proyecto
 	await prisma.column.create({
 		data: {
 			name: "1. Elaboration (Spec)",
@@ -270,52 +271,104 @@ async function main() {
 			tasks: {
 				create: [
 					{
-						title: "Selector y creador de ramas GitHub dentro del Spec Drawer",
+						title: "CRUD de Units of Work y Bolts desde el Sidebar",
 						description: serializeSeedBlocks([
-							h2("Gestión de Ramas desde TaskDetailSheet"),
+							h2("Gestión de Units y Bolts en la Interfaz"),
 							p(
-								text("Permitir vincular cualquier rama existente de "),
-								code("clix002/boltflow"),
-								text(
-									" o crear una rama remota nueva en 1 clic desde la sección ",
-								),
-								bold("Properties"),
+								text("Permitir crear, editar y cambiar el estado de los "),
+								bold("Bolts"),
+								text(" (PLANNED, ACTIVE, COMPLETED) y las "),
+								bold("Units of Work"),
+								text(" (nombre, descripción, color) directamente desde "),
+								code("BoardDetailSidebar"),
 								text("."),
 							),
-							h3("Flujo de Creación"),
-							bullet(
-								text("Generar slug limpio con "),
-								code("kebabCase(task.title)"),
-								text(" de "),
-								code("es-toolkit"),
-								text("."),
-							),
-							bullet(
-								text("Invocar "),
-								code("POST /tasks/:id/branch"),
-								text(" con "),
-								code("createOnGitHub: true"),
-								text("."),
+							h3("Endpoints Requeridos"),
+							table(
+								["Método", "Ruta", "Descripción"],
+								[
+									[
+										"POST",
+										"/boards/:id/units",
+										"Crear nueva Unit con color y descripción",
+									],
+									[
+										"PATCH / DELETE",
+										"/units/:id",
+										"Actualizar o eliminar Unit",
+									],
+									[
+										"POST",
+										"/boards/:id/bolts",
+										"Crear nuevo Bolt para el tablero",
+									],
+									[
+										"PATCH / DELETE",
+										"/bolts/:id",
+										"Cambiar estado (ACTIVE / COMPLETED) o eliminar Bolt",
+									],
+								],
 							),
 							h3("Checklist"),
-							todo(true, text("Selector de ramas reales desde Octokit.")),
 							todo(
-								true,
-								text("Botón 'Create branch on GitHub' con feedback de carga."),
+								false,
+								text("Endpoints Hono OpenAPI + validación Zod en "),
+								code("@scrum-board/shared"),
+								text("."),
 							),
 							todo(
 								false,
-								text("Mostrar enlace directo al PR cuando exista "),
-								code("prUrl"),
+								text("Tests de integración en "),
+								code("apps/api"),
 								text("."),
+							),
+							todo(
+								false,
+								text("Diálogos de creación/edición en el Sidebar izquierdo."),
 							),
 						]),
 						order: 0,
+						priority: Priority.URGENT,
+						unitId: unitUi.id,
+						boltId: bolt3.id,
+						assignees: {
+							connect: [{ id: demoUser.id }, { id: aiAgent.id }],
+						},
+					},
+					{
+						title: "Suite de Tests de Integración para GitHub, Units y Bolts",
+						description: serializeSeedBlocks([
+							h2("Cobertura de Tests en CI"),
+							p(
+								text("Asegurar que cada feature nueva tenga su suite en "),
+								code("apps/api/src/modules/**/__tests__/"),
+								text(" ejecutada automáticamente en GitHub Actions."),
+							),
+							todo(
+								false,
+								text("Tests unitarios de "),
+								code("github.utils.ts"),
+								text(" y manejo de errores con "),
+								code("Effect"),
+								text("."),
+							),
+							todo(
+								false,
+								text("Tests de integración de filtros "),
+								code("unitId"),
+								text(", "),
+								code("boltId"),
+								text(" y "),
+								code("branchName"),
+								text(" en "),
+								code("GET /boards/:id"),
+								text("."),
+							),
+						]),
+						order: 1,
 						priority: Priority.HIGH,
-						unitId: unitGitHub.id,
-						boltId: bolt2.id,
-						branchName: "feature/board-detail-01",
-						prStatus: PrStatus.OPEN,
+						unitId: unitCore.id,
+						boltId: bolt3.id,
 						assignees: {
 							connect: [{ id: demoUser.id }, { id: aiAgent.id }],
 						},
@@ -329,6 +382,67 @@ async function main() {
 		data: {
 			name: "3. Constructing",
 			order: 2,
+			boardId: mainProjectBoard.id,
+		},
+	});
+
+	await prisma.column.create({
+		data: {
+			name: "4. PR Review",
+			order: 3,
+			boardId: mainProjectBoard.id,
+			tasks: {
+				create: [
+					{
+						title:
+							"Pipeline GitHub Actions CI (Lint, Typecheck & Postgres Tests)",
+						description: serializeSeedBlocks([
+							h2("Integración Continua en GitHub Actions"),
+							p(
+								text("Workflow "),
+								code(".github/workflows/main.yml"),
+								text(
+									" con contenedor de servicio PostgreSQL 16, generación de Prisma Client, Biome Lint, TypeScript Check y Bun Test.",
+								),
+							),
+							todo(
+								true,
+								text("Configurar servicio efímero "),
+								code("postgres:16-alpine"),
+								text("."),
+							),
+							todo(
+								true,
+								text("Generar cliente Prisma antes de "),
+								code("bun run check-types"),
+								text("."),
+							),
+							todo(
+								true,
+								text("Verificar ejecución exitosa en rama "),
+								code("staging"),
+								text("."),
+							),
+						]),
+						order: 0,
+						priority: Priority.HIGH,
+						unitId: unitCore.id,
+						boltId: bolt2.id,
+						branchName: "staging",
+						prStatus: PrStatus.OPEN,
+						assignees: {
+							connect: [{ id: demoUser.id }, { id: aiAgent.id }],
+						},
+					},
+				],
+			},
+		},
+	});
+
+	await prisma.column.create({
+		data: {
+			name: "5. Merged",
+			order: 4,
 			boardId: mainProjectBoard.id,
 			tasks: {
 				create: [
@@ -391,7 +505,7 @@ async function main() {
 						unitId: unitUi.id,
 						boltId: bolt2.id,
 						branchName: "feature/board-detail-01",
-						prStatus: PrStatus.OPEN,
+						prStatus: PrStatus.MERGED,
 						assignees: {
 							connect: [{ id: demoUser.id }, { id: aiAgent.id }],
 						},
@@ -454,21 +568,54 @@ async function main() {
 						unitId: unitGitHub.id,
 						boltId: bolt2.id,
 						branchName: "feature/board-detail-01",
-						prStatus: PrStatus.OPEN,
+						prStatus: PrStatus.MERGED,
 						assignees: { connect: [{ id: aiAgent.id }] },
 					},
-				],
-			},
-		},
-	});
-
-	await prisma.column.create({
-		data: {
-			name: "4. PR Review",
-			order: 3,
-			boardId: mainProjectBoard.id,
-			tasks: {
-				create: [
+					{
+						title: "Selector y creador de ramas GitHub dentro del Spec Drawer",
+						description: serializeSeedBlocks([
+							h2("Gestión de Ramas desde TaskDetailSheet"),
+							p(
+								text("Permitir vincular cualquier rama existente de "),
+								code("clix002/boltflow"),
+								text(
+									" o crear una rama remota nueva en 1 clic desde la sección ",
+								),
+								bold("Properties"),
+								text("."),
+							),
+							h3("Flujo de Creación"),
+							bullet(
+								text("Generar slug limpio con "),
+								code("kebabCase(task.title)"),
+								text(" de "),
+								code("es-toolkit"),
+								text("."),
+							),
+							bullet(
+								text("Invocar "),
+								code("POST /tasks/:id/branch"),
+								text(" con "),
+								code("createOnGitHub: true"),
+								text("."),
+							),
+							h3("Checklist"),
+							todo(true, text("Selector de ramas reales desde Octokit.")),
+							todo(
+								true,
+								text("Botón 'Create branch on GitHub' con feedback de carga."),
+							),
+						]),
+						order: 2,
+						priority: Priority.HIGH,
+						unitId: unitGitHub.id,
+						boltId: bolt2.id,
+						branchName: "feature/board-detail-01",
+						prStatus: PrStatus.MERGED,
+						assignees: {
+							connect: [{ id: demoUser.id }, { id: aiAgent.id }],
+						},
+					},
 					{
 						title: "Modelos Prisma: Unit, Bolt y campos GitHub en Board/Task",
 						description: serializeSeedBlocks([
@@ -510,12 +657,12 @@ async function main() {
 								text("Validación Zod bidireccional en frontend y backend."),
 							),
 						]),
-						order: 0,
+						order: 3,
 						priority: Priority.URGENT,
 						unitId: unitCore.id,
 						boltId: bolt2.id,
 						branchName: "feature/model-01",
-						prStatus: PrStatus.OPEN,
+						prStatus: PrStatus.MERGED,
 						assignees: {
 							connect: [{ id: demoUser.id }, { id: aiAgent.id }],
 						},
@@ -566,26 +713,43 @@ async function main() {
 								),
 							),
 						]),
-						order: 1,
+						order: 4,
 						priority: Priority.HIGH,
 						unitId: unitUi.id,
 						boltId: bolt1.id,
 						branchName: "feature/board-detail-01",
-						prStatus: PrStatus.OPEN,
+						prStatus: PrStatus.MERGED,
 						assignees: { connect: [{ id: demoUser.id }] },
 					},
-				],
-			},
-		},
-	});
-
-	await prisma.column.create({
-		data: {
-			name: "5. Merged",
-			order: 4,
-			boardId: mainProjectBoard.id,
-			tasks: {
-				create: [
+					{
+						title: "Drawer estilo Notion con BlockNote (@blocknote/shadcn)",
+						description: serializeSeedBlocks([
+							h2("Spec Editor Rico en Bloques"),
+							p(
+								text(
+									"Panel lateral expandible (50% a 100% del área de trabajo respetando el Sidebar) con soporte nativo para Slash Commands (",
+								),
+								code("/"),
+								text("), tablas, checklists y código."),
+							),
+							todo(true, text("Autoguardado con debounce de 650ms.")),
+							todo(
+								true,
+								text(
+									"Integración de tema oscuro/claro con variables CSS de shadcn.",
+								),
+							),
+						]),
+						order: 5,
+						priority: Priority.HIGH,
+						unitId: unitUi.id,
+						boltId: bolt1.id,
+						branchName: "feature/board-detail-01",
+						prStatus: PrStatus.MERGED,
+						assignees: {
+							connect: [{ id: demoUser.id }, { id: aiAgent.id }],
+						},
+					},
 					{
 						title: "Drag & Drop canónico con @dnd-kit/react en Kanban y Tabla",
 						description: serializeSeedBlocks([
@@ -610,40 +774,11 @@ async function main() {
 								text("Rollback optimista automático en caso de error de red."),
 							),
 						]),
-						order: 0,
+						order: 6,
 						priority: Priority.HIGH,
 						unitId: unitUi.id,
 						boltId: bolt1.id,
 						branchName: "feature/board-01",
-						prStatus: PrStatus.MERGED,
-						assignees: {
-							connect: [{ id: demoUser.id }, { id: aiAgent.id }],
-						},
-					},
-					{
-						title: "Drawer estilo Notion con BlockNote (@blocknote/shadcn)",
-						description: serializeSeedBlocks([
-							h2("Spec Editor Rico en Bloques"),
-							p(
-								text(
-									"Panel lateral expandible (50% a 100% del área de trabajo respetando el Sidebar) con soporte nativo para Slash Commands (",
-								),
-								code("/"),
-								text("), tablas, checklists y código."),
-							),
-							todo(true, text("Autoguardado con debounce de 650ms.")),
-							todo(
-								true,
-								text(
-									"Integración de tema oscuro/claro con variables CSS de shadcn.",
-								),
-							),
-						]),
-						order: 1,
-						priority: Priority.HIGH,
-						unitId: unitUi.id,
-						boltId: bolt1.id,
-						branchName: "feature/board-detail-01",
 						prStatus: PrStatus.MERGED,
 						assignees: {
 							connect: [{ id: demoUser.id }, { id: aiAgent.id }],
@@ -668,7 +803,7 @@ async function main() {
 							),
 							todo(true, text("Documentación interactiva Scalar OpenAPI.")),
 						]),
-						order: 2,
+						order: 7,
 						priority: Priority.MEDIUM,
 						unitId: unitCore.id,
 						boltId: bolt1.id,
