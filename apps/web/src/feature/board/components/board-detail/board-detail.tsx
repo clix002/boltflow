@@ -1,9 +1,4 @@
-import {
-	DragDropProvider,
-	type DragEndEvent,
-	type DragOverEvent,
-	DragOverlay,
-} from "@dnd-kit/react";
+import { DragDropProvider, DragOverlay } from "@dnd-kit/react";
 import type {
 	BoardDetailResponseSchema,
 	ColumnWithTasksSchema,
@@ -28,10 +23,10 @@ import { CreateColumnDialog } from "@/feature/column/components/form/create-colu
 import { UpdateColumnDialog } from "@/feature/column/components/form/update-column-dialog";
 import { useMoveTaskMutation } from "@/feature/task/api/use-move-task";
 import { CreateTaskDialog } from "@/feature/task/components/form/create-task-dialog";
+import { TaskDetailSheet } from "@/feature/task/components/task-detail-sheet";
 import { useConfirm } from "@/hooks/confirm-provider";
-import { playTaskMoveSound } from "@/lib/sound.utils";
 import { BoardTableView } from "./board-table";
-import { findTaskInBoard, moveTaskInBoard } from "./dnd.utils";
+import { createBoardDndHandlers, findTaskInBoard } from "./dnd.utils";
 import { KanbanColumn } from "./kanban-column";
 import { TaskCard } from "./task-card";
 import { BOARD_VIEW_MODE } from "./types";
@@ -64,6 +59,7 @@ export const BoardDetail = () => {
 
 	const boardBeforeDrag = useRef<Maybe<BoardDetailData>>(null);
 	const [activeColumnId, setActiveColumnId] = useState<Maybe<string>>(null);
+	const [selectedTaskId, setSelectedTaskId] = useState<Maybe<string>>(null);
 	const [editingColumn, setEditingColumn] =
 		useState<Maybe<ColumnWithTasks>>(null);
 
@@ -104,75 +100,49 @@ export const BoardDetail = () => {
 		? board.columns
 		: matchingColumns;
 
-	const handleDragStart = () => {
-		boardBeforeDrag.current = board;
-	};
+	const selectedTask = selectedTaskId
+		? findTaskInBoard(board, selectedTaskId)
+		: null;
+	const selectedTaskColumn = selectedTask
+		? board.columns.find((col) => col.id === selectedTask.columnId)
+		: undefined;
 
-	const handleDragOver = (event: DragOverEvent) => {
-		queryClient.setQueryData<BoardDetailData>(
-			boardQueryKey,
-			(current) => current && moveTaskInBoard(current, event),
-		);
-	};
-
-	const handleDragEnd = (event: DragEndEvent) => {
-		const previousBoard = boardBeforeDrag.current;
-		boardBeforeDrag.current = null;
-		const { source } = event.operation;
-		if (!previousBoard || !source) return;
-
-		if (event.canceled) {
-			queryClient.setQueryData(boardQueryKey, previousBoard);
-			return;
-		}
-
-		const currentBoard =
-			queryClient.getQueryData<BoardDetailData>(boardQueryKey);
-		if (!currentBoard) return;
-
-		const taskId = String(source.id);
-		const before = findTaskInBoard(previousBoard, taskId);
-		const after = findTaskInBoard(currentBoard, taskId);
-		if (!before || !after) return;
-		if (before.columnId === after.columnId && before.order === after.order) {
-			return;
-		}
-
-		playTaskMoveSound();
-
-		moveTask(
-			{ id: taskId, data: { columnId: after.columnId, order: after.order } },
-			{
-				onSettled: () =>
-					queryClient.invalidateQueries({ queryKey: ["board", boardId] }),
-			},
-		);
-	};
+	const dndHandlers = createBoardDndHandlers({
+		board,
+		boardQueryKey,
+		boardBeforeDragRef: boardBeforeDrag,
+		queryClient,
+		onPersistMove: ({ id, columnId, order }) => {
+			moveTask(
+				{ id, data: { columnId, order } },
+				{
+					onSettled: () =>
+						queryClient.invalidateQueries({ queryKey: ["board", boardId] }),
+				},
+			);
+		},
+	});
 
 	return (
 		<div className="flex flex-1 flex-col overflow-hidden py-4">
-			{currentView === BOARD_VIEW_MODE.LIST ? (
-				<BoardTableView
-					key={boardId}
-					columns={visibleColumns}
-					onAddTask={(colId) => setActiveColumnId(colId)}
-					onTaskClick={() => {}}
-					onEditColumn={(col) => setEditingColumn(col)}
-					onDeleteColumn={handleDeleteColumn}
-				/>
-			) : (
-				<DragDropProvider
-					onDragStart={handleDragStart}
-					onDragOver={handleDragOver}
-					onDragEnd={handleDragEnd}
-				>
+			<DragDropProvider {...dndHandlers}>
+				{currentView === BOARD_VIEW_MODE.LIST ? (
+					<BoardTableView
+						key={boardId}
+						columns={visibleColumns}
+						onAddTask={(colId) => setActiveColumnId(colId)}
+						onTaskClick={(taskId) => setSelectedTaskId(taskId)}
+						onEditColumn={(col) => setEditingColumn(col)}
+						onDeleteColumn={handleDeleteColumn}
+					/>
+				) : (
 					<div className="flex flex-1 items-start gap-4 overflow-x-auto min-h-0 w-full pb-3 pt-2 custom-scrollbar">
 						{visibleColumns.map((column) => (
 							<KanbanColumn
 								key={column.id}
 								column={column}
 								onAddTask={(colId) => setActiveColumnId(colId)}
-								onTaskClick={() => {}}
+								onTaskClick={(taskId) => setSelectedTaskId(taskId)}
 								onEditColumn={(col) => setEditingColumn(col)}
 								onDeleteColumn={handleDeleteColumn}
 							/>
@@ -189,17 +159,25 @@ export const BoardDetail = () => {
 							</Button>
 						)}
 					</div>
+				)}
 
-					<DragOverlay>
-						{(source) => {
-							const task = findTaskInBoard(board, String(source.id));
-							return (
-								task && <TaskCard task={task} variant={CARD_VARIANT.OVERLAY} />
-							);
-						}}
-					</DragOverlay>
-				</DragDropProvider>
-			)}
+				<DragOverlay>
+					{(source) => {
+						const task = findTaskInBoard(board, String(source.id));
+						return (
+							task && <TaskCard task={task} variant={CARD_VARIANT.OVERLAY} />
+						);
+					}}
+				</DragOverlay>
+			</DragDropProvider>
+
+			<TaskDetailSheet
+				task={selectedTask}
+				boardId={boardId}
+				columnName={selectedTaskColumn?.name}
+				open={Boolean(selectedTask)}
+				onOpenChange={(open) => !open && setSelectedTaskId(null)}
+			/>
 
 			{Boolean(activeColumnId) && (
 				<CreateTaskDialog

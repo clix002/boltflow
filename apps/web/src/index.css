@@ -155,3 +155,31 @@
 		background-color: var(--muted-foreground);
 	}
 }
+
+.bn-container[data-color-scheme] {
+	--bn-colors-editor-background: transparent;
+	--bn-colors-editor-text: var(--foreground);
+	--bn-colors-menu-background: var(--popover);
+	--bn-colors-menu-text: var(--popover-foreground);
+	--bn-colors-tooltip-background: var(--popover);
+	--bn-colors-tooltip-text: var(--popover-foreground);
+	--bn-colors-hovered-background: var(--accent);
+	--bn-colors-hovered-text: var(--accent-foreground);
+	--bn-colors-selected-background: var(--secondary);
+	--bn-colors-selected-text: var(--secondary-foreground);
+	--bn-colors-border: var(--border);
+	--bn-font-family: var(--font-sans);
+}
+
+.bn-container.task-sheet-editor,
+.bn-container.task-sheet-editor > .bn-editor {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 100%;
+	background-color: transparent;
+}
+
+.bn-container.task-sheet-editor > .bn-editor {
+	padding-bottom: 4rem;
+}

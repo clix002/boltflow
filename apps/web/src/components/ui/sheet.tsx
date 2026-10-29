@@ -1,8 +1,93 @@
+import { cva, type VariantProps } from "class-variance-authority";
 import { XIcon } from "lucide-react";
 import { Dialog as SheetPrimitive } from "radix-ui";
 import type * as React from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+export const SHEET_SIDE = {
+	TOP: "top",
+	RIGHT: "right",
+	BOTTOM: "bottom",
+	LEFT: "left",
+} as const;
+
+export type SheetSide = (typeof SHEET_SIDE)[keyof typeof SHEET_SIDE];
+
+export const SHEET_SIZE = {
+	SM: "sm",
+	DEFAULT: "default",
+	EXPANDED: "expanded",
+} as const;
+
+export type SheetSize = (typeof SHEET_SIZE)[keyof typeof SHEET_SIZE];
+
+const sheetOverlayVariants = cva(
+	"fixed inset-0 z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+	{
+		variants: {
+			insetSidebar: {
+				true: "md:left-64",
+				false: "",
+			},
+		},
+		defaultVariants: {
+			insetSidebar: false,
+		},
+	},
+);
+
+const sheetContentVariants = cva(
+	"fixed z-50 flex flex-col gap-4 bg-popover bg-clip-padding text-sm text-popover-foreground shadow-lg transition-[width,max-width,transform] duration-300 ease-in-out data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+	{
+		variants: {
+			side: {
+				[SHEET_SIDE.TOP]:
+					"inset-x-0 top-0 h-auto border-b data-open:slide-in-from-top-10 data-closed:slide-out-to-top-10",
+				[SHEET_SIDE.BOTTOM]:
+					"inset-x-0 bottom-0 h-auto border-t data-open:slide-in-from-bottom-10 data-closed:slide-out-to-bottom-10",
+				[SHEET_SIDE.LEFT]:
+					"inset-y-0 left-0 h-full border-r data-open:slide-in-from-left-10 data-closed:slide-out-to-left-10",
+				[SHEET_SIDE.RIGHT]:
+					"inset-y-0 right-0 h-full border-l data-open:slide-in-from-right-10 data-closed:slide-out-to-right-10",
+			},
+			size: {
+				[SHEET_SIZE.SM]:
+					"data-[side=left]:w-3/4 data-[side=right]:w-3/4 data-[side=left]:sm:max-w-sm data-[side=right]:sm:max-w-sm",
+				[SHEET_SIZE.DEFAULT]:
+					"data-[side=left]:w-full data-[side=right]:w-full data-[side=left]:max-w-none data-[side=right]:max-w-none data-[side=left]:md:w-1/2 data-[side=right]:md:w-1/2",
+				[SHEET_SIZE.EXPANDED]:
+					"data-[side=left]:w-full data-[side=right]:w-full data-[side=left]:max-w-none data-[side=right]:max-w-none",
+			},
+			insetSidebar: {
+				true: "",
+				false: "",
+			},
+		},
+		compoundVariants: [
+			{
+				size: SHEET_SIZE.DEFAULT,
+				insetSidebar: true,
+				className: "data-[side=right]:md:w-[calc((100vw-16rem)/2)]",
+			},
+			{
+				size: SHEET_SIZE.EXPANDED,
+				insetSidebar: true,
+				className: "data-[side=right]:md:w-[calc(100vw-16rem)]",
+			},
+			{
+				size: SHEET_SIZE.EXPANDED,
+				insetSidebar: false,
+				className: "data-[side=right]:md:w-screen data-[side=right]:border-l-0",
+			},
+		],
+		defaultVariants: {
+			side: SHEET_SIDE.RIGHT,
+			size: SHEET_SIZE.SM,
+			insetSidebar: false,
+		},
+	},
+);
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
 	return <SheetPrimitive.Root data-slot="sheet" {...props} />;
@@ -28,15 +113,14 @@ function SheetPortal({
 
 function SheetOverlay({
 	className,
+	insetSidebar = false,
 	...props
-}: React.ComponentProps<typeof SheetPrimitive.Overlay>) {
+}: React.ComponentProps<typeof SheetPrimitive.Overlay> &
+	VariantProps<typeof sheetOverlayVariants>) {
 	return (
 		<SheetPrimitive.Overlay
 			data-slot="sheet-overlay"
-			className={cn(
-				"fixed inset-0 z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
-				className,
-			)}
+			className={cn(sheetOverlayVariants({ insetSidebar, className }))}
 			{...props}
 		/>
 	);
@@ -45,22 +129,24 @@ function SheetOverlay({
 function SheetContent({
 	className,
 	children,
-	side = "right",
+	side = SHEET_SIDE.RIGHT,
+	size = SHEET_SIZE.SM,
+	insetSidebar = false,
 	showCloseButton = true,
 	...props
-}: React.ComponentProps<typeof SheetPrimitive.Content> & {
-	side?: "top" | "right" | "bottom" | "left";
-	showCloseButton?: boolean;
-}) {
+}: React.ComponentProps<typeof SheetPrimitive.Content> &
+	VariantProps<typeof sheetContentVariants> & {
+		showCloseButton?: boolean;
+	}) {
 	return (
 		<SheetPortal>
-			<SheetOverlay />
+			<SheetOverlay insetSidebar={insetSidebar} />
 			<SheetPrimitive.Content
 				data-slot="sheet-content"
 				data-side={side}
+				data-size={size}
 				className={cn(
-					"fixed z-50 flex flex-col gap-4 bg-popover bg-clip-padding text-sm text-popover-foreground shadow-lg transition duration-200 ease-in-out data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=bottom]:border-t data-[side=left]:inset-y-0 data-[side=left]:left-0 data-[side=left]:h-full data-[side=left]:w-3/4 data-[side=left]:border-r data-[side=right]:inset-y-0 data-[side=right]:right-0 data-[side=right]:h-full data-[side=right]:w-3/4 data-[side=right]:border-l data-[side=top]:inset-x-0 data-[side=top]:top-0 data-[side=top]:h-auto data-[side=top]:border-b data-[side=left]:sm:max-w-sm data-[side=right]:sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-[side=bottom]:data-open:slide-in-from-bottom-10 data-[side=left]:data-open:slide-in-from-left-10 data-[side=right]:data-open:slide-in-from-right-10 data-[side=top]:data-open:slide-in-from-top-10 data-closed:animate-out data-closed:fade-out-0 data-[side=bottom]:data-closed:slide-out-to-bottom-10 data-[side=left]:data-closed:slide-out-to-left-10 data-[side=right]:data-closed:slide-out-to-right-10 data-[side=top]:data-closed:slide-out-to-top-10",
-					className,
+					sheetContentVariants({ side, size, insetSidebar, className }),
 				)}
 				{...props}
 			>
@@ -140,4 +226,5 @@ export {
 	SheetHeader,
 	SheetTitle,
 	SheetTrigger,
+	sheetContentVariants,
 };

@@ -8,6 +8,8 @@ import { isEmpty, keyBy } from "es-toolkit/compat";
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { tableColumns } from "./columns";
+import { DroppableTableGroup } from "./droppable-table-group";
+import { SortableTableRow } from "./sortable-table-row";
 import { boardTableFeatures } from "./table-features";
 import { TableGroupHeader } from "./table-group-header";
 import type { BoardTableProps, TableTaskRow } from "./types";
@@ -58,7 +60,6 @@ export const BoardTable = ({
 		features: boardTableFeatures,
 		data,
 		columns: tableColumns,
-		meta: { onTaskClick },
 		state: {
 			grouping,
 			expanded,
@@ -102,62 +103,52 @@ export const BoardTable = ({
 						</tr>
 					))}
 				</thead>
-				<tbody>
-					{table.getRowModel().rows.map((row) => {
-						if (row.getIsGrouped()) {
-							const columnId = row.subRows[0]?.original.columnId;
-							const columnObj = columnId ? columnMap[columnId] : undefined;
+				{table.getGroupedRowModel().rows.map((groupRow) => {
+					const columnId = groupRow.subRows[0]?.original.columnId;
+					if (!columnId) return null;
+					const columnObj = columnMap[columnId];
 
-							return (
-								<TableGroupHeader
-									key={row.id}
-									row={row}
-									colSpan={tableColumns.length}
-									column={columnObj}
-									onAddTask={onAddTask}
-									onEditColumn={onEditColumn}
-									onDeleteColumn={onDeleteColumn}
-								/>
-							);
-						}
+					return (
+						<DroppableTableGroup key={columnId} columnId={columnId}>
+							<TableGroupHeader
+								row={groupRow}
+								colSpan={tableColumns.length}
+								column={columnObj}
+								onAddTask={onAddTask}
+								onEditColumn={onEditColumn}
+								onDeleteColumn={onDeleteColumn}
+							/>
 
-						if (row.original.isEmptyPlaceholder) {
-							return (
-								<tr
-									key={row.id}
-									className="border-b border-border/30 hover:bg-muted/10 transition-colors"
-								>
-									<td
-										colSpan={tableColumns.length}
-										className="py-3.5 pl-10 text-xs italic text-muted-foreground"
-									>
-										No tasks in this column
-									</td>
-								</tr>
-							);
-						}
+							{groupRow.getIsExpanded() &&
+								groupRow.subRows.map((row, index) => {
+									if (row.original.isEmptyPlaceholder) {
+										return (
+											<tr
+												key={row.original.id}
+												className="border-b border-border/30 hover:bg-muted/10 transition-colors"
+											>
+												<td
+													colSpan={tableColumns.length}
+													className="py-3.5 pl-10 text-xs italic text-muted-foreground"
+												>
+													No tasks in this column
+												</td>
+											</tr>
+										);
+									}
 
-						return (
-							<tr
-								key={row.id}
-								className="group border-b border-border/30 hover:bg-muted/30 transition-colors cursor-pointer"
-								onClick={() => onTaskClick?.(row.original.id)}
-							>
-								{row.getAllCells().map((cell) => (
-									<td
-										key={cell.id}
-										className={cn(
-											"py-2.5 px-4 text-xs text-foreground align-middle",
-											cell.column.id === "title" && "pl-8",
-										)}
-									>
-										<table.FlexRender cell={cell} />
-									</td>
-								))}
-							</tr>
-						);
-					})}
-				</tbody>
+									return (
+										<SortableTableRow
+											key={row.original.id}
+											row={row}
+											index={index}
+											onTaskClick={onTaskClick}
+										/>
+									);
+								})}
+						</DroppableTableGroup>
+					);
+				})}
 			</table>
 		</div>
 	);

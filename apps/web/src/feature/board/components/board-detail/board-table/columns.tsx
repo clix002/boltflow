@@ -1,10 +1,13 @@
 import { createColumnHelper } from "@tanstack/react-table";
 import { isEmpty } from "es-toolkit/compat";
-import { Calendar, MoreHorizontal } from "lucide-react";
+import { Calendar, GripVertical, MoreHorizontal } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PriorityBadge } from "@/feature/task/components/priority-badge";
+import {
+	PRIORITY_BADGE_VARIANT,
+	PriorityBadge,
+} from "@/feature/task/components/priority-badge";
 import type { BoardTableFeatures } from "./table-features";
 import type { TableTaskRow } from "./types";
 
@@ -16,18 +19,15 @@ export const tableColumns = helper.columns([
 		cell: ({ row }) => {
 			const task = row.original;
 			return (
-				<div className="flex items-center gap-2.5 py-1">
-					<PriorityBadge priority={task.priority} variant="dot" />
-					<div className="flex flex-col min-w-0">
-						<span className="text-sm font-medium text-foreground truncate">
-							{task.title}
-						</span>
-						{task.description && (
-							<span className="text-xs text-muted-foreground truncate max-w-md">
-								{task.description}
-							</span>
-						)}
-					</div>
+				<div className="flex items-center gap-2.5 py-1 min-w-0">
+					<GripVertical className="size-3.5 shrink-0 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors" />
+					<PriorityBadge
+						priority={task.priority}
+						variant={PRIORITY_BADGE_VARIANT.DOT}
+					/>
+					<span className="text-sm font-medium text-foreground truncate">
+						{task.title}
+					</span>
 				</div>
 			);
 		},
@@ -97,12 +97,8 @@ export const tableColumns = helper.columns([
 	helper.display({
 		id: "actions",
 		header: "",
-		cell: ({ row, table }) => {
+		cell: ({ row }) => {
 			if (row.original.isEmptyPlaceholder) return null;
-
-			const onTaskClick = (
-				table.options.meta as { onTaskClick?: (id: string) => void } | undefined
-			)?.onTaskClick;
 
 			return (
 				<div className="flex justify-end">
@@ -110,10 +106,6 @@ export const tableColumns = helper.columns([
 						variant="ghost"
 						size="icon"
 						className="size-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground cursor-pointer"
-						onClick={(e) => {
-							e.stopPropagation();
-							onTaskClick?.(row.original.id);
-						}}
 						aria-label="Task options"
 					>
 						<MoreHorizontal className="size-3.5" />

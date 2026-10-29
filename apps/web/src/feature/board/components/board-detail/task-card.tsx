@@ -6,7 +6,11 @@ import type React from "react";
 import type { z } from "zod";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, type cardVariants } from "@/components/ui/card";
-import { PriorityBadge } from "@/feature/task/components/priority-badge";
+import {
+	PRIORITY_BADGE_VARIANT,
+	PriorityBadge,
+} from "@/feature/task/components/priority-badge";
+import { getTaskDescriptionPreview } from "@/feature/task/components/task-detail-sheet";
 
 type Task = z.infer<typeof TaskWithAssigneesSchema>;
 
@@ -22,6 +26,7 @@ export const TaskCard = ({ task, onClick, variant, ref }: TaskCardProps) => {
 		month: "short",
 		day: "numeric",
 	});
+	const descriptionPreview = getTaskDescriptionPreview(task.description);
 
 	return (
 		<Card
@@ -32,15 +37,18 @@ export const TaskCard = ({ task, onClick, variant, ref }: TaskCardProps) => {
 			className="shrink-0 gap-2.5 p-3.5 shadow-sm"
 		>
 			<div className="flex items-center gap-2">
-				<PriorityBadge priority={task.priority} variant="dot" />
+				<PriorityBadge
+					priority={task.priority}
+					variant={PRIORITY_BADGE_VARIANT.DOT}
+				/>
 				<span className="text-sm font-medium leading-tight text-foreground truncate">
 					{task.title}
 				</span>
 			</div>
 
-			{task.description && (
+			{descriptionPreview && (
 				<p className="text-xs text-muted-foreground line-clamp-2">
-					{task.description}
+					{descriptionPreview}
 				</p>
 			)}
 

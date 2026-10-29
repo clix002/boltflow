@@ -1,8 +1,10 @@
 import { CollisionPriority } from "@dnd-kit/abstract";
 import { useDroppable } from "@dnd-kit/react";
 import type { ColumnWithTasksSchema } from "@scrum-board/shared/schemas";
+import { cva } from "class-variance-authority";
 import { MoreHorizontal, Plus } from "lucide-react";
 import type { z } from "zod";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -15,6 +17,21 @@ import { SortableTaskCard } from "./sortable-task-card";
 import { DND_TYPE } from "./types";
 
 type ColumnWithTasks = z.infer<typeof ColumnWithTasksSchema>;
+
+const kanbanColumnVariants = cva(
+	"flex h-full w-80 shrink-0 flex-col rounded-2xl border border-border/40 bg-secondary/20 p-3 transition-colors",
+	{
+		variants: {
+			isDropTarget: {
+				true: "bg-secondary/40 border-primary/50 ring-2 ring-primary/20",
+				false: "",
+			},
+		},
+		defaultVariants: {
+			isDropTarget: false,
+		},
+	},
+);
 
 type KanbanColumnProps = {
 	column: ColumnWithTasks;
@@ -39,22 +56,18 @@ export const KanbanColumn = ({
 	});
 
 	return (
-		<div
-			ref={ref}
-			className={cn(
-				"flex h-full w-80 shrink-0 flex-col rounded-2xl border border-border/40 bg-secondary/20 p-3 transition-colors",
-				isDropTarget &&
-					"bg-secondary/40 border-primary/50 ring-2 ring-primary/20",
-			)}
-		>
+		<div ref={ref} className={cn(kanbanColumnVariants({ isDropTarget }))}>
 			<div className="group/header flex shrink-0 items-center justify-between pb-3">
 				<div className="flex items-center gap-2">
 					<span className="text-sm font-semibold tracking-tight text-foreground">
 						{column.name}
 					</span>
-					<span className="inline-flex size-5 items-center justify-center rounded-full bg-muted text-[11px] font-medium text-muted-foreground">
+					<Badge
+						variant="secondary"
+						className="size-5 justify-center p-0 text-[11px]"
+					>
 						{column.tasks.length}
-					</span>
+					</Badge>
 				</div>
 
 				<div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover/header:opacity-100">

@@ -3,6 +3,24 @@ import { cva } from "class-variance-authority";
 import type * as React from "react";
 import { cn } from "@/lib/utils";
 
+export const PRIORITY_BADGE_VARIANT = {
+	BADGE: "badge",
+	DOT: "dot",
+} as const;
+
+export type PriorityBadgeVariant =
+	(typeof PRIORITY_BADGE_VARIANT)[keyof typeof PRIORITY_BADGE_VARIANT];
+
+export const PRIORITY_BADGE_SIZE = {
+	XS: "xs",
+	SM: "sm",
+	DEFAULT: "default",
+	LG: "lg",
+} as const;
+
+export type PriorityBadgeSize =
+	(typeof PRIORITY_BADGE_SIZE)[keyof typeof PRIORITY_BADGE_SIZE];
+
 export const priorityDotVariants = cva(
 	"rounded-full shrink-0 transition-colors",
 	{
@@ -14,15 +32,15 @@ export const priorityDotVariants = cva(
 				URGENT: "bg-rose-600 dark:bg-rose-400",
 			},
 			size: {
-				xs: "size-1.5",
-				sm: "size-2",
-				default: "size-2.5",
-				lg: "size-3",
+				[PRIORITY_BADGE_SIZE.XS]: "size-1.5",
+				[PRIORITY_BADGE_SIZE.SM]: "size-2",
+				[PRIORITY_BADGE_SIZE.DEFAULT]: "size-2.5",
+				[PRIORITY_BADGE_SIZE.LG]: "size-3",
 			},
 		},
 		defaultVariants: {
 			priority: "MEDIUM",
-			size: "sm",
+			size: PRIORITY_BADGE_SIZE.SM,
 		},
 	},
 );
@@ -40,13 +58,13 @@ export const priorityBadgeVariants = cva(
 					"border-rose-500/20 bg-rose-500/10 text-rose-700 dark:text-rose-400",
 			},
 			size: {
-				sm: "h-5 px-1.5 text-[11px]",
-				default: "h-6 px-2 text-xs",
+				[PRIORITY_BADGE_SIZE.SM]: "h-5 px-1.5 text-[11px]",
+				[PRIORITY_BADGE_SIZE.DEFAULT]: "h-6 px-2 text-xs",
 			},
 		},
 		defaultVariants: {
 			priority: "MEDIUM",
-			size: "sm",
+			size: PRIORITY_BADGE_SIZE.SM,
 		},
 	},
 );
@@ -64,20 +82,31 @@ type BasePriorityBadgeProps = Omit<React.ComponentProps<"span">, "children"> & {
 
 export type PriorityBadgeProps = BasePriorityBadgeProps &
 	(
-		| { variant: "dot"; size?: "sm" | "default" | "lg" }
-		| { variant?: "badge"; size?: "sm" | "default" }
+		| {
+				variant: typeof PRIORITY_BADGE_VARIANT.DOT;
+				size?:
+					| typeof PRIORITY_BADGE_SIZE.SM
+					| typeof PRIORITY_BADGE_SIZE.DEFAULT
+					| typeof PRIORITY_BADGE_SIZE.LG;
+		  }
+		| {
+				variant?: typeof PRIORITY_BADGE_VARIANT.BADGE;
+				size?:
+					| typeof PRIORITY_BADGE_SIZE.SM
+					| typeof PRIORITY_BADGE_SIZE.DEFAULT;
+		  }
 	);
 
 export function PriorityBadge({
 	priority,
-	variant = "badge",
-	size = "sm",
+	variant = PRIORITY_BADGE_VARIANT.BADGE,
+	size = PRIORITY_BADGE_SIZE.SM,
 	className,
 	...props
 }: PriorityBadgeProps) {
 	const label = priorityLabels[priority];
 
-	if (variant === "dot") {
+	if (variant === PRIORITY_BADGE_VARIANT.DOT) {
 		return (
 			<span
 				role="img"
@@ -91,8 +120,14 @@ export function PriorityBadge({
 		);
 	}
 
-	const badgeSize = size === "default" ? "default" : "sm";
-	const dotSize = badgeSize === "default" ? "sm" : "xs";
+	const badgeSize =
+		size === PRIORITY_BADGE_SIZE.DEFAULT
+			? PRIORITY_BADGE_SIZE.DEFAULT
+			: PRIORITY_BADGE_SIZE.SM;
+	const dotSize =
+		badgeSize === PRIORITY_BADGE_SIZE.DEFAULT
+			? PRIORITY_BADGE_SIZE.SM
+			: PRIORITY_BADGE_SIZE.XS;
 
 	return (
 		<span

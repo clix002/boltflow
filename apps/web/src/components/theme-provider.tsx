@@ -1,6 +1,20 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "dark" | "light" | "system";
+export const THEME = {
+	DARK: "dark",
+	LIGHT: "light",
+	SYSTEM: "system",
+} as const;
+
+export type Theme = (typeof THEME)[keyof typeof THEME];
+
+export const RESOLVED_THEME = {
+	DARK: THEME.DARK,
+	LIGHT: THEME.LIGHT,
+} as const;
+
+export type ResolvedTheme =
+	(typeof RESOLVED_THEME)[keyof typeof RESOLVED_THEME];
 
 type ThemeProviderProps = {
 	children: React.ReactNode;
@@ -14,45 +28,49 @@ type ThemeProviderState = {
 };
 
 const initialState: ThemeProviderState = {
-	theme: "system",
+	theme: THEME.SYSTEM,
 	setTheme: () => null,
 };
+
+function isValidTheme(value: string | null): value is Theme {
+	return (
+		value === THEME.DARK || value === THEME.LIGHT || value === THEME.SYSTEM
+	);
+}
+
+export function resolveTheme(theme: Theme): ResolvedTheme {
+	if (theme !== THEME.SYSTEM) {
+		return theme;
+	}
+	return window.matchMedia("(prefers-color-scheme: dark)").matches
+		? RESOLVED_THEME.DARK
+		: RESOLVED_THEME.LIGHT;
+}
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 export function ThemeProvider({
 	children,
-	defaultTheme = "system",
+	defaultTheme = THEME.SYSTEM,
 	storageKey = "vite-ui-theme",
 	...props
 }: ThemeProviderProps) {
-	const [theme, setTheme] = useState<Theme>(
-		() => (localStorage.getItem(storageKey) as Theme) || defaultTheme,
-	);
+	const [theme, setTheme] = useState<Theme>(() => {
+		const stored = localStorage.getItem(storageKey);
+		return isValidTheme(stored) ? stored : defaultTheme;
+	});
 
 	useEffect(() => {
 		const root = window.document.documentElement;
-
-		root.classList.remove("light", "dark");
-
-		if (theme === "system") {
-			const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-				.matches
-				? "dark"
-				: "light";
-
-			root.classList.add(systemTheme);
-			return;
-		}
-
-		root.classList.add(theme);
+		root.classList.remove(THEME.LIGHT, THEME.DARK);
+		root.classList.add(resolveTheme(theme));
 	}, [theme]);
 
 	const value = {
 		theme,
-		setTheme: (theme: Theme) => {
-			localStorage.setItem(storageKey, theme);
-			setTheme(theme);
+		setTheme: (nextTheme: Theme) => {
+			localStorage.setItem(storageKey, nextTheme);
+			setTheme(nextTheme);
 		},
 	};
 
