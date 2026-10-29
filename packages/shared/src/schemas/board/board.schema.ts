@@ -12,8 +12,25 @@ export const UnitSchema = z.object({
 });
 export type Unit = z.infer<typeof UnitSchema>;
 
+export const CreateUnitSchema = z.object({
+	name: z.string().min(1).max(100),
+	description: z.string().max(500).nullable().optional(),
+	color: z.string().max(32).optional(),
+});
+export type CreateUnitInput = z.infer<typeof CreateUnitSchema>;
+
+export const UpdateUnitSchema = z.object({
+	name: z.string().min(1).max(100).optional(),
+	description: z.string().max(500).nullable().optional(),
+	color: z.string().max(32).optional(),
+});
+export type UpdateUnitInput = z.infer<typeof UpdateUnitSchema>;
+
 export const BoltStatusSchema = z.enum(["PLANNED", "ACTIVE", "COMPLETED"]);
+export const BOLT_STATUS = BoltStatusSchema.enum;
 export type BoltStatus = z.infer<typeof BoltStatusSchema>;
+
+export const DEFAULT_UNIT_COLOR = "#8b5cf6";
 
 export const BoltSchema = z.object({
 	id: z.string(),
@@ -27,6 +44,20 @@ export const BoltSchema = z.object({
 	updatedAt: z.string(),
 });
 export type Bolt = z.infer<typeof BoltSchema>;
+
+export const CreateBoltSchema = z.object({
+	name: z.string().min(1).max(100),
+	goal: z.string().max(500).nullable().optional(),
+	status: BoltStatusSchema.optional(),
+});
+export type CreateBoltInput = z.infer<typeof CreateBoltSchema>;
+
+export const UpdateBoltSchema = z.object({
+	name: z.string().min(1).max(100).optional(),
+	goal: z.string().max(500).nullable().optional(),
+	status: BoltStatusSchema.optional(),
+});
+export type UpdateBoltInput = z.infer<typeof UpdateBoltSchema>;
 
 export const GitHubBranchSchema = z.object({
 	name: z.string(),

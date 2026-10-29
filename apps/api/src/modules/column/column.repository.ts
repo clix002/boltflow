@@ -10,7 +10,8 @@ export const columnRepository = {
 	findById(id: string) {
 		return prisma.column.findUnique({
 			where: { id },
-			include: {
+			select: {
+				id: true,
 				board: {
 					select: { ownerId: true },
 				},
@@ -31,6 +32,7 @@ export const columnRepository = {
 	delete(id: string) {
 		return prisma.column.delete({
 			where: { id },
+			select: { id: true },
 		});
 	},
 };

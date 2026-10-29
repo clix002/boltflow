@@ -1,6 +1,7 @@
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Link, useParams } from "react-router";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { useGetBoardQuery } from "@/feature/board/api/use-get-board";
 
 export const BoardDetailSidebarHeader = () => {
@@ -15,11 +16,7 @@ export const BoardDetailSidebarHeader = () => {
 				</Link>
 			</Button>
 			<h2 className="text-sm font-semibold truncate">
-				{isPending ? (
-					<Loader2 className="size-4 animate-spin shrink-0" />
-				) : (
-					board?.name
-				)}
+				{isPending ? <Spinner className="size-4 shrink-0" /> : board?.name}
 			</h2>
 		</div>
 	);

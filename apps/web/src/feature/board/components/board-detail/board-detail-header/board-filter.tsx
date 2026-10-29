@@ -90,25 +90,29 @@ export const BoardFilter = () => {
 					<span className="text-xs font-semibold">Filter by</span>
 					<div className="flex items-center gap-2">
 						{isModified && (
-							<button
+							<Button
 								type="button"
+								variant="outline"
+								size="xs"
 								onClick={savePreferences}
-								className="inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 transition-colors cursor-pointer"
+								className="h-5 rounded-full border-amber-500/40 bg-amber-500/10 px-2 text-[11px] text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 cursor-pointer"
 								title="Save current filters as default"
 							>
 								<Bookmark className="size-3" />
 								Save
-							</button>
+							</Button>
 						)}
 						{hasActiveFilters && (
-							<button
+							<Button
 								type="button"
+								variant="ghost"
+								size="xs"
 								onClick={clearAll}
-								className="text-[11px] text-muted-foreground hover:text-foreground cursor-pointer flex items-center gap-1 transition-colors"
+								className="h-5 px-1.5 text-[11px] text-muted-foreground hover:text-foreground cursor-pointer"
 							>
 								<X className="size-3" />
 								Clear all
-							</button>
+							</Button>
 						)}
 					</div>
 				</div>
@@ -128,16 +132,18 @@ export const BoardFilter = () => {
 								)}
 							</div>
 							{!isEmpty(selectedColumnIds) && (
-								<button
+								<Button
 									type="button"
+									variant="ghost"
+									size="xs"
 									onClick={(e) => {
 										e.stopPropagation();
 										clearColumns();
 									}}
-									className="text-[10px] text-muted-foreground hover:text-foreground cursor-pointer"
+									className="h-4 px-1 text-[10px] text-muted-foreground hover:text-foreground cursor-pointer"
 								>
 									Clear
-								</button>
+								</Button>
 							)}
 						</div>
 						<div className="max-h-36 overflow-y-auto custom-scrollbar space-y-0.5 pr-0.5">
@@ -178,16 +184,18 @@ export const BoardFilter = () => {
 								)}
 							</div>
 							{!isEmpty(selectedUserIds) && (
-								<button
+								<Button
 									type="button"
+									variant="ghost"
+									size="xs"
 									onClick={(e) => {
 										e.stopPropagation();
 										clearUsers();
 									}}
-									className="text-[10px] text-muted-foreground hover:text-foreground cursor-pointer"
+									className="h-4 px-1 text-[10px] text-muted-foreground hover:text-foreground cursor-pointer"
 								>
 									Clear
-								</button>
+								</Button>
 							)}
 						</div>
 

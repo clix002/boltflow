@@ -1,4 +1,5 @@
 import { Bookmark, BookmarkCheck, RotateCcw, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useBoardPreferences } from "../use-board-preferences";
@@ -51,19 +52,24 @@ export const BoardDetailHeader = () => {
 					</div>
 				) : (
 					hasDefault && (
-						<div className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/40 pl-2.5 pr-1 py-0.5 text-[11px] text-muted-foreground">
+						<Badge
+							variant="outline"
+							className="gap-1 border-border/60 bg-muted/40 pl-2.5 pr-1 py-0.5 text-[11px] font-normal text-muted-foreground"
+						>
 							<BookmarkCheck className="size-3 text-primary" />
 							<span>Default view</span>
-							<button
+							<Button
 								type="button"
+								variant="ghost"
+								size="icon-xs"
 								onClick={forgetDefault}
-								className="ml-0.5 rounded-full p-0.5 hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+								className="ml-0.5 size-4 rounded-full hover:bg-muted hover:text-foreground cursor-pointer"
 								title="Forget default view"
 								aria-label="Forget default view"
 							>
 								<X className="size-3" />
-							</button>
-						</div>
+							</Button>
+						</Badge>
 					)
 				)}
 				<BoardFilter />

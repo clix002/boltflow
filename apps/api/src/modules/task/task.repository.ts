@@ -96,6 +96,7 @@ export const taskRepository = {
 		return prisma.$transaction(async (tx) => {
 			await tx.task.delete({
 				where: { id: params.id },
+				select: { id: true },
 			});
 
 			await tx.task.updateMany({

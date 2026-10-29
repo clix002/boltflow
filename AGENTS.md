@@ -57,4 +57,13 @@ Este documento define los estándares arquitectónicos y de código obligatorios
 - **Componentización Obligatoria:** Ningún componente de vista o panel complejo (ej. `board-detail-sidebar/`, `task-detail-sheet/`) debe concentrar múltiples secciones en un archivo monolítico. Debe dividirse en una subcarpeta dentro de su `feature/<modulo>/components/` con subcomponentes pequeños de responsabilidad única y un `index.tsx`.
 - **Prohibidos los archivos puente redundantes:** Al convertir un componente `mi-componente.tsx` en una carpeta `mi-componente/`, **eliminar** el archivo plano `mi-componente.tsx` y exponer la API pública desde `mi-componente/index.tsx`. Nunca dejar un archivo suelto que haga `export { X } from "./x/x"`.
 - **Respetar configuraciones centrales:** No hardcodear opciones como `staleTime` en hooks individuales de React Query si ya están gobernadas por la instancia central en `lib/react-query.ts`, salvo requerimiento explícito de negocio.
+- **Reutilización Obligatoria de Primitivas UI (`@/components/ui` y `@/hooks`):** Prohibido usar etiquetas HTML nativas crudas (`<button>`, `<input>`, `<textarea>`) o iconos `<Loader2>` manuales cuando ya existen componentes estandarizados (`Button` con variantes `xs`/`icon-xs`/`ghost`, `Badge`, `Spinner`, `useConfirm`).
 - **Cero Emojis en UI, Seeds o Código:** Prohibido usar emojis en componentes, textos de interfaz, logs o datos de seed. Para iconografía visual utilizar exclusivamente componentes de `lucide-react` o SVGs.
+
+---
+
+## 8. Proyección Mínima en Prisma (`select` sobre `include` o entidad completa)
+- **Prohibido:** Traer modelos completos o relaciones pesadas (`include`) cuando solo se necesita verificar existencia, propiedad (`ownerId`) o eliminar un registro.
+- **Obligatorio:**
+  - En validaciones previas a `update`, `delete` o consultas auxiliares, utilizar siempre `select` explícito con únicamente los campos requeridos (ej. `select: { id: true, boardId: true, board: { select: { ownerId: true } } }`).
+  - En operaciones `delete` cuyo resultado no se devuelve al cliente (`204 No Content`), incluir `select: { id: true }` para evitar que Prisma hidrate toda la fila eliminada en memoria.

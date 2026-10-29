@@ -28,10 +28,12 @@ export const TableGroupHeader = ({
 		<tr className="bg-muted/20 border-b border-border/50 hover:bg-muted/30 transition-colors select-none">
 			<td colSpan={colSpan} className="py-2.5 px-4">
 				<div className="flex items-center justify-between">
-					<button
+					<Button
 						type="button"
+						variant="ghost"
+						size="xs"
 						onClick={row.getToggleExpandedHandler()}
-						className="flex items-center gap-2 cursor-pointer text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-md px-1 py-0.5"
+						className="h-auto gap-2 px-1 py-0.5 text-left cursor-pointer hover:bg-transparent"
 					>
 						{isExpanded ? (
 							<ChevronDown className="size-4 text-muted-foreground transition-transform" />
@@ -47,7 +49,7 @@ export const TableGroupHeader = ({
 						>
 							{taskCount}
 						</Badge>
-					</button>
+					</Button>
 
 					<div className="flex items-center gap-1">
 						{onAddTask && columnId && (

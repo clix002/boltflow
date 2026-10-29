@@ -294,7 +294,7 @@ async function main() {
 									],
 									[
 										"PATCH / DELETE",
-										"/units/:id",
+										"/boards/:id/units/:unitId",
 										"Actualizar o eliminar Unit",
 									],
 									[
@@ -304,26 +304,26 @@ async function main() {
 									],
 									[
 										"PATCH / DELETE",
-										"/bolts/:id",
+										"/boards/:id/bolts/:boltId",
 										"Cambiar estado (ACTIVE / COMPLETED) o eliminar Bolt",
 									],
 								],
 							),
 							h3("Checklist"),
 							todo(
-								false,
+								true,
 								text("Endpoints Hono OpenAPI + validación Zod en "),
 								code("@scrum-board/shared"),
 								text("."),
 							),
 							todo(
-								false,
+								true,
 								text("Tests de integración en "),
 								code("apps/api"),
 								text("."),
 							),
 							todo(
-								false,
+								true,
 								text("Diálogos de creación/edición en el Sidebar izquierdo."),
 							),
 						]),
@@ -345,7 +345,7 @@ async function main() {
 								text(" ejecutada automáticamente en GitHub Actions."),
 							),
 							todo(
-								false,
+								true,
 								text("Tests unitarios de "),
 								code("github.utils.ts"),
 								text(" y manejo de errores con "),
@@ -353,7 +353,7 @@ async function main() {
 								text("."),
 							),
 							todo(
-								false,
+								true,
 								text("Tests de integración de filtros "),
 								code("unitId"),
 								text(", "),

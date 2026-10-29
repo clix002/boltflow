@@ -94,6 +94,76 @@ export const boardRepository = {
 	delete(id: string) {
 		return prisma.board.delete({
 			where: { id },
+			select: { id: true },
+		});
+	},
+	findOwnershipById(id: string) {
+		return prisma.board.findUnique({
+			where: { id },
+			select: {
+				id: true,
+				ownerId: true,
+				githubRepo: true,
+				defaultBranch: true,
+			},
+		});
+	},
+	findUnitOwnershipById(id: string) {
+		return prisma.unit.findUnique({
+			where: { id },
+			select: {
+				id: true,
+				boardId: true,
+				board: {
+					select: { ownerId: true },
+				},
+			},
+		});
+	},
+	createUnit(data: Prisma.UnitUncheckedCreateInput) {
+		return prisma.unit.create({
+			data,
+		});
+	},
+	updateUnit(id: string, data: Prisma.UnitUpdateInput) {
+		return prisma.unit.update({
+			where: { id },
+			data,
+		});
+	},
+	deleteUnit(id: string) {
+		return prisma.unit.delete({
+			where: { id },
+			select: { id: true },
+		});
+	},
+	findBoltOwnershipById(id: string) {
+		return prisma.bolt.findUnique({
+			where: { id },
+			select: {
+				id: true,
+				boardId: true,
+				board: {
+					select: { ownerId: true },
+				},
+			},
+		});
+	},
+	createBolt(data: Prisma.BoltUncheckedCreateInput) {
+		return prisma.bolt.create({
+			data,
+		});
+	},
+	updateBolt(id: string, data: Prisma.BoltUpdateInput) {
+		return prisma.bolt.update({
+			where: { id },
+			data,
+		});
+	},
+	deleteBolt(id: string) {
+		return prisma.bolt.delete({
+			where: { id },
+			select: { id: true },
 		});
 	},
 };

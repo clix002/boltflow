@@ -3,7 +3,7 @@ import { CreateTaskSchema, PrioritySchema } from "@scrum-board/shared/schemas";
 import type { Maybe } from "@scrum-board/shared/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { isEmpty } from "es-toolkit/compat";
-import { ChevronsUpDown, Loader2 } from "lucide-react";
+import { ChevronsUpDown } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -32,6 +32,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { useGetBoardQuery } from "@/feature/board/api/use-get-board";
 import { useCreateTaskMutation } from "@/feature/task/api/use-create-task";
@@ -257,7 +258,7 @@ export const CreateTaskDialog = ({
 												) : (
 													<span className="text-muted-foreground">
 														{isLoadingUsers ? (
-															<Loader2 className="size-4" />
+															<Spinner className="size-4" />
 														) : (
 															"Select assignees..."
 														)}
