@@ -23,3 +23,21 @@ export const CommaSeparatedArray = z.preprocess(
 	(val) => (isString(val) ? compact(val.split(",").map((s) => trim(s))) : val),
 	z.array(z.string()).optional(),
 );
+
+export const GITHUB_WEB_BASE_URL = "https://github.com" as const;
+
+export function buildGitHubRepoUrl(repoSlug?: Maybe<string>): Maybe<string> {
+	const cleanedRepo = trimToNull(repoSlug);
+	if (!cleanedRepo) return null;
+	return `${GITHUB_WEB_BASE_URL}/${cleanedRepo}`;
+}
+
+export function buildGitHubBranchUrl(
+	repoSlug?: Maybe<string>,
+	branchName?: Maybe<string>,
+): Maybe<string> {
+	const cleanedRepo = trimToNull(repoSlug);
+	const cleanedBranch = trimToNull(branchName);
+	if (!cleanedRepo || !cleanedBranch) return null;
+	return `${GITHUB_WEB_BASE_URL}/${cleanedRepo}/tree/${cleanedBranch}`;
+}

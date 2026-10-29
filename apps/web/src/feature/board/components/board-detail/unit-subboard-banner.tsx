@@ -1,4 +1,7 @@
-import type { UnitWithBoard } from "@scrum-board/shared/schemas";
+import {
+	buildGitHubBranchUrl,
+	type UnitWithBoard,
+} from "@scrum-board/shared/schemas";
 import type { Maybe } from "@scrum-board/shared/types";
 import { ExternalLink, GitBranch, Layers } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -12,18 +15,11 @@ export const UnitSubboardBanner = ({
 	unit,
 	githubRepo,
 }: UnitSubboardBannerProps) => {
-	const branchUrl =
-		githubRepo && unit.branchName
-			? `https://github.com/${githubRepo}/tree/${unit.branchName}`
-			: null;
+	const branchUrl = buildGitHubBranchUrl(githubRepo, unit.branchName);
 
 	return (
 		<div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/70 bg-card/60 px-4 py-2.5 shadow-xs">
 			<div className="flex flex-wrap items-center gap-2.5 min-w-0">
-				<span
-					className="size-3 rounded-full shrink-0"
-					style={{ backgroundColor: unit.color }}
-				/>
 				<div className="flex items-center gap-2 min-w-0">
 					<h2 className="text-sm font-semibold tracking-tight text-foreground truncate">
 						{unit.name}

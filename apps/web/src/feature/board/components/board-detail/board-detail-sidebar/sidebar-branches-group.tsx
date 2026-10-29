@@ -69,20 +69,13 @@ const BranchLeafItem = ({
 				>
 					<GitCommitHorizontal className="size-3.5 text-emerald-500 shrink-0" />
 					<span className="truncate font-mono text-[11px]">{displayName}</span>
-					<div className="ml-auto flex items-center gap-1 shrink-0">
-						{unitMeta && (
-							<span
-								className="size-2 rounded-full shrink-0"
-								style={{ backgroundColor: unitMeta.unitColor }}
-								title={`Unit: ${unitMeta.unitName}`}
-							/>
-						)}
-						{branch.protected && (
+					{branch.protected && (
+						<div className="ml-auto flex items-center gap-1 shrink-0">
 							<span title="Protected branch">
 								<ShieldCheck className="size-3 text-amber-500" />
 							</span>
-						)}
-					</div>
+						</div>
+					)}
 				</SidebarMenuButton>
 			</SidebarMenuItem>
 

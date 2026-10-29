@@ -1,5 +1,6 @@
-import { ArrowRight, Zap } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Link } from "react-router";
+import { BoltFlowLogo } from "@/components/logo/boltflow-logo";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -10,10 +11,8 @@ export const MarketingHeader = () => {
 	return (
 		<header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur-md">
 			<div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
-				<Link to="/" className="flex items-center gap-2 font-semibold">
-					<span className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-						<Zap className="size-4" />
-					</span>
+				<Link to="/" className="flex items-center gap-2.5 font-semibold">
+					<BoltFlowLogo className="size-7" />
 					<span className="text-sm tracking-tight">BoltFlow</span>
 				</Link>
 

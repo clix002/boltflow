@@ -1,3 +1,4 @@
+import { buildGitHubRepoUrl } from "@scrum-board/shared/schemas";
 import type { Maybe } from "@scrum-board/shared/types";
 import { ExternalLink, Settings2, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,8 @@ export const SidebarRepoBanner = ({
 	connected,
 	onConfigure,
 }: SidebarRepoBannerProps) => {
+	const repoUrl = buildGitHubRepoUrl(repoSlug);
+
 	return (
 		<SidebarGroup className="pb-1">
 			<div className="rounded-lg border border-sidebar-border bg-sidebar-accent/40 p-2.5 text-xs">
@@ -36,9 +39,9 @@ export const SidebarRepoBanner = ({
 						</span>
 					</div>
 					<div className="flex items-center gap-1 shrink-0">
-						{repoSlug && (
+						{repoUrl && (
 							<a
-								href={`https://github.com/${repoSlug}`}
+								href={repoUrl}
 								target="_blank"
 								rel="noreferrer"
 								className="text-muted-foreground hover:text-foreground transition-colors"

@@ -45,7 +45,7 @@ export const TaskCard = ({
 			size="sm"
 			variant={variant}
 			onClick={onClick}
-			className="shrink-0 gap-2.5 p-3.5 shadow-sm"
+			className="shrink-0 gap-2.5 p-3.5 bg-card dark:bg-zinc-800/80 border border-border/80 shadow-sm hover:border-foreground/20 dark:hover:bg-zinc-800"
 		>
 			<div className="flex items-center justify-between gap-2">
 				<div className="flex items-center gap-2 min-w-0">

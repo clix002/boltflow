@@ -1,7 +1,6 @@
 import type { Unit } from "@scrum-board/shared/schemas";
 import { ChevronRight, GitBranch, Layers, Plus } from "lucide-react";
 import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	Collapsible,
@@ -86,22 +85,21 @@ export const SidebarUnitsGroup = ({
 														? `${unit.name} (${unit.branchName})`
 														: (unit.description ?? unit.name)
 												}
-												className="cursor-pointer"
+												className="h-auto items-start py-1.5 cursor-pointer"
 											>
-												<span
-													className="size-2.5 rounded-full shrink-0"
-													style={{ backgroundColor: unit.color }}
-												/>
-												<span className="truncate text-xs">{unit.name}</span>
-												{unit.branchName && (
-													<Badge
-														variant="outline"
-														className="ml-auto h-4 gap-0.5 px-1 font-mono text-[9px] text-emerald-600 dark:text-emerald-400 shrink-0 max-w-[48%]"
-													>
-														<GitBranch className="size-2.5 shrink-0" />
-														<span className="truncate">{unit.branchName}</span>
-													</Badge>
-												)}
+												<div className="flex min-w-0 flex-1 flex-col gap-0.5 pr-4">
+													<span className="truncate text-xs font-medium leading-tight">
+														{unit.name}
+													</span>
+													{unit.branchName && (
+														<span className="inline-flex items-center gap-1 font-mono text-[10px] text-emerald-600 dark:text-emerald-400 min-w-0">
+															<GitBranch className="size-2.5 shrink-0" />
+															<span className="truncate">
+																{unit.branchName}
+															</span>
+														</span>
+													)}
+												</div>
 											</SidebarMenuButton>
 											{boardId && (
 												<UnitItemActions

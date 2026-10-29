@@ -4,7 +4,6 @@ import type { Maybe } from "@scrum-board/shared/types";
 export type BranchUnitMeta = {
 	unitId: string;
 	unitName: string;
-	unitColor: string;
 };
 
 export type BranchLeafNode = {
@@ -37,7 +36,6 @@ const collectUnitBranchMaps = (units: UnitWithBoard[]) => {
 		unitByBranch.set(unit.branchName, {
 			unitId: unit.id,
 			unitName: unit.name,
-			unitColor: unit.color,
 		});
 	}
 

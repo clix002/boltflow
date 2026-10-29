@@ -1,13 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-	CATALOG_SLUG,
 	CreateUnitSchema,
-	DEFAULT_UNIT_COLOR,
 	trimToNull,
 	type Unit,
 } from "@scrum-board/shared/schemas";
 import { useQueryClient } from "@tanstack/react-query";
-import { Check, GitBranch, Plus } from "lucide-react";
+import { GitBranch, Plus } from "lucide-react";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import type { z } from "zod";
@@ -32,14 +30,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCreateUnitMutation } from "@/feature/board/api/use-create-unit";
 import { useGetBoardGitHubQuery } from "@/feature/board/api/use-get-board-github";
 import { useUpdateUnitMutation } from "@/feature/board/api/use-update-unit";
-import { useGetCatalogQuery } from "@/feature/catalog/api/use-get-catalog";
 import {
 	buildSuggestedUnitBranchName,
 	fromOptionalSelectValue,
 	SELECT_UNSET_VALUE,
 	toOptionalSelectValue,
 } from "@/feature/task/components/task-detail-sheet/task-detail.utils";
-import { cn } from "@/lib/utils";
 
 type UnitFormDialogProps = {
 	open: boolean;
@@ -59,9 +55,6 @@ export const UnitFormDialog = ({
 	const queryClient = useQueryClient();
 	const isEditing = Boolean(unit);
 	const [isNewBranchMode, setIsNewBranchMode] = useState(false);
-	const { data: colorPresets = [] } = useGetCatalogQuery(
-		CATALOG_SLUG.UNIT_COLOR,
-	);
 	const { data: githubInfo } = useGetBoardGitHubQuery(boardId);
 	const branches = githubInfo?.branches ?? [];
 
@@ -74,7 +67,6 @@ export const UnitFormDialog = ({
 		defaultValues: {
 			name: unit?.name ?? "",
 			description: unit?.description ?? "",
-			color: unit?.color ?? DEFAULT_UNIT_COLOR,
 			branchName: unit?.branchName ?? null,
 			createBranchOnGitHub: false,
 		},
@@ -111,7 +103,6 @@ export const UnitFormDialog = ({
 					data: {
 						name: data.name,
 						description: data.description,
-						color: data.color,
 						branchName: data.branchName,
 						createBranchOnGitHub: Boolean(
 							data.branchName && data.createBranchOnGitHub,
@@ -131,7 +122,6 @@ export const UnitFormDialog = ({
 				data: {
 					name: data.name,
 					description: data.description,
-					color: data.color ?? DEFAULT_UNIT_COLOR,
 					branchName: data.branchName,
 					createBranchOnGitHub: Boolean(
 						data.branchName && data.createBranchOnGitHub,
@@ -158,7 +148,7 @@ export const UnitFormDialog = ({
 					</DialogTitle>
 					<DialogDescription>
 						{isEditing
-							? "Update the domain sub-board name, description, color, or linked GitHub branch."
+							? "Update the domain sub-board name, description, or linked GitHub branch."
 							: "Create an isolated sub-board for a domain module and optionally link or create its GitHub branch."}
 					</DialogDescription>
 				</DialogHeader>
@@ -277,45 +267,6 @@ export const UnitFormDialog = ({
 								)}
 							</Field>
 						)}
-					/>
-
-					<Controller
-						name="color"
-						control={form.control}
-						render={({ field }) => {
-							const activeColor = field.value ?? DEFAULT_UNIT_COLOR;
-							return (
-								<Field>
-									<FieldLabel>Color Preset</FieldLabel>
-									<div className="flex flex-wrap items-center gap-2 pt-1">
-										{colorPresets.map((preset) => {
-											const isSelected = activeColor === preset.value;
-											return (
-												<Button
-													key={preset.value}
-													type="button"
-													variant="ghost"
-													size="icon-xs"
-													onClick={() => field.onChange(preset.value)}
-													title={preset.label}
-													aria-label={preset.label}
-													className={cn(
-														"size-6 rounded-full p-0 transition-transform cursor-pointer hover:opacity-90",
-														isSelected &&
-															"ring-2 ring-ring ring-offset-2 ring-offset-background scale-110",
-													)}
-													style={{ backgroundColor: preset.value }}
-												>
-													{isSelected && (
-														<Check className="size-3.5 text-white" />
-													)}
-												</Button>
-											);
-										})}
-									</div>
-								</Field>
-							);
-						}}
 					/>
 
 					<Button type="submit" disabled={isPending} className="cursor-pointer">
