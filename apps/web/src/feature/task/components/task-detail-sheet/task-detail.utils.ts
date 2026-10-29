@@ -1,9 +1,23 @@
 import type { Block, PartialBlock } from "@blocknote/core";
 import type { Maybe } from "@scrum-board/shared/types";
+import { kebabCase } from "es-toolkit";
 
 const BLOCK_TYPE = {
 	PARAGRAPH: "paragraph",
+	HEADING: "heading",
 } as const;
+
+export const SELECT_UNSET_VALUE = "unset" as const;
+
+export function toOptionalSelectValue(
+	value: Maybe<string | undefined>,
+): string {
+	return value ?? SELECT_UNSET_VALUE;
+}
+
+export function fromOptionalSelectValue(value: string): Maybe<string> {
+	return value === SELECT_UNSET_VALUE ? null : value;
+}
 
 export function formatTaskDateTime(dateString: string): string {
 	return new Date(dateString).toLocaleDateString("en-US", {
@@ -74,7 +88,13 @@ export function getTaskDescriptionPreview(description?: Maybe<string>): string {
 	try {
 		const parsed: unknown = JSON.parse(description);
 		if (Array.isArray(parsed)) {
-			return parsed
+			const nonHeadingBlocks = parsed.filter(
+				(block) => isRecord(block) && block.type !== BLOCK_TYPE.HEADING,
+			);
+			const sourceBlocks =
+				nonHeadingBlocks.length > 0 ? nonHeadingBlocks : parsed;
+
+			return sourceBlocks
 				.map((block) => {
 					if (isRecord(block) && "content" in block) {
 						return extractInlineText(block.content);
@@ -102,4 +122,9 @@ export function serializeTaskEditorBlocks(blocks: Block[]): Maybe<string> {
 	}
 
 	return JSON.stringify(blocks);
+}
+
+export function buildSuggestedBranchName(title: string): string {
+	const slug = kebabCase(title).slice(0, 36);
+	return `feat/${slug || "task"}`;
 }

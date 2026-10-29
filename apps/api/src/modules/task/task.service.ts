@@ -1,5 +1,6 @@
 import type { z } from "@hono/zod-openapi";
 import type {
+	CreateTaskBranchSchema,
 	CreateTaskSchema,
 	MoveTaskSchema,
 	UpdateTaskSchema,
@@ -7,12 +8,20 @@ import type {
 import { HTTPException } from "hono/http-exception";
 import { prisma } from "@/db/connections";
 import { Priority, Prisma } from "@/db/prisma/generated/client";
+import { githubService } from "../github/github.service";
+import { sanitizeBranchName } from "../github/github.utils";
 import { taskRepository } from "./task.repository";
 
 export type UpdateTaskInput = {
 	userId: string;
 	id: string;
 	data: z.infer<typeof UpdateTaskSchema>;
+};
+
+export type CreateTaskBranchInput = {
+	userId: string;
+	id: string;
+	data: z.infer<typeof CreateTaskBranchSchema>;
 };
 
 export type MoveTaskInput = {
@@ -72,6 +81,9 @@ export const taskService = {
 				order,
 				priority: data.priority ?? Priority.MEDIUM,
 				columnId: data.columnId,
+				unitId: data.unitId ?? null,
+				boltId: data.boltId ?? null,
+				branchName: data.branchName ?? null,
 				assignees: {
 					connect: assignees,
 				},
@@ -111,6 +123,30 @@ export const taskService = {
 					})),
 				},
 			}),
+		});
+	},
+
+	async linkOrCreateBranch(input: CreateTaskBranchInput) {
+		const { userId, id, data } = input;
+		const task = await taskRepository.findByIdWithBoard(id);
+		if (!task) {
+			throw new HTTPException(404, { message: "Task not found" });
+		}
+
+		if (task.column.board.ownerId !== userId) {
+			throw new HTTPException(403, { message: "Not authorized" });
+		}
+
+		const branchName = data.createOnGitHub
+			? await githubService.ensureBranchExists({
+					githubRepo: task.column.board.githubRepo,
+					defaultBranch: task.column.board.defaultBranch,
+					branchName: data.branchName,
+				})
+			: sanitizeBranchName(data.branchName);
+
+		return taskRepository.update(id, {
+			branchName,
 		});
 	},
 

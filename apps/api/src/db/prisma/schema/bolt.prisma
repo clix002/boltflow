@@ -1,0 +1,23 @@
+enum BoltStatus {
+  PLANNED
+  ACTIVE
+  COMPLETED
+}
+
+model Bolt {
+  id       String     @id @default(uuid())
+  name     String
+  goal     String?
+  status   BoltStatus @default(PLANNED)
+  startsAt DateTime?
+  endsAt   DateTime?
+
+  boardId String
+  board   Board  @relation("BoardBolts", fields: [boardId], references: [id], onDelete: Cascade)
+  tasks   Task[] @relation("BoltTasks")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([boardId])
+}

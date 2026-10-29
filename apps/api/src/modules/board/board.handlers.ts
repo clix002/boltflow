@@ -5,6 +5,7 @@ import type {
 	createBoardRoute,
 	deleteBoardRoute,
 	getBoardByIdRoute,
+	getBoardGitHubBranchesRoute,
 	listBoardsRoute,
 	updateBoardRoute,
 } from "./board.routes";
@@ -35,6 +36,17 @@ export const getByIdHandler: RouteHandler<
 
 	const board = await boardService.getById({ id, userId, filters: query });
 	return c.json(board, 200);
+};
+
+export const getGitHubBranchesHandler: RouteHandler<
+	typeof getBoardGitHubBranchesRoute,
+	AppEnv
+> = async (c) => {
+	const userId = c.get("jwtPayload").id;
+	const id = c.req.param("id");
+
+	const githubInfo = await boardService.getGitHubInfo({ id, userId });
+	return c.json(githubInfo, 200);
 };
 
 export const createHandler: RouteHandler<

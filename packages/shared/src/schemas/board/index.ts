@@ -1,6 +1,16 @@
 export {
 	BoardDetailResponseSchema,
+	type BoardGitHubInfo,
+	BoardGitHubInfoSchema,
 	BoardSchema,
+	type Bolt,
+	BoltSchema,
+	type BoltStatus,
+	BoltStatusSchema,
 	CreateBoardSchema,
+	type GitHubBranch,
+	GitHubBranchSchema,
+	type Unit,
+	UnitSchema,
 	UpdateBoardSchema,
 } from "./board.schema";

@@ -7,12 +7,13 @@ import type {
 import type { Maybe } from "@scrum-board/shared/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { isEmpty } from "es-toolkit/compat";
-import { Plus } from "lucide-react";
+import { GitBranch, Layers, Plus, X, Zap } from "lucide-react";
 import { useRef, useState } from "react";
 import { useParams } from "react-router";
 import type { z } from "zod";
 import { ErrorState } from "@/components/state/error-state";
 import { LoadingState } from "@/components/state/loading-state";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CARD_VARIANT } from "@/components/ui/card";
 import {
@@ -48,11 +49,23 @@ export const BoardDetail = () => {
 	const { mutate: deleteTask } = useDeleteTaskMutation();
 	const { mutate: moveTask } = useMoveTaskMutation();
 
-	const { session, selectedColumnIds, currentView } = useBoardPreferences();
+	const {
+		session,
+		selectedColumnIds,
+		currentView,
+		hasContextFilter,
+		toggleUnit,
+		toggleBolt,
+		toggleBranch,
+		clearContextFilters,
+	} = useBoardPreferences();
 
 	const boardFilters = {
 		search: session.search,
 		assigneeIds: session.assigneeIds.join(","),
+		unitId: session.unitId,
+		boltId: session.boltId,
+		branchName: session.branchName,
 	};
 	const boardQueryKey = getBoardQueryKey(boardId, boardFilters);
 	const {
@@ -132,6 +145,9 @@ export const BoardDetail = () => {
 		? board.columns.find((col) => col.id === selectedTask.columnId)
 		: undefined;
 
+	const activeUnit = board.units?.find((u) => u.id === session.unitId);
+	const activeBolt = board.bolts?.find((b) => b.id === session.boltId);
+
 	const dndHandlers = createBoardDndHandlers({
 		board,
 		boardQueryKey,
@@ -150,6 +166,68 @@ export const BoardDetail = () => {
 
 	return (
 		<div className="flex flex-1 flex-col overflow-hidden py-4">
+			{hasContextFilter && (
+				<div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-1.5 text-xs">
+					<span className="font-medium text-muted-foreground">
+						Active Filters:
+					</span>
+					{activeBolt && (
+						<Badge variant="secondary" className="gap-1.5 pr-1">
+							<Zap className="size-3 text-amber-500" />
+							<span>{activeBolt.name}</span>
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon-xs"
+								className="size-4 rounded-full hover:bg-muted cursor-pointer"
+								onClick={() => toggleBolt(activeBolt.id)}
+							>
+								<X className="size-2.5" />
+							</Button>
+						</Badge>
+					)}
+					{activeUnit && (
+						<Badge variant="secondary" className="gap-1.5 pr-1">
+							<Layers className="size-3 text-indigo-500" />
+							<span>{activeUnit.name}</span>
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon-xs"
+								className="size-4 rounded-full hover:bg-muted cursor-pointer"
+								onClick={() => toggleUnit(activeUnit.id)}
+							>
+								<X className="size-2.5" />
+							</Button>
+						</Badge>
+					)}
+					{session.branchName && (
+						<Badge variant="secondary" className="gap-1.5 font-mono pr-1">
+							<GitBranch className="size-3 text-emerald-500" />
+							<span>{session.branchName}</span>
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon-xs"
+								className="size-4 rounded-full hover:bg-muted cursor-pointer"
+								onClick={() => toggleBranch(session.branchName)}
+							>
+								<X className="size-2.5" />
+							</Button>
+						</Badge>
+					)}
+					<Button
+						type="button"
+						variant="ghost"
+						size="xs"
+						className="ml-auto h-6 text-xs text-muted-foreground cursor-pointer"
+						onClick={clearContextFilters}
+					>
+						Clear all
+					</Button>
+				</div>
+			)}
+
 			<DragDropProvider {...dndHandlers}>
 				{currentView === BOARD_VIEW_MODE.LIST ? (
 					<BoardTableView
@@ -203,6 +281,8 @@ export const BoardDetail = () => {
 			<TaskDetailSheet
 				task={selectedTask}
 				columns={board.columns}
+				units={board.units}
+				bolts={board.bolts}
 				boardId={boardId}
 				columnName={selectedTaskColumn?.name}
 				open={Boolean(selectedTask)}

@@ -1,5 +1,6 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import {
+	CreateTaskBranchSchema,
 	CreateTaskSchema,
 	MoveTaskSchema,
 	TaskWithAssigneesSchema,
@@ -40,6 +41,28 @@ export const updateTaskRoute = createRoute({
 	responses: {
 		200: {
 			description: "Task updated successfully",
+			content: {
+				"application/json": { schema: TaskWithAssigneesSchema },
+			},
+		},
+	},
+});
+
+export const createTaskBranchRoute = createRoute({
+	method: "post",
+	tags: ["Task", "GitHub"],
+	path: "/:id/branch",
+	request: {
+		params: z.object({
+			id: z.string(),
+		}),
+		body: {
+			content: { "application/json": { schema: CreateTaskBranchSchema } },
+		},
+	},
+	responses: {
+		200: {
+			description: "Branch linked or created on GitHub for task",
 			content: {
 				"application/json": { schema: TaskWithAssigneesSchema },
 			},

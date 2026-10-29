@@ -1,6 +1,7 @@
 import type { RouteHandler } from "@hono/zod-openapi";
 import type { AppEnv } from "@/modules/auth/types";
 import type {
+	createTaskBranchRoute,
 	createTaskRoute,
 	deleteTaskRoute,
 	moveTaskRoute,
@@ -28,6 +29,18 @@ export const updateHandler: RouteHandler<
 	const data = c.req.valid("json");
 
 	const task = await taskService.update({ userId, id, data });
+	return c.json(task, 200);
+};
+
+export const createBranchHandler: RouteHandler<
+	typeof createTaskBranchRoute,
+	AppEnv
+> = async (c) => {
+	const userId = c.get("jwtPayload").id;
+	const { id } = c.req.valid("param");
+	const data = c.req.valid("json");
+
+	const task = await taskService.linkOrCreateBranch({ userId, id, data });
 	return c.json(task, 200);
 };
 

@@ -21,6 +21,9 @@ export const BoardDefaultSchema = z.object({
 
 export const BoardSessionSchema = BoardDefaultSchema.extend({
 	search: z.string().trim().catch(""),
+	unitId: z.string().trim().catch(""),
+	boltId: z.string().trim().catch(""),
+	branchName: z.string().trim().catch(""),
 });
 
 export type BoardDefault = z.infer<typeof BoardDefaultSchema>;

@@ -9,9 +9,18 @@ type BoardDetail = z.infer<typeof BoardDetailResponseSchema>;
 export type BoardFilters = {
 	search?: string;
 	assigneeIds?: string;
+	unitId?: string;
+	boltId?: string;
+	branchName?: string;
 };
 
-const BOARD_FILTER_KEYS = ["search", "assigneeIds"] as const;
+const BOARD_FILTER_KEYS = [
+	"search",
+	"assigneeIds",
+	"unitId",
+	"boltId",
+	"branchName",
+] as const;
 
 export const getBoardQueryKey = (
 	id?: string,

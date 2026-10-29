@@ -8,6 +8,30 @@ export type DeleteTaskParams = {
 	order: number;
 };
 
+const TASK_RELATIONS_INCLUDE = {
+	assignees: {
+		select: {
+			id: true,
+			name: true,
+			avatarUrl: true,
+		},
+	},
+	unit: {
+		select: {
+			id: true,
+			name: true,
+			color: true,
+		},
+	},
+	bolt: {
+		select: {
+			id: true,
+			name: true,
+			status: true,
+		},
+	},
+} satisfies Prisma.TaskInclude;
+
 export const taskRepository = {
 	findByIdWithBoard(id: string) {
 		return prisma.task.findUnique({
@@ -23,6 +47,8 @@ export const taskRepository = {
 							select: {
 								id: true,
 								ownerId: true,
+								githubRepo: true,
+								defaultBranch: true,
 							},
 						},
 					},
@@ -38,30 +64,14 @@ export const taskRepository = {
 	create(data: Prisma.TaskUncheckedCreateInput) {
 		return prisma.task.create({
 			data,
-			include: {
-				assignees: {
-					select: {
-						id: true,
-						name: true,
-						avatarUrl: true,
-					},
-				},
-			},
+			include: TASK_RELATIONS_INCLUDE,
 		});
 	},
 	update(id: string, data: Prisma.TaskUncheckedUpdateInput) {
 		return prisma.task.update({
 			where: { id },
 			data,
-			include: {
-				assignees: {
-					select: {
-						id: true,
-						name: true,
-						avatarUrl: true,
-					},
-				},
-			},
+			include: TASK_RELATIONS_INCLUDE,
 		});
 	},
 	async moveTask(params: MoveTaskParams) {
@@ -78,15 +88,7 @@ export const taskRepository = {
 					columnId: params.targetColumnId,
 					order: params.targetOrder,
 				},
-				include: {
-					assignees: {
-						select: {
-							id: true,
-							name: true,
-							avatarUrl: true,
-						},
-					},
-				},
+				include: TASK_RELATIONS_INCLUDE,
 			});
 		});
 	},

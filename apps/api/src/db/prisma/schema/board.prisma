@@ -1,11 +1,15 @@
 model Board {
-  id   String @id @default(uuid())
-  name String
+  id            String  @id @default(uuid())
+  name          String
+  githubRepo    String?
+  defaultBranch String  @default("main")
 
   ownerId String
   owner   User   @relation("UserBoards", fields: [ownerId], references: [id], onDelete: Cascade)
 
   columns Column[] @relation("BoardColumns")
+  units   Unit[]   @relation("BoardUnits")
+  bolts   Bolt[]   @relation("BoardBolts")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

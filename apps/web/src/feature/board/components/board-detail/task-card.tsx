@@ -1,10 +1,11 @@
 import type { TaskWithAssigneesSchema } from "@scrum-board/shared/schemas";
 import type { VariantProps } from "class-variance-authority";
 import { isEmpty } from "es-toolkit/compat";
-import { Calendar } from "lucide-react";
+import { Calendar, GitBranch } from "lucide-react";
 import type React from "react";
 import type { z } from "zod";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Card, type cardVariants } from "@/components/ui/card";
 import {
 	PRIORITY_BADGE_VARIANT,
@@ -66,6 +67,33 @@ export const TaskCard = ({
 				<p className="text-xs text-muted-foreground line-clamp-2">
 					{descriptionPreview}
 				</p>
+			)}
+
+			{(task.unit || task.branchName) && (
+				<div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+					{task.unit && (
+						<Badge
+							variant="outline"
+							className="h-5 gap-1.5 px-1.5 text-[10px] font-medium bg-background/60"
+						>
+							<span
+								className="size-2 rounded-full shrink-0"
+								style={{ backgroundColor: task.unit.color }}
+							/>
+							<span className="truncate max-w-28">{task.unit.name}</span>
+						</Badge>
+					)}
+
+					{task.branchName && (
+						<Badge
+							variant="secondary"
+							className="h-5 gap-1 px-1.5 font-mono text-[10px] text-emerald-600 dark:text-emerald-400"
+						>
+							<GitBranch className="size-2.5 shrink-0" />
+							<span className="truncate max-w-32">{task.branchName}</span>
+						</Badge>
+					)}
+				</div>
 			)}
 
 			<div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">

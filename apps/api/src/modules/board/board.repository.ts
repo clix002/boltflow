@@ -39,6 +39,12 @@ export const boardRepository = {
 		return prisma.board.findUnique({
 			where: { id },
 			include: {
+				units: {
+					orderBy: { createdAt: "asc" },
+				},
+				bolts: {
+					orderBy: { createdAt: "asc" },
+				},
 				columns: {
 					orderBy: { order: "asc" },
 					include: {
@@ -51,6 +57,20 @@ export const boardRepository = {
 										id: true,
 										name: true,
 										avatarUrl: true,
+									},
+								},
+								unit: {
+									select: {
+										id: true,
+										name: true,
+										color: true,
+									},
+								},
+								bolt: {
+									select: {
+										id: true,
+										name: true,
+										status: true,
 									},
 								},
 							},

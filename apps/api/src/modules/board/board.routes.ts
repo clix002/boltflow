@@ -1,6 +1,7 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import {
 	BoardDetailResponseSchema,
+	BoardGitHubInfoSchema,
 	BoardSchema,
 	CommaSeparatedArray,
 	CreateBoardSchema,
@@ -20,6 +21,9 @@ const ParamsSchema = z.object({
 const BoardDetailQuerySchema = z.object({
 	search: z.string().optional(),
 	assigneeIds: CommaSeparatedArray,
+	unitId: z.string().optional(),
+	boltId: z.string().optional(),
+	branchName: z.string().optional(),
 });
 
 export const listBoardsRoute = createRoute({
@@ -52,6 +56,25 @@ export const getBoardByIdRoute = createRoute({
 			content: {
 				"application/json": {
 					schema: BoardDetailResponseSchema,
+				},
+			},
+		},
+	},
+});
+
+export const getBoardGitHubBranchesRoute = createRoute({
+	method: "get",
+	tags: ["Board", "GitHub"],
+	path: "/{id}/github/branches",
+	request: {
+		params: ParamsSchema,
+	},
+	responses: {
+		200: {
+			description: "GitHub branches and repository connection status for board",
+			content: {
+				"application/json": {
+					schema: BoardGitHubInfoSchema,
 				},
 			},
 		},

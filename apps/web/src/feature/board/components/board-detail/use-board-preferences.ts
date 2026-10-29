@@ -39,7 +39,13 @@ export const useBoardPreferences = () => {
 	const getSession = (): BoardSession => {
 		if (!saved) return urlSession;
 		if (hasAnyLayoutParams(searchParams)) return urlSession;
-		return { ...saved, search: urlSession.search };
+		return {
+			...saved,
+			search: urlSession.search,
+			unitId: urlSession.unitId,
+			boltId: urlSession.boltId,
+			branchName: urlSession.branchName,
+		};
 	};
 
 	const session = getSession();
@@ -73,11 +79,36 @@ export const useBoardPreferences = () => {
 	const toggleUser = (userId: string) =>
 		updateSession({ assigneeIds: xor(session.assigneeIds, [userId]) });
 
+	const toggleUnit = (unitId: string) =>
+		updateSearchParams({
+			unitId: session.unitId === unitId ? null : unitId,
+		});
+
+	const toggleBolt = (boltId: string) =>
+		updateSearchParams({
+			boltId: session.boltId === boltId ? null : boltId,
+		});
+
+	const toggleBranch = (branchName: string) =>
+		updateSearchParams({
+			branchName: session.branchName === branchName ? null : branchName,
+		});
+
+	const clearContextFilters = () =>
+		updateSearchParams({
+			unitId: null,
+			boltId: null,
+			branchName: null,
+		});
+
 	const clearColumns = () => updateSession({ columns: [] });
 
 	const clearUsers = () => updateSession({ assigneeIds: [] });
 
-	const clearAll = () => updateSession({ columns: [], assigneeIds: [] });
+	const clearAll = () => {
+		updateSession({ columns: [], assigneeIds: [] });
+		clearContextFilters();
+	};
 
 	const setView = (view: BoardViewMode) => updateSession({ view });
 
@@ -96,17 +127,29 @@ export const useBoardPreferences = () => {
 
 	const resetToDefault = clearLayoutOverride;
 
+	const hasContextFilter = Boolean(
+		session.unitId || session.boltId || session.branchName,
+	);
+
 	return {
 		session,
 		currentView: session.view,
 		selectedColumnIds: session.columns,
 		selectedUserIds: session.assigneeIds,
+		selectedUnitId: session.unitId,
+		selectedBoltId: session.boltId,
+		selectedBranchName: session.branchName,
+		hasContextFilter,
 		hasDefault,
 		isViewModified,
 		isDirty,
 		isModified: isDirty,
 		toggleColumn,
 		toggleUser,
+		toggleUnit,
+		toggleBolt,
+		toggleBranch,
+		clearContextFilters,
 		clearColumns,
 		clearUsers,
 		clearAll,

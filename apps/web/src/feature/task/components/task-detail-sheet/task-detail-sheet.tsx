@@ -1,6 +1,8 @@
 import type {
+	Bolt,
 	ColumnWithTasksSchema,
 	TaskWithAssigneesSchema,
+	Unit,
 	UpdateTaskSchema,
 } from "@scrum-board/shared/schemas";
 import type { Maybe } from "@scrum-board/shared/types";
@@ -37,6 +39,8 @@ type UpdateTaskInput = z.infer<typeof UpdateTaskSchema>;
 type TaskDetailSheetProps = {
 	task: Maybe<TaskWithAssignees>;
 	columns?: ColumnWithTasks[];
+	units?: Unit[];
+	bolts?: Bolt[];
 	boardId?: string;
 	columnName?: string;
 	open: boolean;
@@ -47,6 +51,8 @@ type TaskDetailSheetProps = {
 export const TaskDetailSheet = ({
 	task,
 	columns,
+	units,
+	bolts,
 	boardId,
 	columnName,
 	open,
@@ -172,6 +178,9 @@ export const TaskDetailSheet = ({
 								<TaskPropertiesSection
 									task={task}
 									columns={columns}
+									units={units}
+									bolts={bolts}
+									boardId={boardId}
 									columnName={columnName}
 									onUpdateTask={handleImmediateUpdate}
 								/>

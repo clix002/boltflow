@@ -2,8 +2,11 @@ import type { z } from "@hono/zod-openapi";
 import type {
 	CreateBoardSchema,
 	PaginateOptions,
+	UpdateBoardSchema,
 } from "@scrum-board/shared/schemas";
 import { HTTPException } from "hono/http-exception";
+import { env } from "@/config/env";
+import { githubService } from "../github/github.service";
 import type { TaskFilterParams } from "../task/task.filters";
 import { boardRepository } from "./board.repository";
 
@@ -16,7 +19,7 @@ export type GetBoardInput = {
 export type UpdateBoardInput = {
 	id: string;
 	userId: string;
-	data: z.infer<typeof CreateBoardSchema>;
+	data: z.infer<typeof UpdateBoardSchema>;
 };
 
 export const boardService = {
@@ -32,9 +35,19 @@ export const boardService = {
 		return board;
 	},
 
+	async getGitHubInfo(input: GetBoardInput) {
+		const board = await boardService.getById(input);
+		return githubService.getBoardGitHubInfo({
+			githubRepo: board.githubRepo,
+			defaultBranch: board.defaultBranch,
+		});
+	},
+
 	async create(userId: string, data: z.infer<typeof CreateBoardSchema>) {
 		return await boardRepository.create({
 			name: data.name,
+			githubRepo: data.githubRepo ?? env.GITHUB_REPO ?? null,
+			defaultBranch: data.defaultBranch ?? "main",
 			owner: {
 				connect: {
 					id: userId,

@@ -1,27 +1,50 @@
 import { prisma } from "@/db/connections";
-import { Priority } from "@/db/prisma/generated/client";
+import { BoltStatus, Priority, PrStatus } from "@/db/prisma/generated/client";
+import {
+	bold,
+	bullet,
+	code,
+	h2,
+	h3,
+	p,
+	serializeSeedBlocks,
+	table,
+	text,
+	todo,
+} from "./seed-blocks.utils";
+
+const MAIN_BOARD_ID = "4ec3738b-039f-4b75-a93e-58ae5a1529a6";
 
 async function main() {
-	console.log("🌱 Starting database seeding...");
+	console.log("Starting database seeding...");
 
-	// Limpiar datos existentes en orden inverso de relaciones
 	await prisma.comment.deleteMany();
 	await prisma.task.deleteMany();
 	await prisma.column.deleteMany();
+	await prisma.unit.deleteMany();
+	await prisma.bolt.deleteMany();
 	await prisma.board.deleteMany();
 	await prisma.user.deleteMany();
 
-	console.log("🧹 Existing database cleared.");
+	console.log("Existing database cleared.");
 
 	const defaultPassword = await Bun.password.hash("password123");
 
-	// 1. Crear Usuarios
 	const demoUser = await prisma.user.create({
 		data: {
 			email: "demo@example.com",
-			name: "Demo User",
+			name: "Clix",
 			password: defaultPassword,
 			avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Demo",
+		},
+	});
+
+	const aiAgent = await prisma.user.create({
+		data: {
+			email: "agent@example.com",
+			name: "Code Agent",
+			password: defaultPassword,
+			avatarUrl: "https://api.dicebear.com/7.x/bottts/svg?seed=BoltFlow",
 		},
 	});
 
@@ -34,131 +57,267 @@ async function main() {
 		},
 	});
 
-	const jane = await prisma.user.create({
-		data: {
-			email: "jane@example.com",
-			name: "Jane Smith",
-			password: defaultPassword,
-			avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jane",
-		},
-	});
-
 	console.log(
-		"👤 Created 3 users (demo@example.com, john@example.com, jane@example.com).",
+		"Created 3 users (demo@example.com, agent@example.com, john@example.com).",
 	);
 
-	// 2. Tablero 1: Sprint 24 - Plataforma Web
-	const board1 = await prisma.board.create({
+	// 1. Crear el Board principal conectado al repositorio real clix002/boltflow
+	const mainProjectBoard = await prisma.board.create({
 		data: {
-			name: "🚀 Sprint 24 - Plataforma Web",
+			id: MAIN_BOARD_ID,
+			name: "BoltFlow Workspace",
+			githubRepo: "clix002/boltflow",
+			defaultBranch: "main",
 			ownerId: demoUser.id,
-			columns: {
+		},
+	});
+
+	// 2. Crear las Units of Work (Módulos DDD)
+	const [unitCore, unitGitHub, unitUi, unitCli] = await Promise.all([
+		prisma.unit.create({
+			data: {
+				name: "Core & Schema",
+				description: "Modelos Prisma (Unit, Bolt) y esquemas Zod compartidos",
+				color: "#8b5cf6",
+				boardId: mainProjectBoard.id,
+			},
+		}),
+		prisma.unit.create({
+			data: {
+				name: "GitHub Sync",
+				description: "Integración Octokit REST API, ramas y Pull Requests",
+				color: "#10b981",
+				boardId: mainProjectBoard.id,
+			},
+		}),
+		prisma.unit.create({
+			data: {
+				name: "UI Sidebar & Drawer",
+				description:
+					"BoardDetailSidebar, Kanban, Table y BlockNote Spec Drawer",
+				color: "#3b82f6",
+				boardId: mainProjectBoard.id,
+			},
+		}),
+		prisma.unit.create({
+			data: {
+				name: "CLI Agent",
+				description:
+					"Herramienta CLI para que agentes IA operen desde terminal",
+				color: "#f59e0b",
+				boardId: mainProjectBoard.id,
+			},
+		}),
+	]);
+
+	// 3. Crear los Bolts (Ciclos rápidos de horas/días)
+	const [bolt1, bolt2, bolt3] = await Promise.all([
+		prisma.bolt.create({
+			data: {
+				name: "Bolt #1: Core & Spec Drawer",
+				goal: "Drag & Drop canónico, BlockNote Drawer y CRUD con sonidos",
+				status: BoltStatus.COMPLETED,
+				boardId: mainProjectBoard.id,
+			},
+		}),
+		prisma.bolt.create({
+			data: {
+				name: "Bolt #2: GitHub & Sidebar",
+				goal: "Conectar Octokit con clix002/boltflow, Units, Bolts y ramas en vivo",
+				status: BoltStatus.ACTIVE,
+				boardId: mainProjectBoard.id,
+			},
+		}),
+		prisma.bolt.create({
+			data: {
+				name: "Bolt #3: CLI Agent & Webhooks",
+				goal: "CLI en terminal para agentes IA y sincronización automática por Webhooks",
+				status: BoltStatus.PLANNED,
+				boardId: mainProjectBoard.id,
+			},
+		}),
+	]);
+
+	// 4. Crear las Columnas con especificaciones ricas en formato BlockNote (sin emojis)
+	await prisma.column.create({
+		data: {
+			name: "1. Elaboration (Spec)",
+			order: 0,
+			boardId: mainProjectBoard.id,
+			tasks: {
 				create: [
 					{
-						name: "To Do",
+						title: "Crear paquete CLI para Agentes en Terminal",
+						description: serializeSeedBlocks([
+							h2("Intent & Spec"),
+							p(
+								text(
+									"Permitir que un agente de IA en terminal opere el tablero directamente desde ",
+								),
+								code("apps/cli"),
+								text(" autenticándose con API Key."),
+							),
+							h3("Comandos del CLI"),
+							table(
+								["Comando", "Endpoint Backend", "Acción en el Board"],
+								[
+									[
+										"boltflow task list",
+										"GET /boards/:id",
+										"Lista las tareas del Bolt activo",
+									],
+									[
+										"boltflow task spec <id>",
+										"GET /tasks/:id",
+										"Descarga el Spec BlockNote en Markdown",
+									],
+									[
+										"boltflow task start <id>",
+										"POST /tasks/:id/branch",
+										"Crea rama Git, hace checkout y mueve a Constructing",
+									],
+									[
+										"boltflow task pr <id>",
+										"PATCH /tasks/:id",
+										"Abre PR en GitHub y mueve a PR Review",
+									],
+								],
+							),
+							h3("Criterios de Aceptación"),
+							todo(
+								false,
+								text("Crear workspace "),
+								code("packages/cli"),
+								text(" con Bun."),
+							),
+							todo(
+								false,
+								text("Guardar token de sesión en "),
+								code("~/.boltflow/config.json"),
+								text("."),
+							),
+							todo(
+								false,
+								text("Ejecutar "),
+								code("git switch -c <branch>"),
+								text(" automáticamente al iniciar tarea."),
+							),
+						]),
 						order: 0,
-						tasks: {
-							create: [
-								{
-									title: "Diseñar flujo de onboarding",
-									description:
-										"Crear wireframes interactivos y validar pasos de bienvenida con el equipo de producto.",
-									order: 0,
-									priority: Priority.HIGH,
-									assignees: {
-										connect: [{ id: demoUser.id }, { id: jane.id }],
-									},
-								},
-								{
-									title: "Configurar alertas en Sentry",
-									description:
-										"Integrar Sentry en backend Hono y frontend React para capturar excepciones no controladas.",
-									order: 1,
-									priority: Priority.MEDIUM,
-									assignees: { connect: [{ id: john.id }] },
-								},
-								{
-									title: "Auditoría de dependencias y seguridad",
-									description:
-										"Revisar vulnerabilidades con `bun pm audit` y actualizar librerías con parches críticos.",
-									order: 2,
-									priority: Priority.LOW,
-								},
-							],
+						priority: Priority.HIGH,
+						unitId: unitCli.id,
+						boltId: bolt3.id,
+						assignees: {
+							connect: [{ id: demoUser.id }, { id: aiAgent.id }],
 						},
 					},
 					{
-						name: "In Progress",
+						title: "Webhook HMAC para mover cards al hacer PR / Merge",
+						description: serializeSeedBlocks([
+							h2("Sincronización Automática GitHub -> Board"),
+							p(
+								text("Escuchar los eventos del repositorio "),
+								bold("clix002/boltflow"),
+								text(" en el endpoint "),
+								code("POST /api/webhooks/github"),
+								text(
+									" para transicionar tareas entre columnas sin intervención manual.",
+								),
+							),
+							h3("Matriz de Transición de Estados"),
+							table(
+								["Evento GitHub", "Columna Destino", "Estado PR"],
+								[
+									["create (ref_type: branch)", "3. Constructing", "DRAFT"],
+									["pull_request.opened", "4. PR Review", "OPEN"],
+									["pull_request.closed (merged=true)", "5. Merged", "MERGED"],
+								],
+							),
+							h3("Seguridad & Checklist"),
+							todo(
+								false,
+								text("Verificar firma HMAC-SHA256 con header "),
+								code("X-Hub-Signature-256"),
+								text("."),
+							),
+							todo(
+								false,
+								text("Buscar tarea por "),
+								code("branchName"),
+								text(" y actualizar "),
+								code("prNumber"),
+								text(" + "),
+								code("prUrl"),
+								text("."),
+							),
+						]),
 						order: 1,
-						tasks: {
-							create: [
-								{
-									title: "Implementar filtros avanzados en tabla",
-									description:
-										"Permitir filtrado dinámico por asignados, prioridad y búsqueda en texto en BoardTableView.",
-									order: 0,
-									priority: Priority.HIGH,
-									assignees: { connect: [{ id: demoUser.id }] },
-								},
-								{
-									title: "Refactorizar autenticación y manejo de sesión",
-									description:
-										"Asegurar renovación transparente con Refresh Tokens en cookies HttpOnly seguras.",
-									order: 1,
-									priority: Priority.URGENT,
-									assignees: {
-										connect: [{ id: demoUser.id }, { id: john.id }],
-									},
-								},
-							],
-						},
+						priority: Priority.MEDIUM,
+						unitId: unitGitHub.id,
+						boltId: bolt3.id,
+						assignees: { connect: [{ id: aiAgent.id }] },
 					},
+				],
+			},
+		},
+	});
+
+	await prisma.column.create({
+		data: {
+			name: "2. Ready for Bolt",
+			order: 1,
+			boardId: mainProjectBoard.id,
+			tasks: {
+				create: [
 					{
-						name: "In Review",
-						order: 2,
-						tasks: {
-							create: [
-								{
-									title: "Pruebas end-to-end de registro y login",
-									description:
-										"Verificar validaciones de formularios con Zod y persistencia correcta en base de datos.",
-									order: 0,
-									priority: Priority.MEDIUM,
-									assignees: { connect: [{ id: jane.id }] },
-								},
-								{
-									title: "Revisión de accesibilidad y contrastes",
-									description:
-										"Garantizar cumplimiento de WCAG AA en modo oscuro y claro.",
-									order: 1,
-									priority: Priority.LOW,
-									assignees: { connect: [{ id: demoUser.id }] },
-								},
-							],
-						},
-					},
-					{
-						name: "Done",
-						order: 3,
-						tasks: {
-							create: [
-								{
-									title: "Setup de Turborepo y Vite con Tailwind v4",
-									description:
-										"Configuración inicial del monorepo, tooling de Biome y alias de TypeScript.",
-									order: 0,
-									priority: Priority.MEDIUM,
-									assignees: { connect: [{ id: demoUser.id }] },
-								},
-								{
-									title: "Migración a Prisma 7 y esquemas modulares",
-									description:
-										"Dividir modelos en archivos .prisma individuales con adapter nativo de PostgreSQL.",
-									order: 1,
-									priority: Priority.HIGH,
-									assignees: { connect: [{ id: john.id }] },
-								},
-							],
+						title: "Selector y creador de ramas GitHub dentro del Spec Drawer",
+						description: serializeSeedBlocks([
+							h2("Gestión de Ramas desde TaskDetailSheet"),
+							p(
+								text("Permitir vincular cualquier rama existente de "),
+								code("clix002/boltflow"),
+								text(
+									" o crear una rama remota nueva en 1 clic desde la sección ",
+								),
+								bold("Properties"),
+								text("."),
+							),
+							h3("Flujo de Creación"),
+							bullet(
+								text("Generar slug limpio con "),
+								code("kebabCase(task.title)"),
+								text(" de "),
+								code("es-toolkit"),
+								text("."),
+							),
+							bullet(
+								text("Invocar "),
+								code("POST /tasks/:id/branch"),
+								text(" con "),
+								code("createOnGitHub: true"),
+								text("."),
+							),
+							h3("Checklist"),
+							todo(true, text("Selector de ramas reales desde Octokit.")),
+							todo(
+								true,
+								text("Botón 'Create branch on GitHub' con feedback de carga."),
+							),
+							todo(
+								false,
+								text("Mostrar enlace directo al PR cuando exista "),
+								code("prUrl"),
+								text("."),
+							),
+						]),
+						order: 0,
+						priority: Priority.HIGH,
+						unitId: unitGitHub.id,
+						boltId: bolt2.id,
+						branchName: "feature/board-detail-01",
+						prStatus: PrStatus.OPEN,
+						assignees: {
+							connect: [{ id: demoUser.id }, { id: aiAgent.id }],
 						},
 					},
 				],
@@ -166,172 +325,369 @@ async function main() {
 		},
 	});
 
-	// 3. Tablero 2: App Móvil & API
-	const board2 = await prisma.board.create({
+	await prisma.column.create({
 		data: {
-			name: "📱 App Móvil & API",
-			ownerId: demoUser.id,
-			columns: {
+			name: "3. Constructing",
+			order: 2,
+			boardId: mainProjectBoard.id,
+			tasks: {
 				create: [
 					{
-						name: "Backlog",
+						title:
+							"Construir BoardDetailSidebar con Bolts, Units y Ramas en vivo",
+						description: serializeSeedBlocks([
+							h2("Navegador Contextual en el Sidebar Izquierdo"),
+							p(
+								text(
+									"Reemplazar el placeholder del sidebar por la navegación modular conectada por query params reactivos.",
+								),
+							),
+							h3("Subcomponentes Modulares"),
+							table(
+								["Componente", "Responsabilidad", "Filtro URL"],
+								[
+									[
+										"SidebarRepoBanner",
+										"Estado de conexión con clix002/boltflow y rama base",
+										"—",
+									],
+									[
+										"SidebarBoltsGroup",
+										"Ciclos rápidos (ACTIVE, PLANNED, COMPLETED)",
+										"?boltId=...",
+									],
+									[
+										"SidebarUnitsGroup",
+										"Módulos con indicador de color",
+										"?unitId=...",
+									],
+									[
+										"SidebarBranchesGroup",
+										"Ramas en tiempo real desde GitHub API",
+										"?branchName=...",
+									],
+								],
+							),
+							h3("Criterios de Aceptación"),
+							todo(
+								true,
+								text("Componentizar en carpeta "),
+								code("board-detail-sidebar/"),
+								text("."),
+							),
+							todo(
+								true,
+								text("Mostrar barra de filtros activos sobre el Kanban."),
+							),
+							todo(
+								true,
+								text("Envolver aplicación con "),
+								code("TooltipProvider"),
+								text("."),
+							),
+						]),
 						order: 0,
-						tasks: {
-							create: [
-								{
-									title: "Investigar soporte offline con SQLite",
-									description:
-										"Evaluar sincronización bidireccional entre cliente móvil y servidor Hono.",
-									order: 0,
-									priority: Priority.MEDIUM,
-									assignees: { connect: [{ id: jane.id }] },
-								},
-								{
-									title: "Push notifications con Firebase FCM",
-									description:
-										"Configurar envío de notificaciones automáticas al asignar tareas a un usuario.",
-									order: 1,
-									priority: Priority.HIGH,
-									assignees: { connect: [{ id: demoUser.id }] },
-								},
-							],
+						priority: Priority.URGENT,
+						unitId: unitUi.id,
+						boltId: bolt2.id,
+						branchName: "feature/board-detail-01",
+						prStatus: PrStatus.OPEN,
+						assignees: {
+							connect: [{ id: demoUser.id }, { id: aiAgent.id }],
 						},
 					},
 					{
-						name: "Sprint Backlog",
+						title:
+							"Integrar Octokit + Effect para listar y crear ramas por Board",
+						description: serializeSeedBlocks([
+							h2("Servicio GitHub Tipado con Effect v4 & Octokit"),
+							p(
+								text("Consumir la REST API de GitHub mediante "),
+								code("octokit"),
+								text(" y controlar todos los errores de red/HTTP con "),
+								code("Effect.fn"),
+								text(" y "),
+								code("Schema.TaggedError"),
+								text("."),
+							),
+							h3("Errores de Dominio Tipados (github.errors.ts)"),
+							table(
+								["TaggedError", "Causa", "Respuesta Hono"],
+								[
+									[
+										"InvalidBranchNameError",
+										"Nombre de rama vacío o inválido",
+										"400 Bad Request",
+									],
+									[
+										"GitHubBranchNotFoundError",
+										"404 en getBranch -> dispara createRef desde main",
+										"Recuperación automática",
+									],
+									[
+										"GitHubApiError",
+										"Fallo de permisos, token o red con GitHub",
+										"502 Bad Gateway",
+									],
+								],
+							),
+							h3("Verificación"),
+							todo(
+								true,
+								text("Instalar "),
+								code("octokit"),
+								text(" y "),
+								code("effect"),
+								text(" en "),
+								code("apps/api"),
+								text("."),
+							),
+							todo(
+								true,
+								text("Eliminar bloques try/catch genéricos usando "),
+								code("Effect.catchTag"),
+								text("."),
+							),
+						]),
 						order: 1,
-						tasks: {
-							create: [
-								{
-									title: "Diseño UI kit en Figma",
-									description:
-										"Componentes nativos adaptados para iOS y Android siguiendo Material You y Human Interface.",
-									order: 0,
-									priority: Priority.URGENT,
-									assignees: { connect: [{ id: jane.id }] },
-								},
-							],
-						},
-					},
-					{
-						name: "In Development",
-						order: 2,
-						tasks: {
-							create: [
-								{
-									title: "Setup base de React Native / Expo",
-									description:
-										"Inicializar proyecto con Expo Router y consumo del paquete @scrum-board/shared.",
-									order: 0,
-									priority: Priority.HIGH,
-									assignees: {
-										connect: [{ id: demoUser.id }, { id: john.id }],
-									},
-								},
-							],
-						},
-					},
-					{
-						name: "Released",
-						order: 3,
-						tasks: {
-							create: [
-								{
-									title: "Definición de endpoints OpenAPI v1",
-									description:
-										"Documentar rutas de boards, columnas y tareas con Scalar UI.",
-									order: 0,
-									priority: Priority.LOW,
-									assignees: { connect: [{ id: john.id }] },
-								},
-							],
-						},
+						priority: Priority.HIGH,
+						unitId: unitGitHub.id,
+						boltId: bolt2.id,
+						branchName: "feature/board-detail-01",
+						prStatus: PrStatus.OPEN,
+						assignees: { connect: [{ id: aiAgent.id }] },
 					},
 				],
 			},
 		},
 	});
 
-	// 4. Tablero 3: Bugs & Mantenimiento
-	const board3 = await prisma.board.create({
+	await prisma.column.create({
 		data: {
-			name: "🐛 Bugs & Mantenimiento",
-			ownerId: demoUser.id,
-			columns: {
+			name: "4. PR Review",
+			order: 3,
+			boardId: mainProjectBoard.id,
+			tasks: {
 				create: [
 					{
-						name: "Reportados",
+						title: "Modelos Prisma: Unit, Bolt y campos GitHub en Board/Task",
+						description: serializeSeedBlocks([
+							h2("Esquema de Datos"),
+							p(
+								text("Evolucionar el modelo relacional en "),
+								code("apps/api/src/db/prisma/schema/"),
+								text(" y los esquemas Zod en "),
+								code("@scrum-board/shared"),
+								text("."),
+							),
+							h3("Entidades Incorporadas"),
+							table(
+								["Modelo", "Campos Clave", "Relación"],
+								[
+									["Board", "githubRepo, defaultBranch", "1:N con Unit y Bolt"],
+									["Unit", "name, description, color", "1:N con Task"],
+									[
+										"Bolt",
+										"name, goal, status (PLANNED | ACTIVE | COMPLETED)",
+										"1:N con Task",
+									],
+									[
+										"Task",
+										"branchName, prNumber, prUrl, prStatus, unitId, boltId",
+										"N:1 con Column, Unit, Bolt",
+									],
+								],
+							),
+							h3("Checklist"),
+							todo(
+								true,
+								text("Migración Prisma "),
+								code("20261029025846_add_aidlc_github"),
+								text(" aplicada."),
+							),
+							todo(
+								true,
+								text("Validación Zod bidireccional en frontend y backend."),
+							),
+						]),
 						order: 0,
-						tasks: {
-							create: [
-								{
-									title: "Fallo de scroll horizontal en Kanban en Safari iOS",
-									description:
-										"El contenedor de columnas se traba al deslizar rápidamente en pantallas táctiles.",
-									order: 0,
-									priority: Priority.HIGH,
-									assignees: { connect: [{ id: demoUser.id }] },
-								},
-								{
-									title: "Timeout intermitente al filtrar por múltiples tags",
-									description:
-										"Optimizar query en PostgreSQL agregando índices en columnas frecuentes.",
-									order: 1,
-									priority: Priority.MEDIUM,
-									assignees: { connect: [{ id: john.id }] },
-								},
-							],
+						priority: Priority.URGENT,
+						unitId: unitCore.id,
+						boltId: bolt2.id,
+						branchName: "feature/model-01",
+						prStatus: PrStatus.OPEN,
+						assignees: {
+							connect: [{ id: demoUser.id }, { id: aiAgent.id }],
 						},
 					},
 					{
-						name: "Investigando",
+						title: "CRUD de Tasks + Sonidos Web Audio + Reglas AGENTS.md",
+						description: serializeSeedBlocks([
+							h2("Experiencia Táctil & Estándares de Ingeniería"),
+							p(
+								text(
+									"Implementación completa de actualización y eliminación de tareas en Kanban, Tabla y Drawer, acompañada de síntesis de audio en tiempo real con ",
+								),
+								code("AudioContext"),
+								text("."),
+							),
+							h3("Perfiles de Sonido (sound.utils.ts)"),
+							table(
+								["Acción", "Función", "Frecuencia / Carácter"],
+								[
+									[
+										"Mover Card (DnD)",
+										"playTaskMoveSound()",
+										"180Hz -> 420Hz (Pop cálido ascendente)",
+									],
+									[
+										"Crear Card",
+										"playTaskCreateSound()",
+										"523Hz (C5) -> 783Hz (G5) (Chime brillante)",
+									],
+									[
+										"Eliminar Card",
+										"playTaskDeleteSound()",
+										"587Hz -> 493Hz / 440Hz -> 293Hz (Doble tono descendente)",
+									],
+								],
+							),
+							h3("Cumplimiento AGENTS.md"),
+							todo(
+								true,
+								text(
+									"Máximo 2 parámetros por función (objetos Input dedicados).",
+								),
+							),
+							todo(
+								true,
+								text(
+									"Cero strings mágicos ni casteos forzados (uso de cva + satisfies).",
+								),
+							),
+						]),
 						order: 1,
-						tasks: {
-							create: [
-								{
-									title:
-										"Token refresh loop cuando expira la sesión de usuario",
-									description:
-										"Si el refresh token expira, la UI intenta reintentar 5 veces antes de redirigir a /login.",
-									order: 0,
-									priority: Priority.URGENT,
-									assignees: {
-										connect: [{ id: demoUser.id }, { id: jane.id }],
-									},
-								},
-							],
-						},
-					},
-					{
-						name: "Resueltos",
-						order: 2,
-						tasks: {
-							create: [
-								{
-									title: "Padding incorrecto en el diálogo de crear columna",
-									description:
-										"Corregido espaciado en botones de acción y campo de texto.",
-									order: 0,
-									priority: Priority.LOW,
-									assignees: { connect: [{ id: jane.id }] },
-								},
-							],
-						},
+						priority: Priority.HIGH,
+						unitId: unitUi.id,
+						boltId: bolt1.id,
+						branchName: "feature/board-detail-01",
+						prStatus: PrStatus.OPEN,
+						assignees: { connect: [{ id: demoUser.id }] },
 					},
 				],
 			},
 		},
 	});
 
-	console.log(
-		`📋 Created 3 boards: "${board1.name}", "${board2.name}", "${board3.name}".`,
-	);
-	console.log("✅ Database seeding completed successfully!");
+	await prisma.column.create({
+		data: {
+			name: "5. Merged",
+			order: 4,
+			boardId: mainProjectBoard.id,
+			tasks: {
+				create: [
+					{
+						title: "Drag & Drop canónico con @dnd-kit/react en Kanban y Tabla",
+						description: serializeSeedBlocks([
+							h2("Drag & Drop Unificado"),
+							p(
+								text("Extracción de "),
+								code("createBoardDndHandlers"),
+								text(" en "),
+								code("dnd.utils.ts"),
+								text(" utilizando "),
+								code("move()"),
+								text(" de "),
+								code("@dnd-kit/helpers"),
+								text("."),
+							),
+							todo(
+								true,
+								text("Soporte multi-columna en Kanban y vista Tabla."),
+							),
+							todo(
+								true,
+								text("Rollback optimista automático en caso de error de red."),
+							),
+						]),
+						order: 0,
+						priority: Priority.HIGH,
+						unitId: unitUi.id,
+						boltId: bolt1.id,
+						branchName: "feature/board-01",
+						prStatus: PrStatus.MERGED,
+						assignees: {
+							connect: [{ id: demoUser.id }, { id: aiAgent.id }],
+						},
+					},
+					{
+						title: "Drawer estilo Notion con BlockNote (@blocknote/shadcn)",
+						description: serializeSeedBlocks([
+							h2("Spec Editor Rico en Bloques"),
+							p(
+								text(
+									"Panel lateral expandible (50% a 100% del área de trabajo respetando el Sidebar) con soporte nativo para Slash Commands (",
+								),
+								code("/"),
+								text("), tablas, checklists y código."),
+							),
+							todo(true, text("Autoguardado con debounce de 650ms.")),
+							todo(
+								true,
+								text(
+									"Integración de tema oscuro/claro con variables CSS de shadcn.",
+								),
+							),
+						]),
+						order: 1,
+						priority: Priority.HIGH,
+						unitId: unitUi.id,
+						boltId: bolt1.id,
+						branchName: "feature/board-detail-01",
+						prStatus: PrStatus.MERGED,
+						assignees: {
+							connect: [{ id: demoUser.id }, { id: aiAgent.id }],
+						},
+					},
+					{
+						title: "Setup Monorepo Turborepo + Hono OpenAPI + Auth JWT",
+						description: serializeSeedBlocks([
+							h2("Fundación del Monorepo"),
+							p(
+								text("Estructura base con "),
+								code("@scrum-board/shared"),
+								text(", "),
+								code("apps/api"),
+								text(" y "),
+								code("apps/web"),
+								text("."),
+							),
+							todo(
+								true,
+								text("Autenticación JWT con cookies HttpOnly y refresh token."),
+							),
+							todo(true, text("Documentación interactiva Scalar OpenAPI.")),
+						]),
+						order: 2,
+						priority: Priority.MEDIUM,
+						unitId: unitCore.id,
+						boltId: bolt1.id,
+						branchName: "feature/auth-04",
+						prStatus: PrStatus.MERGED,
+						assignees: { connect: [{ id: john.id }] },
+					},
+				],
+			},
+		},
+	});
+
+	console.log(`Created main board: "${mainProjectBoard.name}"`);
+	console.log("Database seeding completed successfully!");
 }
 
 main()
 	.catch((e) => {
-		console.error("❌ Seeding failed:", e);
+		console.error("Seeding failed:", e);
 		process.exit(1);
 	})
 	.finally(async () => {

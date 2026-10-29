@@ -4,6 +4,7 @@ import type { AppEnv } from "@/modules/auth/types";
 import {
 	createHandler,
 	getByIdHandler,
+	getGitHubBranchesHandler,
 	listHandler,
 	removeHandler,
 	updateHandler,
@@ -12,6 +13,7 @@ import {
 	createBoardRoute,
 	deleteBoardRoute,
 	getBoardByIdRoute,
+	getBoardGitHubBranchesRoute,
 	listBoardsRoute,
 	updateBoardRoute,
 } from "./board.routes";
@@ -21,6 +23,7 @@ boardRouter.use("*", authMiddleware);
 
 boardRouter.openapi(listBoardsRoute, listHandler);
 boardRouter.openapi(getBoardByIdRoute, getByIdHandler);
+boardRouter.openapi(getBoardGitHubBranchesRoute, getGitHubBranchesHandler);
 boardRouter.openapi(createBoardRoute, createHandler);
 boardRouter.openapi(updateBoardRoute, updateHandler);
 boardRouter.openapi(deleteBoardRoute, removeHandler);
