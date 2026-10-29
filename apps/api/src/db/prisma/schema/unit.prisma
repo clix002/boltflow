@@ -3,10 +3,13 @@ model Unit {
   name        String
   description String?
   color       String  @default("#6366f1")
+  branchName  String?
 
   boardId String
   board   Board  @relation("BoardUnits", fields: [boardId], references: [id], onDelete: Cascade)
-  tasks   Task[] @relation("UnitTasks")
+
+  columns Column[] @relation("UnitColumns")
+  bolts   Bolt[]   @relation("UnitBolts")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

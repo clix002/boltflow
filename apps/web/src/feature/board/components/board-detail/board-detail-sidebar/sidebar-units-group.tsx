@@ -1,6 +1,7 @@
 import type { Unit } from "@scrum-board/shared/schemas";
-import { ChevronRight, Layers, Plus } from "lucide-react";
+import { ChevronRight, GitBranch, Layers, Plus } from "lucide-react";
 import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	Collapsible,
@@ -23,14 +24,16 @@ type SidebarUnitsGroupProps = {
 	boardId?: string;
 	units: Unit[];
 	selectedUnitId: string;
-	onToggleUnit: (unitId: string) => void;
+	onSelectUnit: (unitId: string) => void;
+	onClearSelectedUnit: () => void;
 };
 
 export const SidebarUnitsGroup = ({
 	boardId,
 	units,
 	selectedUnitId,
-	onToggleUnit,
+	onSelectUnit,
+	onClearSelectedUnit,
 }: SidebarUnitsGroupProps) => {
 	const [isOpen, setIsOpen] = useState(true);
 	const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -77,8 +80,12 @@ export const SidebarUnitsGroup = ({
 										<SidebarMenuItem key={unit.id}>
 											<SidebarMenuButton
 												isActive={isSelected}
-												onClick={() => onToggleUnit(unit.id)}
-												tooltip={unit.description ?? unit.name}
+												onClick={() => onSelectUnit(unit.id)}
+												tooltip={
+													unit.branchName
+														? `${unit.name} (${unit.branchName})`
+														: (unit.description ?? unit.name)
+												}
 												className="cursor-pointer"
 											>
 												<span
@@ -86,13 +93,24 @@ export const SidebarUnitsGroup = ({
 													style={{ backgroundColor: unit.color }}
 												/>
 												<span className="truncate text-xs">{unit.name}</span>
+												{unit.branchName && (
+													<Badge
+														variant="outline"
+														className="ml-auto h-4 gap-0.5 px-1 font-mono text-[9px] text-emerald-600 dark:text-emerald-400 shrink-0"
+													>
+														<GitBranch className="size-2.5" />
+														<span className="max-w-16 truncate">
+															{unit.branchName}
+														</span>
+													</Badge>
+												)}
 											</SidebarMenuButton>
 											{boardId && (
 												<UnitItemActions
 													boardId={boardId}
 													unit={unit}
 													isSelected={isSelected}
-													onClearSelection={() => onToggleUnit(unit.id)}
+													onClearSelection={onClearSelectedUnit}
 												/>
 											)}
 										</SidebarMenuItem>

@@ -1,16 +1,19 @@
 import type { z } from "@hono/zod-openapi";
-import type {
-	CreateBoardSchema,
-	CreateBoltInput,
-	CreateUnitInput,
-	PaginateOptions,
-	UpdateBoardSchema,
-	UpdateBoltInput,
-	UpdateUnitInput,
+import {
+	type CreateBoardSchema,
+	type CreateBoltInput,
+	type CreateUnitInput,
+	type PaginateOptions,
+	trimToNull,
+	type UpdateBoardSchema,
+	type UpdateBoltInput,
+	type UpdateUnitInput,
 } from "@scrum-board/shared/schemas";
+import type { Maybe } from "@scrum-board/shared/types";
 import { HTTPException } from "hono/http-exception";
 import { env } from "@/config/env";
 import { githubService } from "../github/github.service";
+import { sanitizeBranchName } from "../github/github.utils";
 import type { TaskFilterParams } from "../task/task.filters";
 import { boardRepository } from "./board.repository";
 
@@ -72,6 +75,38 @@ async function verifyBoardOwnership(boardId: string, userId: string) {
 	return board;
 }
 
+type ResolveUnitBranchInput = {
+	branchName?: Maybe<string>;
+	createBranchOnGitHub?: boolean;
+	board: {
+		githubRepo: Maybe<string>;
+		defaultBranch: string;
+	};
+};
+
+async function resolveUnitBranchName(
+	input: ResolveUnitBranchInput,
+): Promise<Maybe<string> | undefined> {
+	const { branchName, createBranchOnGitHub, board } = input;
+	if (branchName === undefined) return undefined;
+	const cleanedBranch = trimToNull(branchName);
+	if (!cleanedBranch) return null;
+
+	if (!createBranchOnGitHub) {
+		return cleanedBranch;
+	}
+
+	const sanitized = sanitizeBranchName(cleanedBranch);
+	if (board.githubRepo) {
+		await githubService.ensureBranchExists({
+			githubRepo: board.githubRepo,
+			defaultBranch: board.defaultBranch,
+			branchName: sanitized,
+		});
+	}
+	return sanitized;
+}
+
 export const boardService = {
 	listByUser(userId: string, options: PaginateOptions) {
 		return boardRepository.findPaginatedByUserId({ userId, options });
@@ -121,12 +156,18 @@ export const boardService = {
 
 	async createUnit(input: CreateBoardUnitInput) {
 		const { boardId, userId, data } = input;
-		await verifyBoardOwnership(boardId, userId);
+		const board = await verifyBoardOwnership(boardId, userId);
+		const branchName = await resolveUnitBranchName({
+			branchName: data.branchName,
+			createBranchOnGitHub: data.createBranchOnGitHub,
+			board,
+		});
 
 		return boardRepository.createUnit({
 			boardId,
 			name: data.name,
 			description: data.description ?? null,
+			branchName: branchName ?? null,
 			...(data.color ? { color: data.color } : {}),
 		});
 	},
@@ -141,7 +182,18 @@ export const boardService = {
 			throw new HTTPException(403, { message: "Not authorized" });
 		}
 
-		return boardRepository.updateUnit(unitId, data);
+		const branchName = await resolveUnitBranchName({
+			branchName: data.branchName,
+			createBranchOnGitHub: data.createBranchOnGitHub,
+			board: unit.board,
+		});
+
+		const { createBranchOnGitHub: _ignore, ...updateFields } = data;
+
+		return boardRepository.updateUnit(unitId, {
+			...updateFields,
+			...(branchName !== undefined ? { branchName } : {}),
+		});
 	},
 
 	async removeUnit(input: RemoveBoardUnitInput) {
@@ -159,10 +211,16 @@ export const boardService = {
 
 	async createBolt(input: CreateBoardBoltInput) {
 		const { boardId, userId, data } = input;
-		await verifyBoardOwnership(boardId, userId);
+		const unit = await boardRepository.findUnitOwnershipById(data.unitId);
+		if (!unit || unit.boardId !== boardId) {
+			throw new HTTPException(404, { message: "Unit not found" });
+		}
+		if (unit.board.ownerId !== userId) {
+			throw new HTTPException(403, { message: "Not authorized" });
+		}
 
 		return boardRepository.createBolt({
-			boardId,
+			unitId: data.unitId,
 			name: data.name,
 			goal: data.goal ?? null,
 			...(data.status ? { status: data.status } : {}),
@@ -172,10 +230,10 @@ export const boardService = {
 	async updateBolt(input: UpdateBoardBoltInput) {
 		const { boardId, boltId, userId, data } = input;
 		const bolt = await boardRepository.findBoltOwnershipById(boltId);
-		if (!bolt || bolt.boardId !== boardId) {
+		if (!bolt || bolt.unit.boardId !== boardId) {
 			throw new HTTPException(404, { message: "Bolt not found" });
 		}
-		if (bolt.board.ownerId !== userId) {
+		if (bolt.unit.board.ownerId !== userId) {
 			throw new HTTPException(403, { message: "Not authorized" });
 		}
 
@@ -185,10 +243,10 @@ export const boardService = {
 	async removeBolt(input: RemoveBoardBoltInput) {
 		const { boardId, boltId, userId } = input;
 		const bolt = await boardRepository.findBoltOwnershipById(boltId);
-		if (!bolt || bolt.boardId !== boardId) {
+		if (!bolt || bolt.unit.boardId !== boardId) {
 			throw new HTTPException(404, { message: "Bolt not found" });
 		}
-		if (bolt.board.ownerId !== userId) {
+		if (bolt.unit.board.ownerId !== userId) {
 			throw new HTTPException(403, { message: "Not authorized" });
 		}
 

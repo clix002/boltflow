@@ -16,13 +16,6 @@ const TASK_RELATIONS_INCLUDE = {
 			avatarUrl: true,
 		},
 	},
-	unit: {
-		select: {
-			id: true,
-			name: true,
-			color: true,
-		},
-	},
 	bolt: {
 		select: {
 			id: true,
@@ -43,12 +36,17 @@ export const taskRepository = {
 				column: {
 					select: {
 						id: true,
-						board: {
+						unit: {
 							select: {
 								id: true,
-								ownerId: true,
-								githubRepo: true,
-								defaultBranch: true,
+								board: {
+									select: {
+										id: true,
+										ownerId: true,
+										githubRepo: true,
+										defaultBranch: true,
+									},
+								},
 							},
 						},
 					},

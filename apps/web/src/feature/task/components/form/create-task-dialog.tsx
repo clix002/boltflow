@@ -35,7 +35,14 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { useGetBoardQuery } from "@/feature/board/api/use-get-board";
+import { resolveActiveUnit } from "@/feature/board/components/board-detail/dnd.utils";
+import { useBoardPreferences } from "@/feature/board/components/board-detail/use-board-preferences";
 import { useCreateTaskMutation } from "@/feature/task/api/use-create-task";
+import {
+	fromOptionalSelectValue,
+	SELECT_UNSET_VALUE,
+	toOptionalSelectValue,
+} from "@/feature/task/components/task-detail-sheet/task-detail.utils";
 import { useGetUsersQuery } from "@/feature/user/api/use-get-users";
 import { PriorityBadge } from "../priority-badge";
 
@@ -50,6 +57,7 @@ const FormSchema = CreateTaskSchema.pick({
 	title: true,
 	description: true,
 	assigneeIds: true,
+	boltId: true,
 }).extend({
 	columnId: z.string().min(1, "Please select a column"),
 	priority: PrioritySchema.default(PrioritySchema.enum.MEDIUM),
@@ -65,10 +73,14 @@ export const CreateTaskDialog = ({
 	boardId,
 }: CreateTaskDialogProps) => {
 	const queryClient = useQueryClient();
+	const { selectedUnitId, selectedBoltId, selectedBranchName } =
+		useBoardPreferences();
 	const { mutate: createTask, isPending } = useCreateTaskMutation();
 	const { data: users, isPending: isLoadingUsers } = useGetUsersQuery();
 	const { data: board } = useGetBoardQuery(boardId);
-	const columns = board?.columns ?? [];
+	const activeUnit = resolveActiveUnit(board?.units, selectedUnitId);
+	const columns = activeUnit?.columns ?? [];
+	const bolts = activeUnit?.bolts ?? [];
 
 	const form = useForm<FormInput, unknown, FormOutput>({
 		resolver: zodResolver(FormSchema),
@@ -78,6 +90,7 @@ export const CreateTaskDialog = ({
 			assigneeIds: [],
 			columnId: columnId ?? "",
 			priority: PrioritySchema.enum.MEDIUM,
+			boltId: selectedBoltId || null,
 		},
 	});
 
@@ -85,10 +98,15 @@ export const CreateTaskDialog = ({
 		const targetColumnId = columnId || data.columnId;
 		if (!targetColumnId) return;
 
+		const inheritedBranch =
+			activeUnit?.branchName ?? (selectedBranchName || null);
+
 		createTask(
 			{
 				...data,
 				columnId: targetColumnId,
+				boltId: data.boltId ?? null,
+				branchName: inheritedBranch,
 			},
 			{
 				onSuccess: () => {
@@ -99,6 +117,7 @@ export const CreateTaskDialog = ({
 						assigneeIds: [],
 						columnId: columnId ?? "",
 						priority: PrioritySchema.enum.MEDIUM,
+						boltId: selectedBoltId || null,
 					});
 					onOpenChange(false);
 				},
@@ -217,6 +236,45 @@ export const CreateTaskDialog = ({
 							</Field>
 						)}
 					/>
+
+					{!isEmpty(bolts) && (
+						<Controller
+							name="boltId"
+							control={form.control}
+							render={({ field }) => (
+								<Field>
+									<FieldLabel>Bolt (Iteration)</FieldLabel>
+									<Select
+										value={toOptionalSelectValue(field.value)}
+										onValueChange={(val) =>
+											field.onChange(fromOptionalSelectValue(val))
+										}
+									>
+										<SelectTrigger className="w-full cursor-pointer">
+											<SelectValue placeholder="Backlog (No Bolt)" />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem
+												value={SELECT_UNSET_VALUE}
+												className="text-muted-foreground cursor-pointer"
+											>
+												Backlog (No Bolt)
+											</SelectItem>
+											{bolts.map((bolt) => (
+												<SelectItem
+													key={bolt.id}
+													value={bolt.id}
+													className="cursor-pointer"
+												>
+													{bolt.name}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								</Field>
+							)}
+						/>
+					)}
 
 					<Controller
 						name="assigneeIds"

@@ -1,5 +1,6 @@
+import { trimToNull } from "@scrum-board/shared/schemas";
 import type { Maybe } from "@scrum-board/shared/types";
-import { kebabCase } from "es-toolkit";
+import { compact, kebabCase, trim } from "es-toolkit";
 
 export type RepoCoordinates = {
 	owner: string;
@@ -9,7 +10,7 @@ export type RepoCoordinates = {
 export const parseRepoCoordinates = (
 	fullRepo: Maybe<string | undefined>,
 ): Maybe<RepoCoordinates> => {
-	const trimmed = fullRepo?.trim();
+	const trimmed = trimToNull(fullRepo);
 	if (!trimmed) {
 		return null;
 	}
@@ -28,11 +29,11 @@ export const parseRepoCoordinates = (
 };
 
 export const sanitizeBranchName = (rawName: string): string => {
-	const segments = rawName
-		.trim()
-		.split("/")
-		.map((segment) => kebabCase(segment))
-		.filter(Boolean);
+	const segments = compact(
+		trim(rawName)
+			.split("/")
+			.map((segment) => kebabCase(segment)),
+	);
 
 	return segments.join("/");
 };

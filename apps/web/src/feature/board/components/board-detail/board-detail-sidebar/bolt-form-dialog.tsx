@@ -35,6 +35,7 @@ type BoltFormDialogProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	boardId: string;
+	unitId: string;
 	bolt?: Bolt;
 };
 
@@ -49,6 +50,7 @@ export const BoltFormDialog = ({
 	open,
 	onOpenChange,
 	boardId,
+	unitId,
 	bolt,
 }: BoltFormDialogProps) => {
 	const isEditing = Boolean(bolt);
@@ -62,6 +64,7 @@ export const BoltFormDialog = ({
 	const form = useForm<FormData>({
 		resolver: zodResolver(CreateBoltSchema),
 		defaultValues: {
+			unitId: bolt?.unitId ?? unitId,
 			name: bolt?.name ?? "",
 			goal: bolt?.goal ?? "",
 			status: bolt?.status ?? BOLT_STATUS.PLANNED,
@@ -71,16 +74,14 @@ export const BoltFormDialog = ({
 	const onSubmit = (data: FormData) => {
 		if (!boardId) return;
 
-		const normalizedGoal = data.goal?.trim() ? data.goal.trim() : null;
-
 		if (bolt) {
 			updateBolt(
 				{
 					boardId,
 					boltId: bolt.id,
 					data: {
-						name: data.name.trim(),
-						goal: normalizedGoal,
+						name: data.name,
+						goal: data.goal,
 						status: data.status,
 					},
 				},
@@ -97,8 +98,9 @@ export const BoltFormDialog = ({
 			{
 				boardId,
 				data: {
-					name: data.name.trim(),
-					goal: normalizedGoal,
+					unitId,
+					name: data.name,
+					goal: data.goal,
 					status: data.status ?? BOLT_STATUS.PLANNED,
 				},
 			},

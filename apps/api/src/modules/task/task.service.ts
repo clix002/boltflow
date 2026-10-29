@@ -41,9 +41,13 @@ export const taskService = {
 			where: { id: data.columnId },
 			select: {
 				id: true,
-				board: {
+				unit: {
 					select: {
-						ownerId: true,
+						board: {
+							select: {
+								ownerId: true,
+							},
+						},
 					},
 				},
 			},
@@ -53,7 +57,7 @@ export const taskService = {
 			throw new HTTPException(404, { message: "Column not found" });
 		}
 
-		if (column.board.ownerId !== userId) {
+		if (column.unit.board.ownerId !== userId) {
 			throw new HTTPException(403, { message: "Not authorized" });
 		}
 
@@ -81,7 +85,6 @@ export const taskService = {
 				order,
 				priority: data.priority ?? Priority.MEDIUM,
 				columnId: data.columnId,
-				unitId: data.unitId ?? null,
 				boltId: data.boltId ?? null,
 				branchName: data.branchName ?? null,
 				assignees: {
@@ -108,7 +111,7 @@ export const taskService = {
 			throw new HTTPException(404, { message: "Task not found" });
 		}
 
-		if (task.column.board.ownerId !== userId) {
+		if (task.column.unit.board.ownerId !== userId) {
 			throw new HTTPException(403, { message: "Not authorized" });
 		}
 
@@ -133,14 +136,14 @@ export const taskService = {
 			throw new HTTPException(404, { message: "Task not found" });
 		}
 
-		if (task.column.board.ownerId !== userId) {
+		if (task.column.unit.board.ownerId !== userId) {
 			throw new HTTPException(403, { message: "Not authorized" });
 		}
 
 		const branchName = data.createOnGitHub
 			? await githubService.ensureBranchExists({
-					githubRepo: task.column.board.githubRepo,
-					defaultBranch: task.column.board.defaultBranch,
+					githubRepo: task.column.unit.board.githubRepo,
+					defaultBranch: task.column.unit.board.defaultBranch,
 					branchName: data.branchName,
 				})
 			: sanitizeBranchName(data.branchName);
@@ -157,7 +160,7 @@ export const taskService = {
 			throw new HTTPException(404, { message: "Task not found" });
 		}
 
-		if (task.column.board.ownerId !== userId) {
+		if (task.column.unit.board.ownerId !== userId) {
 			throw new HTTPException(403, { message: "Not authorized" });
 		}
 
@@ -168,7 +171,7 @@ export const taskService = {
 				where: { id: data.columnId },
 				select: {
 					id: true,
-					boardId: true,
+					unitId: true,
 				},
 			});
 
@@ -176,9 +179,9 @@ export const taskService = {
 				throw new HTTPException(404, { message: "Target column not found" });
 			}
 
-			if (targetColumn.boardId !== task.column.board.id) {
+			if (targetColumn.unitId !== task.column.unit.id) {
 				throw new HTTPException(400, {
-					message: "Cannot move task to a column in a different board",
+					message: "Cannot move task to a column in a different unit",
 				});
 			}
 		}
@@ -202,7 +205,7 @@ export const taskService = {
 			throw new HTTPException(404, { message: "Task not found" });
 		}
 
-		if (task.column.board.ownerId !== userId) {
+		if (task.column.unit.board.ownerId !== userId) {
 			throw new HTTPException(403, { message: "Not authorized" });
 		}
 

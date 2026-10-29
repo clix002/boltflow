@@ -4,10 +4,9 @@ import { boardRepository } from "../board.repository";
 import { boardService } from "../board.service";
 
 describe("buildTaskWhere", () => {
-	it("builds filters for unitId, boltId, branchName, and search", () => {
+	it("builds filters for boltId, branchName, and search", () => {
 		const where = buildTaskWhere({
 			search: "  sidebar ",
-			unitId: "unit-1",
 			boltId: "bolt-2",
 			branchName: "feature/board-detail-01",
 			assigneeIds: ["user-1"],
@@ -24,7 +23,6 @@ describe("buildTaskWhere", () => {
 					id: { in: ["user-1"] },
 				},
 			},
-			unitId: "unit-1",
 			boltId: "bolt-2",
 			branchName: "feature/board-detail-01",
 		});
@@ -34,7 +32,6 @@ describe("buildTaskWhere", () => {
 		expect(
 			buildTaskWhere({
 				search: "   ",
-				unitId: "",
 				boltId: undefined,
 				branchName: " ",
 			}),
@@ -43,7 +40,7 @@ describe("buildTaskWhere", () => {
 });
 
 describe("boardService Units and Bolts", () => {
-	it("creates a unit when the user owns the board", async () => {
+	it("creates a unit with its own board when the user owns the board", async () => {
 		const now = new Date();
 		const findOwner = spyOn(
 			boardRepository,
@@ -60,6 +57,7 @@ describe("boardService Units and Bolts", () => {
 			name: "Core & Schema",
 			description: "Domain models",
 			color: "#8b5cf6",
+			branchName: "feature/unit-subboard-01",
 			createdAt: now,
 			updatedAt: now,
 		});
@@ -72,11 +70,13 @@ describe("boardService Units and Bolts", () => {
 					name: "Core & Schema",
 					description: "Domain models",
 					color: "#8b5cf6",
+					branchName: "feature/unit-subboard-01",
 				},
 			});
 
 			expect(unit.id).toBe("unit-1");
 			expect(unit.name).toBe("Core & Schema");
+			expect(unit.branchName).toBe("feature/unit-subboard-01");
 		} finally {
 			findOwner.mockRestore();
 			createUnit.mockRestore();
@@ -92,6 +92,8 @@ describe("boardService Units and Bolts", () => {
 			boardId: "board-1",
 			board: {
 				ownerId: "owner-user",
+				githubRepo: "clix002/boltflow",
+				defaultBranch: "main",
 			},
 		});
 
@@ -109,21 +111,24 @@ describe("boardService Units and Bolts", () => {
 		}
 	});
 
-	it("updates bolt status when the bolt belongs to the board and owner", async () => {
+	it("updates bolt status when the bolt belongs to the unit and board owner", async () => {
 		const now = new Date();
 		const findBolt = spyOn(
 			boardRepository,
 			"findBoltOwnershipById",
 		).mockResolvedValue({
 			id: "bolt-1",
-			boardId: "board-1",
-			board: {
-				ownerId: "user-1",
+			unitId: "unit-1",
+			unit: {
+				boardId: "board-1",
+				board: {
+					ownerId: "user-1",
+				},
 			},
 		});
 		const updateBolt = spyOn(boardRepository, "updateBolt").mockResolvedValue({
 			id: "bolt-1",
-			boardId: "board-1",
+			unitId: "unit-1",
 			name: "Bolt #3",
 			goal: "Ship CRUD",
 			status: "ACTIVE",

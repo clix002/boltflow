@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ColumnSchema } from "../column";
+import { NullableTrimmedString, TrimmedString } from "../common";
 
 export const PrioritySchema = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);
 export type Priority = z.infer<typeof PrioritySchema>;
@@ -12,13 +13,6 @@ export const PrStatusSchema = z.enum([
 	"CLOSED",
 ]);
 export type PrStatus = z.infer<typeof PrStatusSchema>;
-
-export const TaskUnitRefSchema = z.object({
-	id: z.string(),
-	name: z.string(),
-	color: z.string(),
-});
-export type TaskUnitRef = z.infer<typeof TaskUnitRefSchema>;
 
 export const TaskBoltRefSchema = z.object({
 	id: z.string(),
@@ -37,7 +31,6 @@ export const TaskSchema = z.object({
 	prNumber: z.number().nullable().optional(),
 	prUrl: z.string().nullable().optional(),
 	prStatus: PrStatusSchema.optional(),
-	unitId: z.string().nullable().optional(),
 	boltId: z.string().nullable().optional(),
 	columnId: z.string(),
 	createdAt: z.string(),
@@ -49,31 +42,29 @@ export const AssigneeRefSchema = z.object({
 });
 
 export const CreateTaskSchema = z.object({
-	title: z.string().min(1).max(200),
-	description: z.string().optional(),
-	columnId: z.string(),
+	title: TrimmedString(200),
+	description: z.string().trim().optional(),
+	columnId: TrimmedString(100),
 	assigneeIds: z.array(z.string()).optional(),
 	order: z.number().int().nonnegative().optional(),
 	priority: PrioritySchema.optional(),
-	unitId: z.string().nullable().optional(),
-	boltId: z.string().nullable().optional(),
-	branchName: z.string().nullable().optional(),
+	boltId: NullableTrimmedString(100),
+	branchName: NullableTrimmedString(120),
 });
 
 export const UpdateTaskSchema = z.object({
-	title: z.string().min(1).max(200).optional(),
-	description: z.string().nullable().optional(),
-	columnId: z.string().optional(),
+	title: TrimmedString(200).optional(),
+	description: z.string().trim().nullable().optional(),
+	columnId: TrimmedString(100).optional(),
 	assigneeIds: z.array(z.string()).optional(),
 	order: z.number().int().nonnegative().optional(),
 	priority: PrioritySchema.optional(),
-	unitId: z.string().nullable().optional(),
-	boltId: z.string().nullable().optional(),
-	branchName: z.string().nullable().optional(),
+	boltId: NullableTrimmedString(100),
+	branchName: NullableTrimmedString(120),
 });
 
 export const CreateTaskBranchSchema = z.object({
-	branchName: z.string().min(1).max(120),
+	branchName: TrimmedString(120),
 	createOnGitHub: z.boolean().optional(),
 });
 
@@ -90,7 +81,6 @@ export const AssigneeSchema = z.object({
 
 export const TaskWithAssigneesSchema = TaskSchema.extend({
 	assignees: z.array(AssigneeSchema),
-	unit: TaskUnitRefSchema.nullable().optional(),
 	bolt: TaskBoltRefSchema.nullable().optional(),
 });
 

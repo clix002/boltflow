@@ -1,10 +1,10 @@
+import { trimToNull } from "@scrum-board/shared/schemas";
 import { isEmpty } from "es-toolkit/compat";
 import type { Prisma } from "@/db/prisma/generated/client";
 
 export type TaskFilterParams = {
 	search?: string;
 	assigneeIds?: string[];
-	unitId?: string;
 	boltId?: string;
 	branchName?: string;
 };
@@ -12,55 +12,46 @@ export type TaskFilterParams = {
 export function buildTaskWhere(
 	params: TaskFilterParams,
 ): Prisma.TaskWhereInput {
-	const search = params.search?.trim();
-	const hasSearch = !isEmpty(search);
+	const search = trimToNull(params.search);
+	const boltId = trimToNull(params.boltId);
+	const branchName = trimToNull(params.branchName);
 	const hasAssignees = !isEmpty(params.assigneeIds);
-	const hasUnit = !isEmpty(params.unitId?.trim());
-	const hasBolt = !isEmpty(params.boltId?.trim());
-	const hasBranch = !isEmpty(params.branchName?.trim());
 
-	const searchCondition =
-		hasSearch &&
-		({
-			OR: [
-				{ title: { contains: search, mode: "insensitive" } },
-				{ description: { contains: search, mode: "insensitive" } },
-				{ branchName: { contains: search, mode: "insensitive" } },
-			],
-		} satisfies Prisma.TaskWhereInput);
+	const searchCondition = search
+		? ({
+				OR: [
+					{ title: { contains: search, mode: "insensitive" } },
+					{ description: { contains: search, mode: "insensitive" } },
+					{ branchName: { contains: search, mode: "insensitive" } },
+				],
+			} satisfies Prisma.TaskWhereInput)
+		: undefined;
 
-	const assigneeCondition =
-		hasAssignees &&
-		({
-			assignees: {
-				some: {
-					id: { in: params.assigneeIds },
+	const assigneeCondition = hasAssignees
+		? ({
+				assignees: {
+					some: {
+						id: { in: params.assigneeIds },
+					},
 				},
-			},
-		} satisfies Prisma.TaskWhereInput);
+			} satisfies Prisma.TaskWhereInput)
+		: undefined;
 
-	const unitCondition =
-		hasUnit &&
-		({
-			unitId: params.unitId?.trim(),
-		} satisfies Prisma.TaskWhereInput);
+	const boltCondition = boltId
+		? ({
+				boltId,
+			} satisfies Prisma.TaskWhereInput)
+		: undefined;
 
-	const boltCondition =
-		hasBolt &&
-		({
-			boltId: params.boltId?.trim(),
-		} satisfies Prisma.TaskWhereInput);
-
-	const branchCondition =
-		hasBranch &&
-		({
-			branchName: params.branchName?.trim(),
-		} satisfies Prisma.TaskWhereInput);
+	const branchCondition = branchName
+		? ({
+				branchName,
+			} satisfies Prisma.TaskWhereInput)
+		: undefined;
 
 	return {
 		...searchCondition,
 		...assigneeCondition,
-		...unitCondition,
 		...boltCondition,
 		...branchCondition,
 	};

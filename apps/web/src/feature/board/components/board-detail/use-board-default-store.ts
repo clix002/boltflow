@@ -1,3 +1,4 @@
+import type { Maybe } from "@scrum-board/shared/types";
 import { omit } from "es-toolkit";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -43,7 +44,7 @@ export const useBoardDefaultStore = create<BoardDefaultStoreState>()(
 export const selectBoardDefault = (
 	state: BoardDefaultStoreState,
 	boardId?: string,
-): BoardDefault | null => {
+): Maybe<BoardDefault> => {
 	if (!boardId) return null;
 	return state.defaultsByBoard[boardId] ?? null;
 };

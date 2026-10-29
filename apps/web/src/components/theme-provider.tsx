@@ -1,3 +1,4 @@
+import type { Maybe } from "@scrum-board/shared/types";
 import { createContext, useContext, useEffect, useState } from "react";
 
 export const THEME = {
@@ -32,7 +33,7 @@ const initialState: ThemeProviderState = {
 	setTheme: () => null,
 };
 
-function isValidTheme(value: string | null): value is Theme {
+function isValidTheme(value: Maybe<string>): value is Theme {
 	return (
 		value === THEME.DARK || value === THEME.LIGHT || value === THEME.SYSTEM
 	);

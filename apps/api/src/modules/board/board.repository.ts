@@ -6,6 +6,14 @@ import {
 	type TaskFilterParams,
 } from "@/modules/task/task.filters";
 
+export const DEFAULT_UNIT_COLUMNS = [
+	{ name: "1. Elaboration (Spec)", order: 0 },
+	{ name: "2. Ready for Bolt", order: 1 },
+	{ name: "3. Constructing", order: 2 },
+	{ name: "4. PR Review", order: 3 },
+	{ name: "5. Merged", order: 4 },
+] as const;
+
 type findPaginatedByUserIdOptions = {
 	userId: string;
 	options: PaginateOptions;
@@ -15,6 +23,7 @@ type findByIdOptions = {
 	id?: string;
 	filters?: TaskFilterParams;
 };
+
 export const boardRepository = {
 	findPaginatedByUserId({ userId, options }: findPaginatedByUserIdOptions) {
 		const { search, ...optionsPage } = options;
@@ -41,36 +50,31 @@ export const boardRepository = {
 			include: {
 				units: {
 					orderBy: { createdAt: "asc" },
-				},
-				bolts: {
-					orderBy: { createdAt: "asc" },
-				},
-				columns: {
-					orderBy: { order: "asc" },
 					include: {
-						tasks: {
-							where: buildTaskWhere(filters),
+						bolts: {
+							orderBy: { createdAt: "asc" },
+						},
+						columns: {
 							orderBy: { order: "asc" },
 							include: {
-								assignees: {
-									select: {
-										id: true,
-										name: true,
-										avatarUrl: true,
-									},
-								},
-								unit: {
-									select: {
-										id: true,
-										name: true,
-										color: true,
-									},
-								},
-								bolt: {
-									select: {
-										id: true,
-										name: true,
-										status: true,
+								tasks: {
+									where: buildTaskWhere(filters),
+									orderBy: { order: "asc" },
+									include: {
+										assignees: {
+											select: {
+												id: true,
+												name: true,
+												avatarUrl: true,
+											},
+										},
+										bolt: {
+											select: {
+												id: true,
+												name: true,
+												status: true,
+											},
+										},
 									},
 								},
 							},
@@ -82,7 +86,18 @@ export const boardRepository = {
 	},
 	create(data: Prisma.BoardCreateInput) {
 		return prisma.board.create({
-			data,
+			data: {
+				...data,
+				units: {
+					create: {
+						name: "Core",
+						description: "Main domain unit",
+						columns: {
+							create: [...DEFAULT_UNIT_COLUMNS],
+						},
+					},
+				},
+			},
 		});
 	},
 	update(id: string, data: Prisma.BoardUpdateInput) {
@@ -115,14 +130,23 @@ export const boardRepository = {
 				id: true,
 				boardId: true,
 				board: {
-					select: { ownerId: true },
+					select: {
+						ownerId: true,
+						githubRepo: true,
+						defaultBranch: true,
+					},
 				},
 			},
 		});
 	},
 	createUnit(data: Prisma.UnitUncheckedCreateInput) {
 		return prisma.unit.create({
-			data,
+			data: {
+				...data,
+				columns: {
+					create: [...DEFAULT_UNIT_COLUMNS],
+				},
+			},
 		});
 	},
 	updateUnit(id: string, data: Prisma.UnitUpdateInput) {
@@ -142,9 +166,14 @@ export const boardRepository = {
 			where: { id },
 			select: {
 				id: true,
-				boardId: true,
-				board: {
-					select: { ownerId: true },
+				unitId: true,
+				unit: {
+					select: {
+						boardId: true,
+						board: {
+							select: { ownerId: true },
+						},
+					},
 				},
 			},
 		});

@@ -45,7 +45,6 @@ const BoltParamsSchema = ParamsSchema.extend({
 const BoardDetailQuerySchema = z.object({
 	search: z.string().optional(),
 	assigneeIds: CommaSeparatedArray,
-	unitId: z.string().optional(),
 	boltId: z.string().optional(),
 	branchName: z.string().optional(),
 });

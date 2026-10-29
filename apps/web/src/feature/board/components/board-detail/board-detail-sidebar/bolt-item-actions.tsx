@@ -136,6 +136,7 @@ export const BoltItemActions = ({
 					open={isEditOpen}
 					onOpenChange={setIsEditOpen}
 					boardId={boardId}
+					unitId={bolt.unitId}
 					bolt={bolt}
 				/>
 			)}

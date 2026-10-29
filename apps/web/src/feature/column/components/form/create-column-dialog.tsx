@@ -19,6 +19,7 @@ type CreateColumnDialogProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	boardId: string;
+	unitId: string;
 };
 
 const FormSchema = CreateColumnSchema.pick({
@@ -31,6 +32,7 @@ export const CreateColumnDialog = ({
 	open,
 	onOpenChange,
 	boardId,
+	unitId,
 }: CreateColumnDialogProps) => {
 	const queryClient = useQueryClient();
 	const { mutate: createColumn, isPending } = useCreateColumnMutation();
@@ -41,12 +43,12 @@ export const CreateColumnDialog = ({
 	});
 
 	const onSubmit = (data: FormData) => {
-		if (!boardId) return;
+		if (!boardId || !unitId) return;
 
 		createColumn(
 			{
 				...data,
-				boardId,
+				unitId,
 			},
 			{
 				onSuccess: () => {

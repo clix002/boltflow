@@ -55,6 +55,7 @@ const BoltStatusIcon = ({ status }: { status: BoltStatus }) => {
 
 type SidebarBoltsGroupProps = {
 	boardId?: string;
+	unitId?: string;
 	bolts: Bolt[];
 	selectedBoltId: string;
 	onToggleBolt: (boltId: string) => void;
@@ -62,6 +63,7 @@ type SidebarBoltsGroupProps = {
 
 export const SidebarBoltsGroup = ({
 	boardId,
+	unitId,
 	bolts,
 	selectedBoltId,
 	onToggleBolt,
@@ -88,7 +90,7 @@ export const SidebarBoltsGroup = ({
 								)}
 							/>
 						</CollapsibleTrigger>
-						{boardId && (
+						{boardId && unitId && (
 							<Button
 								type="button"
 								variant="ghost"
@@ -144,11 +146,12 @@ export const SidebarBoltsGroup = ({
 				</SidebarGroup>
 			</Collapsible>
 
-			{boardId && isCreateOpen && (
+			{boardId && unitId && isCreateOpen && (
 				<BoltFormDialog
 					open={isCreateOpen}
 					onOpenChange={setIsCreateOpen}
 					boardId={boardId}
+					unitId={unitId}
 				/>
 			)}
 		</>

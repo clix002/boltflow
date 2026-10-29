@@ -4,7 +4,6 @@ import {
 	type Priority,
 	PrioritySchema,
 	type TaskWithAssigneesSchema,
-	type Unit,
 	type UpdateTaskSchema,
 } from "@scrum-board/shared/schemas";
 import { useQueryClient } from "@tanstack/react-query";
@@ -17,7 +16,6 @@ import {
 	Columns3,
 	Flag,
 	GitBranch,
-	Layers,
 	Plus,
 	Users,
 	Zap,
@@ -68,7 +66,6 @@ type UpdateTaskInput = z.infer<typeof UpdateTaskSchema>;
 type TaskPropertiesSectionProps = {
 	task: TaskWithAssignees;
 	columns?: ColumnWithTasks[];
-	units?: Unit[];
 	bolts?: Bolt[];
 	boardId?: string;
 	columnName?: string;
@@ -78,7 +75,6 @@ type TaskPropertiesSectionProps = {
 export const TaskPropertiesSection = ({
 	task,
 	columns = [],
-	units = [],
 	bolts = [],
 	boardId,
 	columnName,
@@ -208,51 +204,6 @@ export const TaskPropertiesSection = ({
 						</Select>
 					) : (
 						<PriorityBadge priority={task.priority} />
-					)}
-				</TaskPropertyRow>
-
-				<TaskPropertyRow icon={Layers} label="Unit of Work">
-					{onUpdateTask && !isEmpty(units) ? (
-						<Select
-							value={toOptionalSelectValue(task.unitId)}
-							onValueChange={(val) =>
-								onUpdateTask({ unitId: fromOptionalSelectValue(val) })
-							}
-						>
-							<SelectTrigger
-								size="sm"
-								className="h-7 w-fit gap-1.5 border-border/60 bg-background px-2.5 text-xs cursor-pointer"
-							>
-								<SelectValue placeholder="No Unit" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem
-									value={SELECT_UNSET_VALUE}
-									className="text-xs text-muted-foreground cursor-pointer"
-								>
-									No Unit
-								</SelectItem>
-								{units.map((unit) => (
-									<SelectItem
-										key={unit.id}
-										value={unit.id}
-										className="text-xs cursor-pointer"
-									>
-										<span className="inline-flex items-center gap-1.5">
-											<span
-												className="size-2 rounded-full"
-												style={{ backgroundColor: unit.color }}
-											/>
-											{unit.name}
-										</span>
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					) : (
-						<span className="text-muted-foreground">
-							{task.unit?.name ?? "None"}
-						</span>
 					)}
 				</TaskPropertyRow>
 

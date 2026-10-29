@@ -1,16 +1,8 @@
-import { LayoutGrid } from "lucide-react";
 import { useParams } from "react-router";
-import {
-	SidebarGroup,
-	SidebarGroupContent,
-	SidebarMenu,
-	SidebarMenuBadge,
-	SidebarMenuButton,
-	SidebarMenuItem,
-	SidebarSeparator,
-} from "@/components/ui/sidebar";
+import { SidebarSeparator } from "@/components/ui/sidebar";
 import { useGetBoardQuery } from "@/feature/board/api/use-get-board";
 import { useGetBoardGitHubQuery } from "@/feature/board/api/use-get-board-github";
+import { resolveActiveUnit } from "../dnd.utils";
 import { useBoardPreferences } from "../use-board-preferences";
 import { SidebarBoltsGroup } from "./sidebar-bolts-group";
 import { SidebarBranchesGroup } from "./sidebar-branches-group";
@@ -27,15 +19,15 @@ export const BoardDetailSidebar = () => {
 		selectedUnitId,
 		selectedBoltId,
 		selectedBranchName,
-		hasContextFilter,
-		toggleUnit,
+		selectUnit,
+		clearSelectedUnit,
 		toggleBolt,
 		toggleBranch,
-		clearContextFilters,
 	} = useBoardPreferences();
 
 	const units = board?.units ?? [];
-	const bolts = board?.bolts ?? [];
+	const activeUnit = resolveActiveUnit(units, selectedUnitId);
+	const bolts = activeUnit?.bolts ?? [];
 	const branches = githubInfo?.branches ?? [];
 	const repoSlug = githubInfo?.repo ?? board?.githubRepo ?? null;
 	const defaultBranch =
@@ -49,44 +41,22 @@ export const BoardDetailSidebar = () => {
 				connected={Boolean(githubInfo?.connected)}
 			/>
 
-			<SidebarGroup className="py-0">
-				<SidebarGroupContent>
-					<SidebarMenu>
-						<SidebarMenuItem>
-							<SidebarMenuButton
-								isActive={!hasContextFilter}
-								onClick={clearContextFilters}
-								className="cursor-pointer"
-							>
-								<LayoutGrid className="size-4" />
-								<span>All Board Tasks</span>
-								{hasContextFilter && (
-									<SidebarMenuBadge className="text-[10px] text-primary">
-										Reset
-									</SidebarMenuBadge>
-								)}
-							</SidebarMenuButton>
-						</SidebarMenuItem>
-					</SidebarMenu>
-				</SidebarGroupContent>
-			</SidebarGroup>
+			<SidebarUnitsGroup
+				boardId={boardId}
+				units={units}
+				selectedUnitId={activeUnit?.id ?? ""}
+				onSelectUnit={selectUnit}
+				onClearSelectedUnit={clearSelectedUnit}
+			/>
 
 			<SidebarSeparator className="my-1" />
 
 			<SidebarBoltsGroup
 				boardId={boardId}
+				unitId={activeUnit?.id}
 				bolts={bolts}
 				selectedBoltId={selectedBoltId}
 				onToggleBolt={toggleBolt}
-			/>
-
-			<SidebarSeparator className="my-1" />
-
-			<SidebarUnitsGroup
-				boardId={boardId}
-				units={units}
-				selectedUnitId={selectedUnitId}
-				onToggleUnit={toggleUnit}
 			/>
 
 			<SidebarSeparator className="my-1" />

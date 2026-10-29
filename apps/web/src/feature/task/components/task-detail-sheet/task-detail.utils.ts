@@ -1,6 +1,7 @@
 import type { Block, PartialBlock } from "@blocknote/core";
+import { trimToNull } from "@scrum-board/shared/schemas";
 import type { Maybe } from "@scrum-board/shared/types";
-import { kebabCase } from "es-toolkit";
+import { compact, kebabCase, trim } from "es-toolkit";
 
 const BLOCK_TYPE = {
 	PARAGRAPH: "paragraph",
@@ -44,12 +45,13 @@ function isPartialBlockArray(value: unknown): value is PartialBlock[] {
 export function parseTaskEditorBlocks(
 	description?: Maybe<string>,
 ): Maybe<PartialBlock[]> {
-	if (!description?.trim()) {
+	const cleaned = trimToNull(description);
+	if (!cleaned) {
 		return null;
 	}
 
 	try {
-		const parsed: unknown = JSON.parse(description);
+		const parsed: unknown = JSON.parse(cleaned);
 		if (isPartialBlockArray(parsed)) {
 			return parsed;
 		}
@@ -57,7 +59,7 @@ export function parseTaskEditorBlocks(
 		// Legacy plain-text description fallback
 	}
 
-	return description.split("\n").map((line) => ({
+	return cleaned.split("\n").map((line) => ({
 		type: BLOCK_TYPE.PARAGRAPH,
 		content: line,
 	})) satisfies PartialBlock[];
@@ -81,12 +83,13 @@ function extractInlineText(content: unknown): string {
 }
 
 export function getTaskDescriptionPreview(description?: Maybe<string>): string {
-	if (!description?.trim()) {
+	const cleaned = trimToNull(description);
+	if (!cleaned) {
 		return "";
 	}
 
 	try {
-		const parsed: unknown = JSON.parse(description);
+		const parsed: unknown = JSON.parse(cleaned);
 		if (Array.isArray(parsed)) {
 			const nonHeadingBlocks = parsed.filter(
 				(block) => isRecord(block) && block.type !== BLOCK_TYPE.HEADING,
@@ -94,26 +97,25 @@ export function getTaskDescriptionPreview(description?: Maybe<string>): string {
 			const sourceBlocks =
 				nonHeadingBlocks.length > 0 ? nonHeadingBlocks : parsed;
 
-			return sourceBlocks
-				.map((block) => {
+			return compact(
+				sourceBlocks.map((block) => {
 					if (isRecord(block) && "content" in block) {
 						return extractInlineText(block.content);
 					}
 					return "";
-				})
-				.filter(Boolean)
-				.join(" ");
+				}),
+			).join(" ");
 		}
 	} catch {
 		// Plain text
 	}
 
-	return description;
+	return cleaned;
 }
 
 export function serializeTaskEditorBlocks(blocks: Block[]): Maybe<string> {
 	const hasContent = blocks.some((block) => {
-		const text = extractInlineText(block.content).trim();
+		const text = trim(extractInlineText(block.content));
 		return text.length > 0 || (block.children && block.children.length > 0);
 	});
 

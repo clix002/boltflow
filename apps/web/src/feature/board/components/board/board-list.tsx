@@ -1,4 +1,5 @@
 import type { BoardSchema } from "@scrum-board/shared/schemas";
+import type { Maybe } from "@scrum-board/shared/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { range } from "es-toolkit";
 import { isEmpty } from "es-toolkit/compat";
@@ -37,7 +38,7 @@ export const BoardList = () => {
 
 	const confirm = useConfirm();
 	const [open, setOpen] = useState(false);
-	const [editingBoard, setEditingBoard] = useState<Board | null>(null);
+	const [editingBoard, setEditingBoard] = useState<Maybe<Board>>(null);
 	const { data, isPending, isError, refetch } = useGetBoardsQuery({
 		page,
 		limit: BOARDS_PER_PAGE,

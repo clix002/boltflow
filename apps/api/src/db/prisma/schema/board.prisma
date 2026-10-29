@@ -7,9 +7,7 @@ model Board {
   ownerId String
   owner   User   @relation("UserBoards", fields: [ownerId], references: [id], onDelete: Cascade)
 
-  columns Column[] @relation("BoardColumns")
-  units   Unit[]   @relation("BoardUnits")
-  bolts   Bolt[]   @relation("BoardBolts")
+  units Unit[] @relation("BoardUnits")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

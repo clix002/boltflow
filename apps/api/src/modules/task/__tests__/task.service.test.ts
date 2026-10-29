@@ -3,7 +3,11 @@ import { Prisma } from "@/db/prisma/generated/client";
 
 const findColumn = mock(async () => ({
 	id: "column-1",
-	board: { ownerId: "owner-1" },
+	unitId: "unit-1",
+	unit: {
+		boardId: "board-1",
+		board: { ownerId: "owner-1" },
+	},
 }));
 const findUsers = mock(async () => [{ id: "user-1" }]);
 const countTasks = mock(async () => 0);

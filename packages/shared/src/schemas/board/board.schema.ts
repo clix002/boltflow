@@ -1,30 +1,6 @@
 import { z } from "zod";
+import { NullableTrimmedString, TrimmedString } from "../common";
 import { ColumnWithTasksSchema } from "../task";
-
-export const UnitSchema = z.object({
-	id: z.string(),
-	name: z.string(),
-	description: z.string().nullable().optional(),
-	color: z.string(),
-	boardId: z.string(),
-	createdAt: z.string(),
-	updatedAt: z.string(),
-});
-export type Unit = z.infer<typeof UnitSchema>;
-
-export const CreateUnitSchema = z.object({
-	name: z.string().min(1).max(100),
-	description: z.string().max(500).nullable().optional(),
-	color: z.string().max(32).optional(),
-});
-export type CreateUnitInput = z.infer<typeof CreateUnitSchema>;
-
-export const UpdateUnitSchema = z.object({
-	name: z.string().min(1).max(100).optional(),
-	description: z.string().max(500).nullable().optional(),
-	color: z.string().max(32).optional(),
-});
-export type UpdateUnitInput = z.infer<typeof UpdateUnitSchema>;
 
 export const BoltStatusSchema = z.enum(["PLANNED", "ACTIVE", "COMPLETED"]);
 export const BOLT_STATUS = BoltStatusSchema.enum;
@@ -39,25 +15,62 @@ export const BoltSchema = z.object({
 	status: BoltStatusSchema,
 	startsAt: z.string().nullable().optional(),
 	endsAt: z.string().nullable().optional(),
-	boardId: z.string(),
+	unitId: z.string(),
 	createdAt: z.string(),
 	updatedAt: z.string(),
 });
 export type Bolt = z.infer<typeof BoltSchema>;
 
 export const CreateBoltSchema = z.object({
-	name: z.string().min(1).max(100),
-	goal: z.string().max(500).nullable().optional(),
+	unitId: TrimmedString(100),
+	name: TrimmedString(100),
+	goal: NullableTrimmedString(500),
 	status: BoltStatusSchema.optional(),
 });
 export type CreateBoltInput = z.infer<typeof CreateBoltSchema>;
 
 export const UpdateBoltSchema = z.object({
-	name: z.string().min(1).max(100).optional(),
-	goal: z.string().max(500).nullable().optional(),
+	name: TrimmedString(100).optional(),
+	goal: NullableTrimmedString(500),
 	status: BoltStatusSchema.optional(),
 });
 export type UpdateBoltInput = z.infer<typeof UpdateBoltSchema>;
+
+export const UnitSchema = z.object({
+	id: z.string(),
+	name: z.string(),
+	description: z.string().nullable().optional(),
+	color: z.string(),
+	branchName: z.string().nullable().optional(),
+	boardId: z.string(),
+	createdAt: z.string(),
+	updatedAt: z.string(),
+});
+export type Unit = z.infer<typeof UnitSchema>;
+
+export const UnitWithBoardSchema = UnitSchema.extend({
+	columns: z.array(ColumnWithTasksSchema),
+	bolts: z.array(BoltSchema),
+});
+export type UnitWithBoard = z.infer<typeof UnitWithBoardSchema>;
+
+export const CreateUnitSchema = z.object({
+	name: TrimmedString(100),
+	description: NullableTrimmedString(500),
+	color: TrimmedString(32).optional(),
+	branchName: NullableTrimmedString(120),
+	createBranchOnGitHub: z.boolean().optional(),
+});
+export type CreateUnitInput = z.infer<typeof CreateUnitSchema>;
+
+export const UpdateUnitSchema = z.object({
+	name: TrimmedString(100).optional(),
+	description: NullableTrimmedString(500),
+	color: TrimmedString(32).optional(),
+	branchName: NullableTrimmedString(120),
+	createBranchOnGitHub: z.boolean().optional(),
+});
+export type UpdateUnitInput = z.infer<typeof UpdateUnitSchema>;
 
 export const GitHubBranchSchema = z.object({
 	name: z.string(),
@@ -86,19 +99,17 @@ export const BoardSchema = z.object({
 });
 
 export const CreateBoardSchema = z.object({
-	name: z.string().min(1).max(100),
-	githubRepo: z.string().max(120).optional(),
-	defaultBranch: z.string().max(80).optional(),
+	name: TrimmedString(100),
+	githubRepo: z.string().trim().max(120).optional(),
+	defaultBranch: z.string().trim().max(80).optional(),
 });
 
 export const UpdateBoardSchema = z.object({
-	name: z.string().min(1).max(100).optional(),
-	githubRepo: z.string().max(120).nullable().optional(),
-	defaultBranch: z.string().max(80).optional(),
+	name: TrimmedString(100).optional(),
+	githubRepo: NullableTrimmedString(120),
+	defaultBranch: z.string().trim().max(80).optional(),
 });
 
 export const BoardDetailResponseSchema = BoardSchema.extend({
-	columns: z.array(ColumnWithTasksSchema),
-	units: z.array(UnitSchema).optional(),
-	bolts: z.array(BoltSchema).optional(),
+	units: z.array(UnitWithBoardSchema),
 });

@@ -79,9 +79,18 @@ export const useBoardPreferences = () => {
 	const toggleUser = (userId: string) =>
 		updateSession({ assigneeIds: xor(session.assigneeIds, [userId]) });
 
-	const toggleUnit = (unitId: string) =>
+	const selectUnit = (unitId: string) =>
 		updateSearchParams({
-			unitId: session.unitId === unitId ? null : unitId,
+			unitId,
+			boltId: null,
+			columns: null,
+		});
+
+	const clearSelectedUnit = () =>
+		updateSearchParams({
+			unitId: null,
+			boltId: null,
+			columns: null,
 		});
 
 	const toggleBolt = (boltId: string) =>
@@ -96,7 +105,6 @@ export const useBoardPreferences = () => {
 
 	const clearContextFilters = () =>
 		updateSearchParams({
-			unitId: null,
 			boltId: null,
 			branchName: null,
 		});
@@ -127,9 +135,7 @@ export const useBoardPreferences = () => {
 
 	const resetToDefault = clearLayoutOverride;
 
-	const hasContextFilter = Boolean(
-		session.unitId || session.boltId || session.branchName,
-	);
+	const hasContextFilter = Boolean(session.boltId || session.branchName);
 
 	return {
 		session,
@@ -146,7 +152,8 @@ export const useBoardPreferences = () => {
 		isModified: isDirty,
 		toggleColumn,
 		toggleUser,
-		toggleUnit,
+		selectUnit,
+		clearSelectedUnit,
 		toggleBolt,
 		toggleBranch,
 		clearContextFilters,

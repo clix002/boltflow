@@ -18,6 +18,8 @@ export {
 	GitHubBranchSchema,
 	type Unit,
 	UnitSchema,
+	type UnitWithBoard,
+	UnitWithBoardSchema,
 	UpdateBoardSchema,
 	type UpdateBoltInput,
 	UpdateBoltSchema,

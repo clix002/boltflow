@@ -1,7 +1,7 @@
 import type { TaskWithAssigneesSchema } from "@scrum-board/shared/schemas";
 import type { VariantProps } from "class-variance-authority";
 import { isEmpty } from "es-toolkit/compat";
-import { Calendar, GitBranch } from "lucide-react";
+import { Calendar, GitBranch, Zap } from "lucide-react";
 import type React from "react";
 import type { z } from "zod";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -69,18 +69,15 @@ export const TaskCard = ({
 				</p>
 			)}
 
-			{(task.unit || task.branchName) && (
+			{(task.bolt || task.branchName) && (
 				<div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-					{task.unit && (
+					{task.bolt && (
 						<Badge
 							variant="outline"
-							className="h-5 gap-1.5 px-1.5 text-[10px] font-medium bg-background/60"
+							className="h-5 gap-1 px-1.5 text-[10px] font-medium bg-background/60"
 						>
-							<span
-								className="size-2 rounded-full shrink-0"
-								style={{ backgroundColor: task.unit.color }}
-							/>
-							<span className="truncate max-w-28">{task.unit.name}</span>
+							<Zap className="size-2.5 text-amber-500 shrink-0" />
+							<span className="truncate max-w-28">{task.bolt.name}</span>
 						</Badge>
 					)}
 

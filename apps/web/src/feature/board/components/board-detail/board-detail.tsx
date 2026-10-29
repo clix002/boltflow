@@ -7,7 +7,7 @@ import type {
 import type { Maybe } from "@scrum-board/shared/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { isEmpty } from "es-toolkit/compat";
-import { GitBranch, Layers, Plus, X, Zap } from "lucide-react";
+import { GitBranch, Plus, X, Zap } from "lucide-react";
 import { useRef, useState } from "react";
 import { useParams } from "react-router";
 import type { z } from "zod";
@@ -30,10 +30,15 @@ import { UpdateTaskDialog } from "@/feature/task/components/form/update-task-dia
 import { TaskDetailSheet } from "@/feature/task/components/task-detail-sheet";
 import { useConfirm } from "@/hooks/confirm-provider";
 import { BoardTableView } from "./board-table";
-import { createBoardDndHandlers, findTaskInBoard } from "./dnd.utils";
+import {
+	createBoardDndHandlers,
+	findTaskInBoard,
+	resolveActiveUnit,
+} from "./dnd.utils";
 import { KanbanColumn } from "./kanban-column";
 import { TaskCard } from "./task-card";
 import { BOARD_VIEW_MODE } from "./types";
+import { UnitSubboardBanner } from "./unit-subboard-banner";
 import { useBoardPreferences } from "./use-board-preferences";
 
 type BoardDetailData = z.infer<typeof BoardDetailResponseSchema>;
@@ -53,8 +58,6 @@ export const BoardDetail = () => {
 		session,
 		selectedColumnIds,
 		currentView,
-		hasContextFilter,
-		toggleUnit,
 		toggleBolt,
 		toggleBranch,
 		clearContextFilters,
@@ -63,7 +66,6 @@ export const BoardDetail = () => {
 	const boardFilters = {
 		search: session.search,
 		assigneeIds: session.assigneeIds.join(","),
-		unitId: session.unitId,
 		boltId: session.boltId,
 		branchName: session.branchName,
 	};
@@ -131,22 +133,25 @@ export const BoardDetail = () => {
 		);
 	}
 
-	const matchingColumns = board.columns.filter((c) =>
+	const activeUnit = resolveActiveUnit(board.units, session.unitId);
+	const unitColumns = activeUnit?.columns ?? [];
+	const unitBolts = activeUnit?.bolts ?? [];
+
+	const matchingColumns = unitColumns.filter((c) =>
 		selectedColumnIds.includes(c.id),
 	);
 	const visibleColumns = isEmpty(matchingColumns)
-		? board.columns
+		? unitColumns
 		: matchingColumns;
 
 	const selectedTask = selectedTaskId
 		? findTaskInBoard(board, selectedTaskId)
 		: null;
 	const selectedTaskColumn = selectedTask
-		? board.columns.find((col) => col.id === selectedTask.columnId)
+		? unitColumns.find((col) => col.id === selectedTask.columnId)
 		: undefined;
 
-	const activeUnit = board.units?.find((u) => u.id === session.unitId);
-	const activeBolt = board.bolts?.find((b) => b.id === session.boltId);
+	const activeBolt = unitBolts.find((b) => b.id === session.boltId);
 
 	const dndHandlers = createBoardDndHandlers({
 		board,
@@ -166,7 +171,11 @@ export const BoardDetail = () => {
 
 	return (
 		<div className="flex flex-1 flex-col overflow-hidden py-4">
-			{hasContextFilter && (
+			{activeUnit && (
+				<UnitSubboardBanner unit={activeUnit} githubRepo={board.githubRepo} />
+			)}
+
+			{(activeBolt || session.branchName) && (
 				<div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-1.5 text-xs">
 					<span className="font-medium text-muted-foreground">
 						Active Filters:
@@ -181,21 +190,6 @@ export const BoardDetail = () => {
 								size="icon-xs"
 								className="size-4 rounded-full hover:bg-muted cursor-pointer"
 								onClick={() => toggleBolt(activeBolt.id)}
-							>
-								<X className="size-2.5" />
-							</Button>
-						</Badge>
-					)}
-					{activeUnit && (
-						<Badge variant="secondary" className="gap-1.5 pr-1">
-							<Layers className="size-3 text-indigo-500" />
-							<span>{activeUnit.name}</span>
-							<Button
-								type="button"
-								variant="ghost"
-								size="icon-xs"
-								className="size-4 rounded-full hover:bg-muted cursor-pointer"
-								onClick={() => toggleUnit(activeUnit.id)}
 							>
 								<X className="size-2.5" />
 							</Button>
@@ -231,7 +225,7 @@ export const BoardDetail = () => {
 			<DragDropProvider {...dndHandlers}>
 				{currentView === BOARD_VIEW_MODE.LIST ? (
 					<BoardTableView
-						key={boardId}
+						key={activeUnit?.id ?? boardId}
 						columns={visibleColumns}
 						onAddTask={(colId) => setActiveColumnId(colId)}
 						onTaskClick={(taskId) => setSelectedTaskId(taskId)}
@@ -255,7 +249,7 @@ export const BoardDetail = () => {
 							/>
 						))}
 
-						{board.columns.length === 0 && (
+						{activeUnit && unitColumns.length === 0 && (
 							<Button
 								variant="outline"
 								className="h-12 w-80 rounded-2xl border-dashed text-muted-foreground cursor-pointer"
@@ -280,9 +274,8 @@ export const BoardDetail = () => {
 
 			<TaskDetailSheet
 				task={selectedTask}
-				columns={board.columns}
-				units={board.units}
-				bolts={board.bolts}
+				columns={unitColumns}
+				bolts={unitBolts}
 				boardId={boardId}
 				columnName={selectedTaskColumn?.name}
 				open={Boolean(selectedTask)}
@@ -308,11 +301,14 @@ export const BoardDetail = () => {
 					boardId={boardId ?? ""}
 				/>
 			)}
-			<CreateColumnDialog
-				open={isAddColumnOpen}
-				onOpenChange={setIsAddColumnOpen}
-				boardId={boardId ?? ""}
-			/>
+			{activeUnit && (
+				<CreateColumnDialog
+					open={isAddColumnOpen}
+					onOpenChange={setIsAddColumnOpen}
+					boardId={boardId ?? ""}
+					unitId={activeUnit.id}
+				/>
+			)}
 			{editingColumn && (
 				<UpdateColumnDialog
 					open={Boolean(editingColumn)}

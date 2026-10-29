@@ -21,7 +21,7 @@ Este documento define los estándares arquitectónicos y de código obligatorios
 
 ## 3. Funciones Puras y Utilidades Desacopladas (`.utils.ts`)
 - **Lógica de dominio pura:** Los cálculos de ordenamiento, resolución de posiciones, arrastre (*drag & drop*), serialización de bloques y transformaciones de valores para controles UI (`toOptionalSelectValue` / `fromOptionalSelectValue`) deben residir en utilidades puras y comprobables (`.utils.ts`).
-- **No reinventar utilidades existentes:** Antes de escribir cadenas de expresiones regulares (`.replace(...)`) o helpers manuales, verificar si `es-toolkit` ya provee la función (`kebabCase`, `debounce`, `uniq`, `xor`, `pick`, `isEqual`).
+- **No reinventar utilidades existentes:** Antes de escribir cadenas de expresiones regulares (`.replace(...)`) o helpers manuales, verificar si `es-toolkit` ya provee la función (`kebabCase`, `debounce`, `uniq`, `xor`, `pick`, `isEqual`, `trim`, `compact`, `isString`).
 - **Eficiencia y memoria:**
   - Evitar asignaciones redundantes en memoria como `board.columns.flatMap(c => c.tasks).find(...)` en cada ciclo de render.
   - Implementar funciones puras con recorridos directos y cortocircuito temprano (`return` inmediato al encontrar el elemento).
@@ -31,6 +31,7 @@ Este documento define los estándares arquitectónicos y de código obligatorios
 
 ## 4. Tipado Estricto y Uso de `satisfies` (Cero strings libres o hacks de tipo)
 - **Cero Strings Mágicos:** Prohibido comparar o asignar strings literales sueltos en la lógica (`block.type !== "heading"`, `status === "ACTIVE"`, `const NONE_OPTION = "__none__"` dentro de un componente). Definir diccionarios constantes con `as const` (`BLOCK_TYPE.HEADING`, `BOLT_STATUS.ACTIVE`) y validar su exhaustividad con `satisfies`.
+- **Uso Obligatorio de `Maybe<T>`:** Utilizar `Maybe<T>` de `@scrum-board/shared/types` en lugar de uniones manuales `T | null` en estados, props, firmas de funciones y utilidades.
 - **Variantes de Componentes:** Nunca tipar variantes como strings sueltos (`"overlay" | "dragging"`). Utilizar `cva` y derivar el tipo con `VariantProps<typeof componentVariants>`.
 - **Integración con ORM/Frameworks:** Usar el operador `satisfies` con los tipos nativos generados (ej. `satisfies Prisma.TaskUpdateManyArgs[]`) para garantizar validación en tiempo de compilación sin perder la inferencia estricta.
 - **Sin type assertions descuidadas:** Prohibido el uso de `as any` o casteo forzado `as MyType` para silenciar errores del compilador.
@@ -41,6 +42,9 @@ Este documento define los estándares arquitectónicos y de código obligatorios
 ## 5. Diagnosticar la Raíz, No Parchar Superficialmente
 - **Cero parches rápidos:** Si faltan datos o un tipo no encaja, no se debe "acomodar a la fuerza" en la vista. Se debe diagnosticar el flujo completo desde el modelo de datos, la API o los esquemas compartidos (`@scrum-board/shared`), y corregir el problema en su origen.
 - **Validación Bidireccional:** Todo endpoint debe tener su esquema Zod correspondiente tanto en backend como frontend para evitar discrepancias en tiempo de ejecución.
+- **Limpieza y Sanitización en Esquemas Compartidos (`@scrum-board/shared/schemas`):**
+  - Prohibido repetir `.trim()` o ternarios manuales (`val?.trim() ? val.trim() : null`) dentro de componentes (`onSubmit`) o servicios de negocio.
+  - Toda limpieza y normalización de cadenas de entrada debe declararse directamente en los esquemas Zod compartidos usando las primitivas de `common.ts` (`TrimmedString` para campos requeridos, `NullableTrimmedString` para opcionales/anulables que convierten `""` en `null`, y `trimToNull` para utilidades fuera de formularios).
 
 ---
 

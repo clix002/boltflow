@@ -12,8 +12,6 @@ export {
 	type TaskBoltRef,
 	TaskBoltRefSchema,
 	TaskSchema,
-	type TaskUnitRef,
-	TaskUnitRefSchema,
 	TaskWithAssigneesSchema,
 	UpdateTaskSchema,
 } from "./task.schema";

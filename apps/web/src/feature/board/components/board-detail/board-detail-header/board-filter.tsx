@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { useGetBoardQuery } from "@/feature/board/api/use-get-board";
+import { resolveActiveUnit } from "@/feature/board/components/board-detail/dnd.utils";
 import { useBoardPreferences } from "@/feature/board/components/board-detail/use-board-preferences";
 import { useGetUsersQuery } from "@/feature/user/api/use-get-users";
 import { cn } from "@/lib/utils";
@@ -42,7 +43,8 @@ export const BoardFilter = () => {
 		assigneeIds: session.assigneeIds.join(","),
 	});
 
-	const columns = board?.columns ?? [];
+	const activeUnit = resolveActiveUnit(board?.units, session.unitId);
+	const columns = activeUnit?.columns ?? [];
 
 	const totalActiveFilters = selectedColumnIds.length + selectedUserIds.length;
 	const hasActiveFilters = totalActiveFilters > 0;

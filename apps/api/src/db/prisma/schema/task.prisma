@@ -30,9 +30,6 @@ model Task {
   columnId String
   column   Column @relation("ColumnTasks", fields: [columnId], references: [id], onDelete: Cascade)
 
-  unitId String?
-  unit   Unit?   @relation("UnitTasks", fields: [unitId], references: [id], onDelete: SetNull)
-
   boltId String?
   bolt   Bolt?   @relation("BoltTasks", fields: [boltId], references: [id], onDelete: SetNull)
 
@@ -42,6 +39,5 @@ model Task {
   updatedAt DateTime @updatedAt
 
   @@index([columnId])
-  @@index([unitId])
   @@index([boltId])
 }

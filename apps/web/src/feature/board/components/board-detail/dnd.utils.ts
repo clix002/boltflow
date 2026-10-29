@@ -3,6 +3,7 @@ import type { DragEndEvent, DragOverEvent } from "@dnd-kit/react";
 import type {
 	BoardDetailResponseSchema,
 	TaskWithAssigneesSchema,
+	UnitWithBoard,
 } from "@scrum-board/shared/schemas";
 import type { Maybe } from "@scrum-board/shared/types";
 import type { QueryClient } from "@tanstack/react-query";
@@ -12,42 +13,62 @@ import { playTaskMoveSound } from "@/lib/sound.utils";
 type BoardDetail = z.infer<typeof BoardDetailResponseSchema>;
 type Task = z.infer<typeof TaskWithAssigneesSchema>;
 
+export function resolveActiveUnit(
+	units: UnitWithBoard[] | undefined,
+	selectedUnitId?: string,
+): Maybe<UnitWithBoard> {
+	if (!units || units.length === 0) return null;
+	if (!selectedUnitId) return units[0];
+	return units.find((u) => u.id === selectedUnitId) ?? units[0];
+}
+
 export function findTaskInBoard(
 	board: BoardDetail,
 	taskId: string,
 ): Maybe<Task> {
-	for (const column of board.columns) {
-		const task = column.tasks.find((t) => t.id === taskId);
-		if (task) return task;
+	for (const unit of board.units) {
+		for (const column of unit.columns) {
+			const task = column.tasks.find((t) => t.id === taskId);
+			if (task) return task;
+		}
 	}
 	return null;
 }
 
 /**
- * Applies the dnd-kit `move` helper to the board, keeping each task's
- * `columnId` and `order` in sync with its new position.
+ * Applies the dnd-kit `move` helper to each unit's columns in the board,
+ * keeping each task's `columnId` and `order` in sync with its new position.
  */
 export function moveTaskInBoard(
 	board: BoardDetail,
 	event: DragOverEvent,
 ): BoardDetail {
-	const tasksByColumn = Object.fromEntries(
-		board.columns.map((column) => [column.id, column.tasks]),
-	);
-	const moved = move(tasksByColumn, event);
-	if (moved === tasksByColumn) return board;
+	let hasMoved = false;
 
-	return {
-		...board,
-		columns: board.columns.map((column) => ({
-			...column,
-			tasks: moved[column.id].map((task, order) => ({
-				...task,
-				columnId: column.id,
-				order,
+	const nextUnits = board.units.map((unit) => {
+		if (unit.columns.length === 0) return unit;
+
+		const tasksByColumn = Object.fromEntries(
+			unit.columns.map((column) => [column.id, column.tasks]),
+		);
+		const moved = move(tasksByColumn, event);
+		if (moved === tasksByColumn) return unit;
+
+		hasMoved = true;
+		return {
+			...unit,
+			columns: unit.columns.map((column) => ({
+				...column,
+				tasks: moved[column.id].map((task, order) => ({
+					...task,
+					columnId: column.id,
+					order,
+				})),
 			})),
-		})),
-	};
+		};
+	});
+
+	return hasMoved ? { ...board, units: nextUnits } : board;
 }
 
 export type PersistTaskMoveInput = {

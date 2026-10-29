@@ -15,25 +15,30 @@ export type UpdateColumnInput = {
 
 export const columnService = {
 	async create(userId: string, data: z.infer<typeof CreateColumnSchema>) {
-		const board = await prisma.board.findUnique({
-			where: { id: data.boardId },
-			select: { id: true, ownerId: true },
+		const unit = await prisma.unit.findUnique({
+			where: { id: data.unitId },
+			select: {
+				id: true,
+				board: {
+					select: { ownerId: true },
+				},
+			},
 		});
 
-		if (!board) {
-			throw new HTTPException(404, { message: "Board not found" });
+		if (!unit) {
+			throw new HTTPException(404, { message: "Unit not found" });
 		}
 
-		if (board.ownerId !== userId) {
+		if (unit.board.ownerId !== userId) {
 			throw new HTTPException(403, { message: "Not authorized" });
 		}
 
-		const currentCount = await columnRepository.countByBoardId(data.boardId);
+		const currentCount = await columnRepository.countByUnitId(data.unitId);
 		const order = data.order ?? currentCount;
 
 		return columnRepository.create({
 			name: data.name,
-			boardId: data.boardId,
+			unitId: data.unitId,
 			order,
 		});
 	},
@@ -46,7 +51,7 @@ export const columnService = {
 			throw new HTTPException(404, { message: "Column not found" });
 		}
 
-		if (column.board.ownerId !== userId) {
+		if (column.unit.board.ownerId !== userId) {
 			throw new HTTPException(403, { message: "Not authorized" });
 		}
 
@@ -60,7 +65,7 @@ export const columnService = {
 			throw new HTTPException(404, { message: "Column not found" });
 		}
 
-		if (column.board.ownerId !== userId) {
+		if (column.unit.board.ownerId !== userId) {
 			throw new HTTPException(403, { message: "Not authorized" });
 		}
 

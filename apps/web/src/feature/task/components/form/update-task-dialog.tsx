@@ -38,6 +38,8 @@ import {
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { useGetBoardQuery } from "@/feature/board/api/use-get-board";
+import { resolveActiveUnit } from "@/feature/board/components/board-detail/dnd.utils";
+import { useBoardPreferences } from "@/feature/board/components/board-detail/use-board-preferences";
 import { useUpdateTaskMutation } from "@/feature/task/api/use-update-task";
 import { useGetUsersQuery } from "@/feature/user/api/use-get-users";
 import { PriorityBadge } from "../priority-badge";
@@ -68,10 +70,12 @@ export const UpdateTaskDialog = ({
 	boardId,
 }: UpdateTaskDialogProps) => {
 	const queryClient = useQueryClient();
+	const { selectedUnitId } = useBoardPreferences();
 	const { mutate: updateTask, isPending } = useUpdateTaskMutation();
 	const { data: users, isPending: isLoadingUsers } = useGetUsersQuery();
 	const { data: board } = useGetBoardQuery(boardId);
-	const columns = board?.columns ?? [];
+	const activeUnit = resolveActiveUnit(board?.units, selectedUnitId);
+	const columns = activeUnit?.columns ?? [];
 
 	const form = useForm<FormInput, unknown, FormOutput>({
 		resolver: zodResolver(FormSchema),

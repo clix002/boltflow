@@ -1,21 +1,22 @@
 import { z } from "zod";
+import { TrimmedString } from "../common";
 
 export const ColumnSchema = z.object({
 	id: z.string(),
 	name: z.string(),
 	order: z.number(),
-	boardId: z.string(),
+	unitId: z.string(),
 	createdAt: z.string(),
 	updatedAt: z.string(),
 });
 
 export const CreateColumnSchema = z.object({
-	name: z.string().min(1).max(100),
-	boardId: z.string(),
+	name: TrimmedString(100),
+	unitId: TrimmedString(100),
 	order: z.number().int().nonnegative().optional(),
 });
 
 export const UpdateColumnSchema = z.object({
-	name: z.string().min(1).max(100).optional(),
+	name: TrimmedString(100).optional(),
 	order: z.number().int().nonnegative().optional(),
 });

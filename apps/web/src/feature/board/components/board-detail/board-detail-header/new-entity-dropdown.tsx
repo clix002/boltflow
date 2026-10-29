@@ -8,15 +8,22 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useGetBoardQuery } from "@/feature/board/api/use-get-board";
+import { resolveActiveUnit } from "@/feature/board/components/board-detail/dnd.utils";
+import { useBoardPreferences } from "@/feature/board/components/board-detail/use-board-preferences";
 import { CreateColumnDialog } from "@/feature/column/components/form/create-column-dialog";
 import { CreateTaskDialog } from "@/feature/task/components/form/create-task-dialog";
 
 export const NewEntityDropdown = () => {
 	const { boardId } = useParams<{ boardId: string }>();
+	const { selectedUnitId } = useBoardPreferences();
+	const { data: board } = useGetBoardQuery(boardId);
 	const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
 	const [isCreateColumnOpen, setIsCreateColumnOpen] = useState(false);
 
 	if (!boardId) return null;
+
+	const activeUnit = resolveActiveUnit(board?.units, selectedUnitId);
 
 	return (
 		<>
@@ -33,12 +40,14 @@ export const NewEntityDropdown = () => {
 				<DropdownMenuContent align="end">
 					<DropdownMenuItem
 						onClick={() => setIsCreateTaskOpen(true)}
+						disabled={!activeUnit}
 						className="cursor-pointer"
 					>
 						New Task
 					</DropdownMenuItem>
 					<DropdownMenuItem
 						onClick={() => setIsCreateColumnOpen(true)}
+						disabled={!activeUnit}
 						className="cursor-pointer"
 					>
 						New Column
@@ -55,11 +64,12 @@ export const NewEntityDropdown = () => {
 				/>
 			)}
 
-			{isCreateColumnOpen && (
+			{isCreateColumnOpen && activeUnit && (
 				<CreateColumnDialog
 					open={isCreateColumnOpen}
 					onOpenChange={setIsCreateColumnOpen}
 					boardId={boardId}
+					unitId={activeUnit.id}
 				/>
 			)}
 		</>

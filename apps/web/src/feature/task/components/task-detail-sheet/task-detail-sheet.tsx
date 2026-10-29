@@ -1,9 +1,9 @@
-import type {
-	Bolt,
-	ColumnWithTasksSchema,
-	TaskWithAssigneesSchema,
-	Unit,
-	UpdateTaskSchema,
+import {
+	type Bolt,
+	type ColumnWithTasksSchema,
+	type TaskWithAssigneesSchema,
+	trimToNull,
+	type UpdateTaskSchema,
 } from "@scrum-board/shared/schemas";
 import type { Maybe } from "@scrum-board/shared/types";
 import { useQueryClient } from "@tanstack/react-query";
@@ -39,7 +39,6 @@ type UpdateTaskInput = z.infer<typeof UpdateTaskSchema>;
 type TaskDetailSheetProps = {
 	task: Maybe<TaskWithAssignees>;
 	columns?: ColumnWithTasks[];
-	units?: Unit[];
 	bolts?: Bolt[];
 	boardId?: string;
 	columnName?: string;
@@ -51,7 +50,6 @@ type TaskDetailSheetProps = {
 export const TaskDetailSheet = ({
 	task,
 	columns,
-	units,
 	bolts,
 	boardId,
 	columnName,
@@ -122,7 +120,7 @@ export const TaskDetailSheet = ({
 	};
 
 	const handleTitleChange = (nextTitle: string) => {
-		const trimmed = nextTitle.trim();
+		const trimmed = trimToNull(nextTitle);
 		if (!task || !trimmed || trimmed === task.title) return;
 		queueTaskUpdate({ title: trimmed });
 	};
@@ -178,7 +176,6 @@ export const TaskDetailSheet = ({
 								<TaskPropertiesSection
 									task={task}
 									columns={columns}
-									units={units}
 									bolts={bolts}
 									boardId={boardId}
 									columnName={columnName}

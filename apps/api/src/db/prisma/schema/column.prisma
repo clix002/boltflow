@@ -3,12 +3,12 @@ model Column {
   name  String
   order Int
 
-  boardId String
-  board   Board  @relation("BoardColumns", fields: [boardId], references: [id], onDelete: Cascade)
-  tasks   Task[] @relation("ColumnTasks")
+  unitId String
+  unit   Unit   @relation("UnitColumns", fields: [unitId], references: [id], onDelete: Cascade)
+  tasks  Task[] @relation("ColumnTasks")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([boardId])
+  @@index([unitId])
 }

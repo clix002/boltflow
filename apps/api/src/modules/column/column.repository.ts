@@ -2,9 +2,9 @@ import { prisma } from "@/db/connections";
 import type { Prisma } from "@/db/prisma/generated/client";
 
 export const columnRepository = {
-	countByBoardId(boardId: string) {
+	countByUnitId(unitId: string) {
 		return prisma.column.count({
-			where: { boardId },
+			where: { unitId },
 		});
 	},
 	findById(id: string) {
@@ -12,8 +12,12 @@ export const columnRepository = {
 			where: { id },
 			select: {
 				id: true,
-				board: {
-					select: { ownerId: true },
+				unit: {
+					select: {
+						board: {
+							select: { ownerId: true },
+						},
+					},
 				},
 			},
 		});
