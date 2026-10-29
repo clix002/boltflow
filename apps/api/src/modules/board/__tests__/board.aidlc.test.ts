@@ -1,7 +1,29 @@
 import { describe, expect, it, spyOn } from "bun:test";
+import {
+	normalizeRepoSlug,
+	parseRepoCoordinates,
+} from "@/modules/github/github.utils";
 import { buildTaskWhere } from "@/modules/task/task.filters";
 import { boardRepository } from "../board.repository";
 import { boardService } from "../board.service";
+
+describe("github.utils repo parsing", () => {
+	it("extracts owner and repo from slug or full GitHub URL", () => {
+		expect(parseRepoCoordinates("clix002/boltflow")).toEqual({
+			owner: "clix002",
+			repo: "boltflow",
+		});
+		expect(
+			parseRepoCoordinates("https://github.com/clix002/boltflow.git/"),
+		).toEqual({
+			owner: "clix002",
+			repo: "boltflow",
+		});
+		expect(normalizeRepoSlug("https://github.com/clix002/boltflow")).toBe(
+			"clix002/boltflow",
+		);
+	});
+});
 
 describe("buildTaskWhere", () => {
 	it("builds filters for boltId, branchName, and search", () => {
@@ -50,6 +72,7 @@ describe("boardService Units and Bolts", () => {
 			ownerId: "user-1",
 			githubRepo: "clix002/boltflow",
 			defaultBranch: "main",
+			owner: { githubToken: null },
 		});
 		const createUnit = spyOn(boardRepository, "createUnit").mockResolvedValue({
 			id: "unit-1",
@@ -94,6 +117,7 @@ describe("boardService Units and Bolts", () => {
 				ownerId: "owner-user",
 				githubRepo: "clix002/boltflow",
 				defaultBranch: "main",
+				owner: { githubToken: null },
 			},
 		});
 

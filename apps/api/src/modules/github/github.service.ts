@@ -1,12 +1,15 @@
 import type {
 	BoardGitHubInfo,
 	GitHubBranch,
+	GitHubRepoItem,
+	UserGitHubReposResponse,
 } from "@scrum-board/shared/schemas";
 import type { Maybe } from "@scrum-board/shared/types";
 import { Effect } from "effect";
 import { HTTPException } from "hono/http-exception";
 import { Octokit } from "octokit";
 import { env } from "@/config/env";
+import { prisma } from "@/db/connections";
 import {
 	GitHubApiError,
 	GitHubBranchNotFoundError,
@@ -22,11 +25,14 @@ import {
 export type ListBoardBranchesInput = {
 	githubRepo: Maybe<string | undefined>;
 	defaultBranch?: string;
+	githubToken?: Maybe<string | undefined>;
 };
 
 export type CreateGitHubBranchInput = {
 	githubRepo: Maybe<string | undefined>;
 	defaultBranch?: string;
+	baseBranch?: Maybe<string | undefined>;
+	githubToken?: Maybe<string | undefined>;
 	branchName: string;
 };
 
@@ -40,14 +46,18 @@ type CreateRemoteBranchParams = {
 	octokit: Octokit;
 	coords: RepoCoordinates;
 	branchName: string;
+	baseBranch: string;
 	defaultBranch: string;
 };
 
-const createOctokitClient = (): Maybe<Octokit> => {
-	if (!env.GITHUB_TOKEN) {
+const createOctokitClient = (
+	token?: Maybe<string | undefined>,
+): Maybe<Octokit> => {
+	const effectiveToken = token || env.GITHUB_TOKEN;
+	if (!effectiveToken) {
 		return null;
 	}
-	return new Octokit({ auth: env.GITHUB_TOKEN });
+	return new Octokit({ auth: effectiveToken });
 };
 
 const getRemoteBranchEffect = Effect.fn("github.getRemoteBranch")(
@@ -74,21 +84,40 @@ const getRemoteBranchEffect = Effect.fn("github.getRemoteBranch")(
 		}),
 );
 
-const createRemoteBranchFromDefaultEffect = Effect.fn(
-	"github.createRemoteBranchFromDefault",
-)(function* (params: CreateRemoteBranchParams) {
-	const baseBranch = yield* getRemoteBranchEffect({
+const resolveBaseBranchCommitEffect = Effect.fn(
+	"github.resolveBaseBranchCommit",
+)((params: CreateRemoteBranchParams) =>
+	getRemoteBranchEffect({
 		octokit: params.octokit,
 		coords: params.coords,
-		branch: params.defaultBranch,
+		branch: params.baseBranch,
 	}).pipe(
+		Effect.catchTag("GitHubBranchNotFoundError", () =>
+			params.baseBranch !== params.defaultBranch
+				? getRemoteBranchEffect({
+						octokit: params.octokit,
+						coords: params.coords,
+						branch: params.defaultBranch,
+					})
+				: Effect.fail(
+						new GitHubApiError({
+							message: `Default branch '${params.defaultBranch}' not found on ${params.coords.owner}/${params.coords.repo}`,
+						}),
+					),
+		),
 		Effect.mapError(
 			() =>
 				new GitHubApiError({
-					message: `Default branch '${params.defaultBranch}' not found on ${params.coords.owner}/${params.coords.repo}`,
+					message: `Base branch '${params.baseBranch}' (or '${params.defaultBranch}') not found on ${params.coords.owner}/${params.coords.repo}`,
 				}),
 		),
-	);
+	),
+);
+
+const createRemoteBranchFromDefaultEffect = Effect.fn(
+	"github.createRemoteBranchFromDefault",
+)(function* (params: CreateRemoteBranchParams) {
+	const baseBranch = yield* resolveBaseBranchCommitEffect(params);
 
 	yield* Effect.tryPromise({
 		try: () =>
@@ -114,10 +143,13 @@ const ensureBranchExistsEffect = Effect.fn("github.ensureBranchExists")(
 			return yield* new InvalidBranchNameError({ rawName: input.branchName });
 		}
 
-		const effectiveRepo = input.githubRepo ?? env.GITHUB_REPO ?? null;
+		const effectiveRepo = input.githubRepo ?? null;
 		const defaultBranch = input.defaultBranch ?? "main";
+		const baseBranch = input.baseBranch
+			? sanitizeBranchName(input.baseBranch) || defaultBranch
+			: defaultBranch;
 		const coords = parseRepoCoordinates(effectiveRepo);
-		const octokit = createOctokitClient();
+		const octokit = createOctokitClient(input.githubToken);
 
 		if (!coords || !octokit) {
 			return cleanBranch;
@@ -134,6 +166,7 @@ const ensureBranchExistsEffect = Effect.fn("github.ensureBranchExists")(
 					octokit,
 					coords,
 					branchName: cleanBranch,
+					baseBranch,
 					defaultBranch,
 				}),
 			),
@@ -144,16 +177,18 @@ const ensureBranchExistsEffect = Effect.fn("github.ensureBranchExists")(
 const listBranchesEffect = Effect.fn("github.listBranches")(function* (
 	input: ListBoardBranchesInput,
 ): Effect.fn.Return<BoardGitHubInfo> {
-	const effectiveRepo = input.githubRepo ?? env.GITHUB_REPO ?? null;
+	const effectiveRepo = input.githubRepo ?? null;
 	const defaultBranch = input.defaultBranch ?? "main";
 	const coords = parseRepoCoordinates(effectiveRepo);
-	const octokit = createOctokitClient();
+	const octokit = createOctokitClient(input.githubToken);
+	const hasToken = Boolean(input.githubToken || env.GITHUB_TOKEN);
 
 	if (!coords || !octokit) {
 		return {
 			repo: effectiveRepo,
 			defaultBranch,
 			connected: false,
+			hasToken,
 			branches: [],
 		};
 	}
@@ -182,6 +217,7 @@ const listBranchesEffect = Effect.fn("github.listBranches")(function* (
 				repo: `${coords.owner}/${coords.repo}`,
 				defaultBranch,
 				connected: true,
+				hasToken,
 				branches,
 			};
 		}),
@@ -190,15 +226,103 @@ const listBranchesEffect = Effect.fn("github.listBranches")(function* (
 				repo: `${coords.owner}/${coords.repo}`,
 				defaultBranch,
 				connected: false,
+				hasToken,
 				branches: [],
 			}),
 		),
 	);
 });
 
+const fetchAuthenticatedReposEffect = Effect.fn(
+	"github.fetchAuthenticatedRepos",
+)((octokit: Octokit) =>
+	Effect.tryPromise({
+		try: () =>
+			octokit.rest.repos.listForAuthenticatedUser({
+				sort: "updated",
+				per_page: 100,
+			}),
+		catch: () =>
+			new GitHubApiError({
+				message:
+					"Invalid GitHub Personal Access Token or insufficient permissions",
+			}),
+	}).pipe(
+		Effect.map((response): GitHubRepoItem[] =>
+			response.data.map((repo) => ({
+				id: repo.id,
+				name: repo.name,
+				fullName: repo.full_name,
+				defaultBranch: repo.default_branch,
+				private: repo.private,
+			})),
+		),
+	),
+);
+
+async function getUserGitHubToken(userId: string): Promise<Maybe<string>> {
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+		select: { githubToken: true },
+	});
+	return user?.githubToken ?? null;
+}
+
 export const githubService = {
 	getBoardGitHubInfo(input: ListBoardBranchesInput): Promise<BoardGitHubInfo> {
 		return Effect.runPromise(listBranchesEffect(input));
+	},
+
+	async listUserRepos(userId: string): Promise<UserGitHubReposResponse> {
+		const userToken = await getUserGitHubToken(userId);
+		const octokit = createOctokitClient(userToken);
+		if (!octokit) {
+			return { connected: false, repos: [] };
+		}
+
+		return Effect.runPromise(
+			fetchAuthenticatedReposEffect(octokit).pipe(
+				Effect.map((repos) => ({ connected: true, repos })),
+				Effect.catchTag("GitHubApiError", () =>
+					Effect.succeed({ connected: false, repos: [] }),
+				),
+			),
+		);
+	},
+
+	async connectUserToken(
+		userId: string,
+		githubToken: string,
+	): Promise<UserGitHubReposResponse> {
+		const octokit = new Octokit({ auth: githubToken });
+		const repos = await Effect.runPromise(
+			fetchAuthenticatedReposEffect(octokit).pipe(
+				Effect.catchTag("GitHubApiError", (err) =>
+					Effect.fail(new HTTPException(400, { message: err.message })),
+				),
+			),
+		);
+
+		await prisma.user.update({
+			where: { id: userId },
+			data: { githubToken },
+			select: { id: true },
+		});
+
+		return { connected: true, repos };
+	},
+
+	async listRepoBranches(
+		userId: string,
+		githubRepo: string,
+	): Promise<BoardGitHubInfo> {
+		const userToken = await getUserGitHubToken(userId);
+		return Effect.runPromise(
+			listBranchesEffect({
+				githubRepo,
+				githubToken: userToken,
+			}),
+		);
 	},
 
 	ensureBranchExists(input: CreateGitHubBranchInput): Promise<string> {

@@ -34,7 +34,7 @@ import { useGetBoardGitHubQuery } from "@/feature/board/api/use-get-board-github
 import { useUpdateUnitMutation } from "@/feature/board/api/use-update-unit";
 import { useGetCatalogQuery } from "@/feature/catalog/api/use-get-catalog";
 import {
-	buildSuggestedBranchName,
+	buildSuggestedUnitBranchName,
 	fromOptionalSelectValue,
 	SELECT_UNSET_VALUE,
 	toOptionalSelectValue,
@@ -88,7 +88,7 @@ export const UnitFormDialog = ({
 		if (nextMode && !form.getValues("branchName")) {
 			const currentName = trimToNull(form.getValues("name"));
 			if (currentName) {
-				form.setValue("branchName", buildSuggestedBranchName(currentName));
+				form.setValue("branchName", buildSuggestedUnitBranchName(currentName));
 			}
 		}
 	};

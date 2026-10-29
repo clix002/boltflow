@@ -120,6 +120,11 @@ export const boardRepository = {
 				ownerId: true,
 				githubRepo: true,
 				defaultBranch: true,
+				owner: {
+					select: {
+						githubToken: true,
+					},
+				},
 			},
 		});
 	},
@@ -134,6 +139,11 @@ export const boardRepository = {
 						ownerId: true,
 						githubRepo: true,
 						defaultBranch: true,
+						owner: {
+							select: {
+								githubToken: true,
+							},
+						},
 					},
 				},
 			},

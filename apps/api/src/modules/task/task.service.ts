@@ -140,10 +140,15 @@ export const taskService = {
 			throw new HTTPException(403, { message: "Not authorized" });
 		}
 
+		const { unit } = task.column;
+		const { board } = unit;
+
 		const branchName = data.createOnGitHub
 			? await githubService.ensureBranchExists({
-					githubRepo: task.column.unit.board.githubRepo,
-					defaultBranch: task.column.unit.board.defaultBranch,
+					githubRepo: board.githubRepo,
+					defaultBranch: board.defaultBranch,
+					baseBranch: unit.branchName ?? board.defaultBranch,
+					githubToken: board.owner.githubToken,
 					branchName: data.branchName,
 				})
 			: sanitizeBranchName(data.branchName);

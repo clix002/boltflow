@@ -1,6 +1,7 @@
 import type { Maybe } from "@scrum-board/shared/types";
-import { ExternalLink, Sparkles } from "lucide-react";
+import { ExternalLink, Settings2, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { SidebarGroup } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 
@@ -8,12 +9,14 @@ type SidebarRepoBannerProps = {
 	repoSlug: Maybe<string>;
 	defaultBranch: string;
 	connected: boolean;
+	onConfigure?: () => void;
 };
 
 export const SidebarRepoBanner = ({
 	repoSlug,
 	defaultBranch,
 	connected,
+	onConfigure,
 }: SidebarRepoBannerProps) => {
 	return (
 		<SidebarGroup className="pb-1">
@@ -29,25 +32,40 @@ export const SidebarRepoBanner = ({
 							)}
 						/>
 						<span className="font-semibold text-sidebar-foreground truncate">
-							{repoSlug ?? "No repository"}
+							{repoSlug ?? "No GitHub repository"}
 						</span>
 					</div>
-					{repoSlug && (
-						<a
-							href={`https://github.com/${repoSlug}`}
-							target="_blank"
-							rel="noreferrer"
-							className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
-							title="Open on GitHub"
-						>
-							<ExternalLink className="size-3.5" />
-						</a>
-					)}
+					<div className="flex items-center gap-1 shrink-0">
+						{repoSlug && (
+							<a
+								href={`https://github.com/${repoSlug}`}
+								target="_blank"
+								rel="noreferrer"
+								className="text-muted-foreground hover:text-foreground transition-colors"
+								title="Open on GitHub"
+							>
+								<ExternalLink className="size-3.5" />
+							</a>
+						)}
+						{onConfigure && (
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon-xs"
+								onClick={onConfigure}
+								title="Configure GitHub Repository & Token"
+								aria-label="Configure GitHub Repository & Token"
+								className="size-5 text-muted-foreground hover:text-foreground cursor-pointer"
+							>
+								<Settings2 className="size-3.5" />
+							</Button>
+						)}
+					</div>
 				</div>
 				<div className="mt-1.5 flex items-center justify-between text-[11px] text-muted-foreground">
 					<span className="inline-flex items-center gap-1">
 						<Sparkles className="size-3 text-primary" />
-						{connected ? "GitHub Connected" : "Offline"}
+						{connected ? "GitHub Connected" : "Click gear to connect"}
 					</span>
 					<Badge variant="outline" className="h-4 px-1.5 text-[10px]">
 						{defaultBranch}

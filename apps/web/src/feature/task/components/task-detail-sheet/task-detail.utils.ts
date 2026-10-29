@@ -130,3 +130,8 @@ export function buildSuggestedBranchName(title: string): string {
 	const slug = kebabCase(title).slice(0, 36);
 	return `feat/${slug || "task"}`;
 }
+
+export function buildSuggestedUnitBranchName(unitName: string): string {
+	const slug = kebabCase(unitName).slice(0, 36);
+	return `unit/${slug || "module"}`;
+}

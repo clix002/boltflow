@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useParams } from "react-router";
 import { SidebarSeparator } from "@/components/ui/sidebar";
 import { useGetBoardQuery } from "@/feature/board/api/use-get-board";
 import { useGetBoardGitHubQuery } from "@/feature/board/api/use-get-board-github";
+import { UpdateBoardDialog } from "@/feature/board/components/form/update-board-dialog";
 import { resolveActiveUnit } from "../dnd.utils";
 import { useBoardPreferences } from "../use-board-preferences";
 import { SidebarBoltsGroup } from "./sidebar-bolts-group";
@@ -14,6 +16,7 @@ export const BoardDetailSidebar = () => {
 	const { data: board } = useGetBoardQuery(boardId);
 	const { data: githubInfo, isPending: isLoadingGitHub } =
 		useGetBoardGitHubQuery(boardId);
+	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
 	const {
 		selectedUnitId,
@@ -39,7 +42,17 @@ export const BoardDetailSidebar = () => {
 				repoSlug={repoSlug}
 				defaultBranch={defaultBranch}
 				connected={Boolean(githubInfo?.connected)}
+				onConfigure={board ? () => setIsSettingsOpen(true) : undefined}
 			/>
+
+			{board && isSettingsOpen && (
+				<UpdateBoardDialog
+					key={board.updatedAt}
+					open={isSettingsOpen}
+					onOpenChange={setIsSettingsOpen}
+					board={board}
+				/>
+			)}
 
 			<SidebarUnitsGroup
 				boardId={boardId}

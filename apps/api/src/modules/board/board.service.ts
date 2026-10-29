@@ -11,9 +11,8 @@ import {
 } from "@scrum-board/shared/schemas";
 import type { Maybe } from "@scrum-board/shared/types";
 import { HTTPException } from "hono/http-exception";
-import { env } from "@/config/env";
 import { githubService } from "../github/github.service";
-import { sanitizeBranchName } from "../github/github.utils";
+import { normalizeRepoSlug, sanitizeBranchName } from "../github/github.utils";
 import type { TaskFilterParams } from "../task/task.filters";
 import { boardRepository } from "./board.repository";
 
@@ -81,6 +80,9 @@ type ResolveUnitBranchInput = {
 	board: {
 		githubRepo: Maybe<string>;
 		defaultBranch: string;
+		owner?: {
+			githubToken: Maybe<string>;
+		};
 	};
 };
 
@@ -101,6 +103,8 @@ async function resolveUnitBranchName(
 		await githubService.ensureBranchExists({
 			githubRepo: board.githubRepo,
 			defaultBranch: board.defaultBranch,
+			baseBranch: board.defaultBranch,
+			githubToken: board.owner?.githubToken,
 			branchName: sanitized,
 		});
 	}
@@ -125,13 +129,14 @@ export const boardService = {
 		return githubService.getBoardGitHubInfo({
 			githubRepo: board.githubRepo,
 			defaultBranch: board.defaultBranch,
+			githubToken: board.owner.githubToken,
 		});
 	},
 
 	async create(userId: string, data: z.infer<typeof CreateBoardSchema>) {
 		return await boardRepository.create({
 			name: data.name,
-			githubRepo: data.githubRepo ?? env.GITHUB_REPO ?? null,
+			githubRepo: normalizeRepoSlug(data.githubRepo),
 			defaultBranch: data.defaultBranch ?? "main",
 			owner: {
 				connect: {
@@ -145,7 +150,15 @@ export const boardService = {
 		const { id, userId, data } = input;
 		await verifyBoardOwnership(id, userId);
 
-		return boardRepository.update(id, data);
+		return boardRepository.update(id, {
+			...(data.name !== undefined ? { name: data.name } : {}),
+			...(data.githubRepo !== undefined
+				? { githubRepo: normalizeRepoSlug(data.githubRepo) }
+				: {}),
+			...(data.defaultBranch !== undefined
+				? { defaultBranch: data.defaultBranch }
+				: {}),
+		});
 	},
 
 	async remove(id: string, userId: string) {

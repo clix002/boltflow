@@ -17,6 +17,7 @@ import {
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useUpdateBoard } from "../../api/use-update-board";
+import { GitHubRepoFields } from "./github-repo-fields";
 
 type Board = z.infer<typeof BoardSchema>;
 type FormData = z.infer<typeof UpdateBoardSchema>;
@@ -38,8 +39,15 @@ export const UpdateBoardDialog = ({
 
 	const form = useForm<FormData>({
 		resolver: zodResolver(UpdateBoardSchema),
-		defaultValues: { name: board.name },
+		defaultValues: {
+			name: board.name,
+			githubRepo: board.githubRepo ?? null,
+			defaultBranch: board.defaultBranch ?? "main",
+		},
 	});
+
+	const githubRepo = form.watch("githubRepo");
+	const defaultBranch = form.watch("defaultBranch") ?? "main";
 
 	const onSubmit = (data: FormData) => {
 		updateBoard(
@@ -47,7 +55,10 @@ export const UpdateBoardDialog = ({
 			{
 				onSuccess: () => {
 					queryClient.invalidateQueries({ queryKey: ["boards"] });
-					form.reset();
+					queryClient.invalidateQueries({ queryKey: ["board", board.id] });
+					queryClient.invalidateQueries({
+						queryKey: ["board-github", board.id],
+					});
 					onOpenChange(false);
 				},
 			},
@@ -57,11 +68,11 @@ export const UpdateBoardDialog = ({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>Update Board</DialogTitle>
+					<DialogTitle>Board &amp; GitHub Settings</DialogTitle>
+					<DialogDescription>
+						Select your GitHub repository and base branch for this board.
+					</DialogDescription>
 				</DialogHeader>
-				<DialogDescription>
-					Fill in the details below to update the board.
-				</DialogDescription>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
 					className="flex flex-col gap-4 mt-4"
@@ -71,9 +82,10 @@ export const UpdateBoardDialog = ({
 						control={form.control}
 						render={({ field, fieldState }) => (
 							<Field>
-								<FieldLabel htmlFor={field.name}>Name</FieldLabel>
+								<FieldLabel htmlFor={field.name}>Board Name</FieldLabel>
 								<Input
 									{...field}
+									value={field.value ?? ""}
 									id={field.name}
 									aria-invalid={fieldState.invalid}
 								/>
@@ -81,8 +93,21 @@ export const UpdateBoardDialog = ({
 							</Field>
 						)}
 					/>
-					<Button type="submit" disabled={isPending}>
-						Update
+
+					<GitHubRepoFields
+						githubRepo={githubRepo}
+						defaultBranch={defaultBranch}
+						onRepoChange={(nextRepo, nextDefaultBranch) => {
+							form.setValue("githubRepo", nextRepo);
+							form.setValue("defaultBranch", nextDefaultBranch);
+						}}
+						onBranchChange={(nextBranch) => {
+							form.setValue("defaultBranch", nextBranch);
+						}}
+					/>
+
+					<Button type="submit" disabled={isPending} className="cursor-pointer">
+						Save Settings
 					</Button>
 				</form>
 			</DialogContent>

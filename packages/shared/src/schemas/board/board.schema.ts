@@ -80,10 +80,33 @@ export const GitHubBranchSchema = z.object({
 });
 export type GitHubBranch = z.infer<typeof GitHubBranchSchema>;
 
+export const GitHubRepoItemSchema = z.object({
+	id: z.number(),
+	name: z.string(),
+	fullName: z.string(),
+	defaultBranch: z.string(),
+	private: z.boolean(),
+});
+export type GitHubRepoItem = z.infer<typeof GitHubRepoItemSchema>;
+
+export const UserGitHubReposResponseSchema = z.object({
+	connected: z.boolean(),
+	repos: z.array(GitHubRepoItemSchema),
+});
+export type UserGitHubReposResponse = z.infer<
+	typeof UserGitHubReposResponseSchema
+>;
+
+export const ConnectGitHubTokenSchema = z.object({
+	githubToken: TrimmedString(255),
+});
+export type ConnectGitHubTokenInput = z.infer<typeof ConnectGitHubTokenSchema>;
+
 export const BoardGitHubInfoSchema = z.object({
 	repo: z.string().nullable(),
 	defaultBranch: z.string(),
 	connected: z.boolean(),
+	hasToken: z.boolean().optional(),
 	branches: z.array(GitHubBranchSchema),
 });
 export type BoardGitHubInfo = z.infer<typeof BoardGitHubInfoSchema>;
@@ -100,14 +123,14 @@ export const BoardSchema = z.object({
 
 export const CreateBoardSchema = z.object({
 	name: TrimmedString(100),
-	githubRepo: z.string().trim().max(120).optional(),
-	defaultBranch: z.string().trim().max(80).optional(),
+	githubRepo: NullableTrimmedString(200),
+	defaultBranch: TrimmedString(80).optional(),
 });
 
 export const UpdateBoardSchema = z.object({
 	name: TrimmedString(100).optional(),
-	githubRepo: NullableTrimmedString(120),
-	defaultBranch: z.string().trim().max(80).optional(),
+	githubRepo: NullableTrimmedString(200),
+	defaultBranch: TrimmedString(80).optional(),
 });
 
 export const BoardDetailResponseSchema = BoardSchema.extend({

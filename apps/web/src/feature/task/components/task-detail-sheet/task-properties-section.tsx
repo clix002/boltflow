@@ -6,6 +6,7 @@ import {
 	type TaskWithAssigneesSchema,
 	type UpdateTaskSchema,
 } from "@scrum-board/shared/schemas";
+import type { Maybe } from "@scrum-board/shared/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { isEmpty } from "es-toolkit/compat";
 import {
@@ -67,6 +68,7 @@ type TaskPropertiesSectionProps = {
 	task: TaskWithAssignees;
 	columns?: ColumnWithTasks[];
 	bolts?: Bolt[];
+	unitBranchName?: Maybe<string>;
 	boardId?: string;
 	columnName?: string;
 	onUpdateTask?: (data: UpdateTaskInput) => void;
@@ -76,6 +78,7 @@ export const TaskPropertiesSection = ({
 	task,
 	columns = [],
 	bolts = [],
+	unitBranchName,
 	boardId,
 	columnName,
 	onUpdateTask,
@@ -314,7 +317,8 @@ export const TaskPropertiesSection = ({
 								) : (
 									<Plus className="size-3" />
 								)}
-								Create branch on GitHub
+								Create branch from{" "}
+								{unitBranchName ?? githubInfo?.defaultBranch ?? "main"}
 							</Button>
 						)}
 					</div>

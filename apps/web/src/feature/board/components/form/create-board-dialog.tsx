@@ -14,13 +14,14 @@ import {
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useCreateBoardMutation } from "../../api/use-create-board";
+import { GitHubRepoFields } from "./github-repo-fields";
 
 type CreateBoardDialogProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 };
 
-type formData = z.infer<typeof CreateBoardSchema>;
+type FormData = z.infer<typeof CreateBoardSchema>;
 
 export const CreateBoardDialog = ({
 	open,
@@ -30,12 +31,19 @@ export const CreateBoardDialog = ({
 
 	const { mutate: createBoard, isPending } = useCreateBoardMutation();
 
-	const form = useForm<formData>({
+	const form = useForm<FormData>({
 		resolver: zodResolver(CreateBoardSchema),
-		defaultValues: { name: "" },
+		defaultValues: {
+			name: "",
+			githubRepo: null,
+			defaultBranch: "main",
+		},
 	});
 
-	const onSubmit = (data: formData) => {
+	const githubRepo = form.watch("githubRepo");
+	const defaultBranch = form.watch("defaultBranch") ?? "main";
+
+	const onSubmit = (data: FormData) => {
 		createBoard(data, {
 			onSuccess: () => {
 				queryClient.invalidateQueries({ queryKey: ["boards"] });
@@ -49,10 +57,11 @@ export const CreateBoardDialog = ({
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>Create Board</DialogTitle>
+					<DialogDescription>
+						Create a new workspace board and link it to one of your GitHub
+						repositories.
+					</DialogDescription>
 				</DialogHeader>
-				<DialogDescription>
-					Fill in the details below to create a new board.
-				</DialogDescription>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
 					className="flex flex-col gap-4 mt-4"
@@ -62,18 +71,33 @@ export const CreateBoardDialog = ({
 						control={form.control}
 						render={({ field, fieldState }) => (
 							<Field>
-								<FieldLabel htmlFor={field.name}>Name</FieldLabel>
+								<FieldLabel htmlFor={field.name}>Board Name</FieldLabel>
 								<Input
 									{...field}
 									id={field.name}
+									placeholder="e.g. BoltFlow Platform"
 									aria-invalid={fieldState.invalid}
+									autoFocus
 								/>
 								{fieldState.error && <FieldError errors={[fieldState.error]} />}
 							</Field>
 						)}
 					/>
-					<Button type="submit" disabled={isPending}>
-						Create
+
+					<GitHubRepoFields
+						githubRepo={githubRepo}
+						defaultBranch={defaultBranch}
+						onRepoChange={(nextRepo, nextDefaultBranch) => {
+							form.setValue("githubRepo", nextRepo);
+							form.setValue("defaultBranch", nextDefaultBranch);
+						}}
+						onBranchChange={(nextBranch) => {
+							form.setValue("defaultBranch", nextBranch);
+						}}
+					/>
+
+					<Button type="submit" disabled={isPending} className="cursor-pointer">
+						Create Board
 					</Button>
 				</form>
 			</DialogContent>

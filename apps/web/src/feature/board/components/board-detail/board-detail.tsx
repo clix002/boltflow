@@ -276,6 +276,7 @@ export const BoardDetail = () => {
 				task={selectedTask}
 				columns={unitColumns}
 				bolts={unitBolts}
+				unitBranchName={activeUnit?.branchName}
 				boardId={boardId}
 				columnName={selectedTaskColumn?.name}
 				open={Boolean(selectedTask)}

@@ -40,6 +40,7 @@ type TaskDetailSheetProps = {
 	task: Maybe<TaskWithAssignees>;
 	columns?: ColumnWithTasks[];
 	bolts?: Bolt[];
+	unitBranchName?: Maybe<string>;
 	boardId?: string;
 	columnName?: string;
 	open: boolean;
@@ -51,6 +52,7 @@ export const TaskDetailSheet = ({
 	task,
 	columns,
 	bolts,
+	unitBranchName,
 	boardId,
 	columnName,
 	open,
@@ -177,6 +179,7 @@ export const TaskDetailSheet = ({
 									task={task}
 									columns={columns}
 									bolts={bolts}
+									unitBranchName={unitBranchName}
 									boardId={boardId}
 									columnName={columnName}
 									onUpdateTask={handleImmediateUpdate}

@@ -39,12 +39,18 @@ export const taskRepository = {
 						unit: {
 							select: {
 								id: true,
+								branchName: true,
 								board: {
 									select: {
 										id: true,
 										ownerId: true,
 										githubRepo: true,
 										defaultBranch: true,
+										owner: {
+											select: {
+												githubToken: true,
+											},
+										},
 									},
 								},
 							},
