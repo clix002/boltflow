@@ -1,4 +1,3 @@
-export { LoginPage, RegisterPage } from "./(auth)";
 export { BoardPage } from "./board";
 export { BoardDetailPage } from "./board-detail";
 export { MarketingPage } from "./marketing";

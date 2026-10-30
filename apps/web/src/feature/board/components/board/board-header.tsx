@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { UserAvatar } from "@/components/user";
 import { useLogoutMutation } from "@/feature/auth/api/use-logout";
+import { AUTH_PATH } from "@/feature/auth/auth.constants";
 import {
 	SEARCH_DEBOUNCE_MS,
 	useDebouncedSearchParam,
@@ -27,7 +28,7 @@ export const BoardHeader = () => {
 		logoutMutation(undefined, {
 			onSuccess: () => {
 				clearUser();
-				navigate("/login");
+				navigate(AUTH_PATH.LOGIN);
 			},
 			onError: (error) => {
 				toast.error(error.message || "An error occurred while logging out");

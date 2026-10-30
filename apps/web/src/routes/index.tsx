@@ -3,6 +3,7 @@ import { createBrowserRouter } from "react-router";
 import { AppLayout } from "@/components/layout/app-layout";
 import { ProtectedRoute } from "@/components/protected-route";
 import { RootErrorBoundary } from "@/components/root-error-boundary";
+import { AUTH_PATH } from "@/feature/auth/auth.constants";
 import { BoardHeader } from "@/feature/board/components/board/board-header";
 import { BoardDetailHeader } from "@/feature/board/components/board-detail/board-detail-header";
 import { BoardDetailSidebar } from "@/feature/board/components/board-detail/board-detail-sidebar";
@@ -10,10 +11,8 @@ import { BoardDetailSidebarHeader } from "@/feature/board/components/board-detai
 import {
 	BoardDetailPage,
 	BoardPage,
-	LoginPage,
 	MarketingPage,
 	NotFoundPage,
-	RegisterPage,
 } from "@/pages";
 
 export type RouteHandle = {
@@ -28,18 +27,18 @@ export const routes = createBrowserRouter([
 		Component: () => <NotFoundPage />,
 	},
 	{
-		path: "/",
+		path: AUTH_PATH.HOME,
 		Component: () => <MarketingPage />,
 		errorElement: <RootErrorBoundary />,
 	},
 	{
-		path: "/login",
-		Component: () => <LoginPage />,
+		path: AUTH_PATH.LOGIN,
+		Component: () => <MarketingPage />,
 		errorElement: <RootErrorBoundary />,
 	},
 	{
-		path: "/register",
-		Component: () => <RegisterPage />,
+		path: AUTH_PATH.REGISTER,
+		Component: () => <MarketingPage />,
 		errorElement: <RootErrorBoundary />,
 	},
 	{
@@ -51,7 +50,7 @@ export const routes = createBrowserRouter([
 		),
 		children: [
 			{
-				path: "/boards",
+				path: AUTH_PATH.BOARDS,
 				Component: () => <BoardPage />,
 				handle: {
 					headerContent: BoardHeader,

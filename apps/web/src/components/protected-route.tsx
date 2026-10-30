@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router";
+import { AUTH_PATH } from "@/feature/auth/auth.constants";
 import { useAuthStore } from "@/store/useAuthStore";
 
 type ProtectedRouteProps = {
@@ -13,7 +14,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 	if (!user) {
 		return (
 			<Navigate
-				to="/login"
+				to={AUTH_PATH.LOGIN}
 				state={{ from: `${location.pathname}${location.search}` }}
 				replace
 			/>
